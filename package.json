@@ -1,0 +1,28 @@
+{
+  "name": "wellplate",
+  "version": "1.0.0",
+  "description": "AI Meal Plan Builder - Complete SaaS Platform",
+  "private": true,
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "start": "turbo run start",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "db:push": "cd apps/web && pnpm prisma db push",
+    "db:migrate": "cd apps/web && pnpm prisma migrate dev",
+    "db:seed": "cd apps/web && pnpm tsx scripts/seed.ts",
+    "clean": "turbo run clean && rm -rf node_modules"
+  },
+  "devDependencies": {
+    "@turbo/gen": "^1.10.12",
+    "turbo": "^1.10.12",
+    "typescript": "^5.2.2"
+  },
+  "packageManager": "pnpm@8.6.10",
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  }
+}

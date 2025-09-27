@@ -1,0 +1,10 @@
+services:
+  nutriai-worker:
+    build: .
+    ports:
+      - "8420:8420"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
+      - PORT=8420
+    restart: unless-stopped

@@ -1,0 +1,6 @@
+@echo off
+echo Stopping worker service...
+taskkill /F /PID 10104 2>nul
+echo Starting worker service...
+cd /d "C:\Users\medja\Desktop\AI meal plan builder\apps\worker"
+python -m uvicorn main:app --host 0.0.0.0 --port 8420 --reload

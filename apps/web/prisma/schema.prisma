@@ -1,0 +1,121 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts      Account[]
+  sessions      Session[]
+  subscription  Subscription?
+  mealPreferences MealPreference[]
+  mealPlans     MealPlan[]
+  documents     Document[]
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Subscription {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  stripeCustomerId  String?  @unique
+  stripeSubscriptionId String? @unique
+  plan              String   @default("FREE") // FREE, PRO_MONTHLY, PRO_ANNUAL
+  status            String   @default("active") // active, canceled, past_due, unpaid
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model MealPreference {
+  id             String   @id @default(cuid())
+  userId         String
+  age            Int
+  weightKg       Float
+  heightCm       Int
+  sex            String   // male, female, other
+  goal           String   // lose, maintain, gain
+  dietType       String   // omnivore, vegan, vegetarian, keto, mediterranean, paleo
+  allergies      String[] @default([])
+  dislikes       String[] @default([])
+  cookingEffort  String   // quick, budget, gourmet
+  caloriesTarget Int?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model MealPlan {
+  id        String   @id @default(cuid())
+  userId    String
+  jsonData  Json     // The full meal plan response from AI
+  calories  Int
+  macros    Json     // { protein_g, carbs_g, fat_g }
+  createdAt DateTime @default(now())
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  documents Document[]
+}
+
+model Document {
+  id         String   @id @default(cuid())
+  userId     String
+  mealPlanId String
+  pdfPath    String   // Path in Supabase Storage
+  signedUrl  String?  // Signed URL for download
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mealPlan MealPlan @relation(fields: [mealPlanId], references: [id], onDelete: Cascade)
+}
