@@ -13,7 +13,7 @@ const resend = process.env.RESEND_API_KEY &&
   : null
 
 export const authOptions: NextAuthOptions = {
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.NEXTAUTH_SECRET || 'fallback-secret-for-development',
   adapter: PrismaAdapter(prisma),
   providers: [
     EmailProvider({
