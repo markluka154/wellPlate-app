@@ -4,7 +4,7 @@ export type PlanType = 'FREE' | 'PRO_MONTHLY' | 'PRO_ANNUAL' | 'FAMILY_MONTHLY';
 
 export type SubscriptionStatus = 'active' | 'canceled' | 'past_due' | 'unpaid';
 
-export type DietType = 'omnivore' | 'vegan' | 'vegetarian' | 'keto' | 'mediterranean' | 'paleo';
+export type DietType = 'omnivore' | 'vegan' | 'vegetarian' | 'keto' | 'mediterranean' | 'paleo' | 'diabetes-friendly';
 
 export type Goal = 'lose' | 'maintain' | 'gain';
 

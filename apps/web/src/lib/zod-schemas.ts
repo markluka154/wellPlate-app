@@ -6,7 +6,7 @@ export const mealPreferenceSchema = z.object({
   heightCm: z.number().min(100).max(250),
   sex: z.enum(['male', 'female', 'other']),
   goal: z.enum(['lose', 'maintain', 'gain']),
-  dietType: z.enum(['omnivore', 'vegan', 'vegetarian', 'keto', 'mediterranean', 'paleo']),
+  dietType: z.enum(['omnivore', 'vegan', 'vegetarian', 'keto', 'mediterranean', 'paleo', 'diabetes-friendly']),
   allergies: z.array(z.string()).default([]),
   dislikes: z.array(z.string()).default([]),
   cookingEffort: z.enum(['quick', 'budget', 'gourmet']),

@@ -537,6 +537,7 @@ export default function DashboardPage() {
           goal: goal === 'Lose Weight' ? 'lose' : goal === 'Gain Muscle' ? 'gain' : 'maintain',
           dietType: diet === 'Balanced' ? 'omnivore' : 
                    diet === 'Keto / Low-Carb' ? 'keto' :
+                   diet === 'Diabetes-Friendly' ? 'diabetes-friendly' :
                    diet === 'Gluten-Free' ? 'omnivore' : // Map to omnivore for now
                    diet === 'Dairy-Free' ? 'omnivore' : // Map to omnivore for now
                    diet === 'Low-FODMAP' ? 'omnivore' : // Map to omnivore for now
@@ -665,6 +666,9 @@ export default function DashboardPage() {
       case 'Vegan':
         baseCalories += 50
         break
+      case 'Diabetes-Friendly':
+        baseCalories -= 100 // Lower calorie focus for blood sugar management
+        break
     }
     
     return Math.max(1200, baseCalories) // Minimum 1200 calories
@@ -757,14 +761,14 @@ export default function DashboardPage() {
 
                 <ProBadge 
                   showBadge={userPlan === 'FREE'}
-                  onClick={() => userPlan === 'FREE' && showUpgrade('Advanced Diet Options', 'Unlock specialized diets like Keto, Paleo, and Low-FODMAP with Pro.', 'Advanced diet types')}
+                  onClick={() => userPlan === 'FREE' && showUpgrade('Advanced Diet Options', 'Unlock specialized diets like Keto, Paleo, Low-FODMAP, Gluten-Free, Dairy-Free, and Diabetes-Friendly with Pro.', 'Advanced diet types')}
                 >
                   <FormField label="Diet Type">
                     <select
                       value={diet}
                       onChange={(e) => {
-                        if (userPlan === 'FREE' && ['Keto / Low-Carb', 'Paleo', 'Low-FODMAP', 'Gluten-Free', 'Dairy-Free'].includes(e.target.value)) {
-                          showUpgrade('Advanced Diet Options', 'Unlock specialized diets like Keto, Paleo, Low-FODMAP, Gluten-Free, and Dairy-Free with Pro.', 'Advanced diet types')
+                        if (userPlan === 'FREE' && ['Keto / Low-Carb', 'Paleo', 'Low-FODMAP', 'Gluten-Free', 'Dairy-Free', 'Diabetes-Friendly'].includes(e.target.value)) {
+                          showUpgrade('Advanced Diet Options', 'Unlock specialized diets like Keto, Paleo, Low-FODMAP, Gluten-Free, Dairy-Free, and Diabetes-Friendly with Pro.', 'Advanced diet types')
                           return
                         }
                         setDiet(e.target.value)
@@ -777,6 +781,7 @@ export default function DashboardPage() {
                       <option>Mediterranean</option>
                       <option>Keto / Low-Carb</option>
                       <option>Paleo</option>
+                      <option>Diabetes-Friendly</option>
                       <option>Gluten-Free</option>
                       <option>Dairy-Free</option>
                       <option>Low-FODMAP</option>

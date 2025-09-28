@@ -19,6 +19,7 @@ class DietType(str, Enum):
     KETO = "keto"
     MEDITERRANEAN = "mediterranean"
     PALEO = "paleo"
+    DIABETES_FRIENDLY = "diabetes-friendly"
 
 class CookingEffort(str, Enum):
     QUICK = "quick"
