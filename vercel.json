@@ -1,6 +1,6 @@
 {
-  "buildCommand": "turbo run build --filter=@wellplate/web",
-  "outputDirectory": "apps/web/.next",
+  "buildCommand": "pnpm run build",
+  "outputDirectory": ".next",
   "installCommand": "pnpm install",
   "framework": "nextjs"
 }
