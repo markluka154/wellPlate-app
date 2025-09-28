@@ -21,8 +21,8 @@ const LocaleSwitcher = () => {
     
     // Emit analytics event
     if (typeof window !== 'undefined') {
-      window.dataLayer = window.dataLayer || []
-      window.dataLayer.push({
+      ;(window as any).dataLayer = (window as any).dataLayer || []
+      ;(window as any).dataLayer.push({
         event: 'locale_change',
         language: newLang,
         currency: currency
@@ -36,8 +36,8 @@ const LocaleSwitcher = () => {
     
     // Emit analytics event
     if (typeof window !== 'undefined') {
-      window.dataLayer = window.dataLayer || []
-      window.dataLayer.push({
+      ;(window as any).dataLayer = (window as any).dataLayer || []
+      ;(window as any).dataLayer.push({
         event: 'locale_change',
         language: language,
         currency: newCurrency

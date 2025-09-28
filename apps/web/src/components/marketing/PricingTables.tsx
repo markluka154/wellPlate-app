@@ -30,8 +30,8 @@ const GuaranteeBadge = () => {
 export function PricingTables() {
   const handleCtaClick = (planId: string) => {
     if (typeof window !== 'undefined') {
-      window.dataLayer = window.dataLayer || []
-      window.dataLayer.push({ event: 'cta_click', id: `pricing_${planId.toLowerCase()}` })
+      ;(window as any).dataLayer = (window as any).dataLayer || []
+      ;(window as any).dataLayer.push({ event: 'cta_click', id: `pricing_${planId.toLowerCase()}` })
     }
   }
 

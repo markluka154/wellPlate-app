@@ -59,7 +59,7 @@ export default function FamilyShoppingList() {
       try {
         const members = JSON.parse(savedMembers)
         setFamilyMembers(members)
-        setSelectedMembers(members.map(m => m.id))
+        setSelectedMembers(members.map((m: any) => m.id))
       } catch (error) {
         console.error('Error loading family members:', error)
       }

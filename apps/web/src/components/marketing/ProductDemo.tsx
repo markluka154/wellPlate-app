@@ -34,8 +34,8 @@ const ProductDemo = () => {
 
   const handleCtaClick = (id: string) => {
     if (typeof window !== 'undefined') {
-      window.dataLayer = window.dataLayer || []
-      window.dataLayer.push({ event: 'cta_click', id })
+      ;(window as any).dataLayer = (window as any).dataLayer || []
+      ;(window as any).dataLayer.push({ event: 'cta_click', id })
     }
   }
 

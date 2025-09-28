@@ -33,25 +33,32 @@ async function main() {
   console.log('✅ Created subscription:', subscription.plan)
 
   // Create sample meal preferences
-  const mealPreference = await prisma.mealPreference.upsert({
+  const existingMealPreference = await prisma.mealPreference.findFirst({
     where: { userId: testUser.id },
-    update: {},
-    create: {
-      userId: testUser.id,
-      age: 30,
-      weightKg: 70,
-      heightCm: 170,
-      sex: 'male',
-      goal: 'maintain',
-      dietType: 'omnivore',
-      allergies: ['nuts'],
-      dislikes: ['mushrooms'],
-      cookingEffort: 'quick',
-      caloriesTarget: 2000,
-    },
   })
 
-  console.log('✅ Created meal preferences')
+  let mealPreference
+  if (existingMealPreference) {
+    mealPreference = existingMealPreference
+    console.log('✅ Meal preferences already exist')
+  } else {
+    mealPreference = await prisma.mealPreference.create({
+      data: {
+        userId: testUser.id,
+        age: 30,
+        weightKg: 70,
+        heightCm: 170,
+        sex: 'male',
+        goal: 'maintain',
+        dietType: 'omnivore',
+        allergies: ['nuts'],
+        dislikes: ['mushrooms'],
+        cookingEffort: 'quick',
+        caloriesTarget: 2000,
+      },
+    })
+    console.log('✅ Created meal preferences')
+  }
 
   // Create sample meal plan
   const sampleMealPlan: MealPlanResponse = {
@@ -137,7 +144,7 @@ async function main() {
   const mealPlan = await prisma.mealPlan.create({
     data: {
       userId: testUser.id,
-      jsonData: sampleMealPlan,
+      jsonData: sampleMealPlan as any,
       calories: sampleMealPlan.totals.kcal,
       macros: {
         protein_g: sampleMealPlan.totals.protein_g,

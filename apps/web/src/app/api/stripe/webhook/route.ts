@@ -12,6 +12,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No signature' }, { status: 400 })
     }
 
+    if (!stripe) {
+      console.error('Stripe not configured')
+      return NextResponse.json({ error: 'Stripe not configured' }, { status: 500 })
+    }
+
     let event: any
 
     try {

@@ -62,7 +62,8 @@ function FamilyMemberModal({ isOpen, onClose, onSave, editingMember }: {
 
   const handleSave = () => {
     if (!formData.name || !formData.age) {
-      showNotification('warning', 'Required Fields', 'Please fill in name and age')
+      // Use alert as fallback since showNotification is not available here
+      alert('Please fill in name and age')
       return
     }
 
@@ -418,7 +419,6 @@ export default function FamilyDashboard() {
     {
       id: 'busy-family-weeknights',
       title: 'Busy Family Weeknights',
-      description: 'Quick, kid-approved meals for busy weeknights',
       duration: '2 weeks',
       difficulty: 'Easy',
       calories: 1800,
@@ -437,7 +437,6 @@ export default function FamilyDashboard() {
     {
       id: 'healthy-family-start',
       title: 'Healthy Family Start',
-      description: 'Nutritious meals to establish healthy eating habits',
       duration: '4 weeks',
       difficulty: 'Medium',
       calories: 2000,
@@ -456,7 +455,6 @@ export default function FamilyDashboard() {
     {
       id: 'weekend-family-cooking',
       title: 'Weekend Family Cooking',
-      description: 'Fun cooking projects for the whole family',
       duration: '6 weeks',
       difficulty: 'Medium',
       calories: 2200,
@@ -775,7 +773,7 @@ export default function FamilyDashboard() {
                     </div>
                   </div>
 
-                  <p className="text-gray-600 text-sm mb-4">{template.description}</p>
+                  <p className="text-gray-600 text-sm mb-4">Family-friendly meal plan with {template.meals.length} meals</p>
 
                   {/* Features */}
                   <div className="mb-4">

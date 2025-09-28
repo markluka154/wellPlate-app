@@ -167,8 +167,8 @@ export function Testimonials() {
               <Button
                 onClick={() => {
                   if (typeof window !== 'undefined') {
-                    window.dataLayer = window.dataLayer || []
-                    window.dataLayer.push({ event: 'cta_click', id: 'testimonials_start_free' })
+                    ;(window as any).dataLayer = (window as any).dataLayer || []
+                    ;(window as any).dataLayer.push({ event: 'cta_click', id: 'testimonials_start_free' })
                   }
                 }}
                 className="bg-green-600 hover:bg-green-700 px-8 py-3 text-lg"

@@ -69,7 +69,7 @@ export default function FamilyMealPlanGenerate() {
           
           // Combine allergies
           const allAllergies = members
-            .map(m => m.allergies)
+            .map((m: any) => m.allergies)
             .filter(Boolean)
             .join(', ')
           setAllergies(allAllergies)

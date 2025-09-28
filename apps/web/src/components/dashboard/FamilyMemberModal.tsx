@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { X, Save, User, Baby, Child, Calendar, Heart, AlertTriangle } from 'lucide-react'
+import { X, Save, User, Baby, Calendar, Heart, AlertTriangle } from 'lucide-react'
 
 interface FamilyMember {
   id: string
@@ -188,7 +188,7 @@ export function FamilyMemberModal({ isOpen, onClose, onSave, editingMember }: Fa
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {[
                   { value: 'child', label: 'Child', icon: <Baby className="h-4 w-4" />, color: 'bg-pink-100 text-pink-700' },
-                  { value: 'teen', label: 'Teen', icon: <Child className="h-4 w-4" />, color: 'bg-blue-100 text-blue-700' },
+                  { value: 'teen', label: 'Teen', icon: <User className="h-4 w-4" />, color: 'bg-blue-100 text-blue-700' },
                   { value: 'adult', label: 'Adult', icon: <User className="h-4 w-4" />, color: 'bg-green-100 text-green-700' },
                   { value: 'senior', label: 'Senior', icon: <User className="h-4 w-4" />, color: 'bg-purple-100 text-purple-700' }
                 ].map(({ value, label, icon, color }) => (

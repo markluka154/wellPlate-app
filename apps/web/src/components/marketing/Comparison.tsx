@@ -86,7 +86,7 @@ const Comparison = () => {
                 <div className="p-6 bg-green-50 border-r">
                   <div className="flex items-center">
                     <span className="mr-2">{item.nutriaiIcon}</span>
-                    <span className="text-green-800 font-medium">{item.nutriai}</span>
+                    <span className="text-green-800 font-medium">{item.wellplate}</span>
                   </div>
                 </div>
                 <div className="p-6">
@@ -116,7 +116,7 @@ const Comparison = () => {
                   <span className="text-gray-700 font-medium">{item.feature}</span>
                   <div className="flex items-center">
                     <span className="mr-2">{item.nutriaiIcon}</span>
-                    <span className="text-green-800 font-medium">{item.nutriai}</span>
+                    <span className="text-green-800 font-medium">{item.wellplate}</span>
                   </div>
                 </div>
               ))}

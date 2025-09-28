@@ -87,16 +87,16 @@ export const albertHeijnAPI: StoreAPI = {
   
   async getProducts(query: string, storeId?: string): Promise<StoreProduct[]> {
     try {
-      const response = await fetch(`${this.baseUrl}/products/search`, {
+      const url = new URL(`${this.baseUrl}/products/search`)
+      url.searchParams.set('q', query)
+      url.searchParams.set('limit', '20')
+      
+      const response = await fetch(url.toString(), {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${this.apiKey}`,
           'Accept': 'application/json',
-        },
-        params: new URLSearchParams({
-          q: query,
-          limit: '20'
-        })
+        }
       })
       
       const data = await response.json()
@@ -134,16 +134,16 @@ export const icaAPI: StoreAPI = {
   
   async getProducts(query: string, storeId?: string): Promise<StoreProduct[]> {
     try {
-      const response = await fetch(`${this.baseUrl}/products`, {
+      const url = new URL(`${this.baseUrl}/products`)
+      url.searchParams.set('search', query)
+      url.searchParams.set('store', storeId || 'default')
+      
+      const response = await fetch(url.toString(), {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${this.apiKey}`,
           'Accept': 'application/json',
-        },
-        params: new URLSearchParams({
-          search: query,
-          store: storeId || 'default'
-        })
+        }
       })
       
       const data = await response.json()
@@ -179,16 +179,17 @@ export const openFoodFactsAPI = {
   
   async searchProducts(query: string, country?: string): Promise<StoreProduct[]> {
     try {
-      const response = await fetch(`${this.baseUrl}/cgi/search.pl`, {
-        method: 'GET',
-        params: new URLSearchParams({
-          search_terms: query,
-          search_simple: '1',
-          action: 'process',
-          json: '1',
-          page_size: '20',
-          countries_tags_en: country || 'europe'
-        })
+      const url = new URL(`${this.baseUrl}/cgi/search.pl`)
+      url.searchParams.set('search_terms', query)
+      url.searchParams.set('search_simple', '1')
+      url.searchParams.set('action', 'process')
+      url.searchParams.set('json', '1')
+      url.searchParams.set('page_size', '20')
+      
+      url.searchParams.set('countries_tags_en', country || 'europe')
+      
+      const response = await fetch(url.toString(), {
+        method: 'GET'
       })
       
       const data = await response.json()
@@ -230,7 +231,7 @@ export class StoreAPIManager {
   async searchAllStores(query: string): Promise<Map<string, StoreProduct[]>> {
     const results = new Map<string, StoreProduct[]>()
     
-    for (const [storeName, api] of this.apis) {
+    for (const [storeName, api] of Array.from(this.apis)) {
       try {
         const products = await api.getProducts(query)
         results.set(storeName, products)

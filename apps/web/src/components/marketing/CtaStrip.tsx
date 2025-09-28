@@ -7,8 +7,8 @@ import { ArrowRight, Sparkles } from 'lucide-react'
 const CtaStrip = () => {
   const handleCtaClick = () => {
     if (typeof window !== 'undefined') {
-      window.dataLayer = window.dataLayer || []
-      window.dataLayer.push({ event: 'cta_click', id: 'cta_strip_start_free' })
+      ;(window as any).dataLayer = (window as any).dataLayer || []
+      ;(window as any).dataLayer.push({ event: 'cta_click', id: 'cta_strip_start_free' })
       
       // Scroll to pricing section
       const pricingSection = document.getElementById('pricing')

@@ -109,8 +109,8 @@ Added to favorites: ${meal.addedDate}`
     return {
       estimated: parseFloat(estimatedPrice),
       range: {
-        low: parseFloat((estimatedPrice * 0.8).toFixed(2)),
-        high: parseFloat((estimatedPrice * 1.3).toFixed(2))
+        low: parseFloat((Number(estimatedPrice) * 0.8).toFixed(2)),
+        high: parseFloat((Number(estimatedPrice) * 1.3).toFixed(2))
       }
     }
   }
