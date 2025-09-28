@@ -6,17 +6,42 @@ import { uploadPDF, createSignedUrl } from '@/lib/supabase'
 import { sendMealPlanEmail } from '@/lib/email'
 import { canGeneratePlan } from '@/lib/pricing'
 
+// Check if we're in build environment
+const isBuildTime = process.env.NODE_ENV === 'production' && !process.env.VERCEL_URL && !process.env.DATABASE_URL
+
 // Direct PostgreSQL connection to avoid Prisma prepared statement issues
 const getDbClient = () => {
+  if (isBuildTime || !process.env.DATABASE_URL) {
+    throw new Error('Database not available during build')
+  }
+  
   return new Client({
     connectionString: process.env.DATABASE_URL,
   })
 }
 
 export async function POST(request: NextRequest) {
-  const client = getDbClient()
+  // Handle build-time execution
+  if (isBuildTime) {
+    return NextResponse.json({
+      error: 'Service temporarily unavailable',
+      issues: ['API not available during build']
+    }, { status: 503 })
+  }
+
+  // Check required environment variables
+  if (!process.env.DATABASE_URL) {
+    return NextResponse.json({
+      error: 'Database configuration missing',
+      issues: ['Database connection not configured']
+    }, { status: 500 })
+  }
+
+  let client: Client | null = null
   
   try {
+    client = getDbClient()
+    
     // Get user email and plan from request headers (passed from dashboard)
     const userEmail = request.headers.get('x-user-email')
     const userPlan = request.headers.get('x-user-plan') as 'FREE' | 'PRO_MONTHLY' | 'PRO_ANNUAL' | 'FAMILY_MONTHLY' | null
@@ -283,47 +308,57 @@ export async function POST(request: NextRequest) {
 
     console.log('✅ Meal plan saved to database:', mealPlanId)
 
-    // Generate PDF
-    const pdfBuffer = await generateMealPlanPDF(
-      validatedMealPlan,
-      userEmail
-    )
+    // Generate PDF - wrap in try-catch to handle build-time issues
+    let pdfBuffer: Buffer | null = null
+    try {
+      pdfBuffer = await generateMealPlanPDF(
+        validatedMealPlan,
+        userEmail
+      )
+    } catch (pdfError) {
+      console.warn('⚠️ PDF generation failed:', pdfError)
+      // Continue without PDF if generation fails
+    }
 
     // Upload PDF to Supabase Storage (optional)
     let pdfPath: string | null = null
     let signedUrl: string | null = null
     
-    try {
-      pdfPath = `mealplans/${user.id}/${mealPlanId}.pdf`
-      await uploadPDF(pdfBuffer, pdfPath)
-      
-      // Create signed URL
-      signedUrl = await createSignedUrl(pdfPath, 7 * 24 * 60 * 60) // 7 days
-      
-      // Save document record
-      const documentResult = await client.query(
-        'INSERT INTO "Document" (id, "userId", "mealPlanId", "pdfPath", "signedUrl", "expiresAt", "createdAt", "updatedAt") VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5, NOW(), NOW()) RETURNING id',
-        [user.id, mealPlanId, pdfPath, signedUrl, new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)]
-      )
-      
-      console.log('✅ PDF uploaded to Supabase storage')
-    } catch (uploadError) {
-      console.warn('⚠️ PDF upload failed, continuing without storage:', uploadError instanceof Error ? uploadError.message : 'Unknown error')
-      // Continue without PDF storage - the meal plan is still saved to database
+    if (pdfBuffer) {
+      try {
+        pdfPath = `mealplans/${user.id}/${mealPlanId}.pdf`
+        await uploadPDF(pdfBuffer, pdfPath)
+        
+        // Create signed URL
+        signedUrl = await createSignedUrl(pdfPath, 7 * 24 * 60 * 60) // 7 days
+        
+        // Save document record
+        const documentResult = await client.query(
+          'INSERT INTO "Document" (id, "userId", "mealPlanId", "pdfPath", "signedUrl", "expiresAt", "createdAt", "updatedAt") VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5, NOW(), NOW()) RETURNING id',
+          [user.id, mealPlanId, pdfPath, signedUrl, new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)]
+        )
+        
+        console.log('✅ PDF uploaded to Supabase storage')
+      } catch (uploadError) {
+        console.warn('⚠️ PDF upload failed, continuing without storage:', uploadError instanceof Error ? uploadError.message : 'Unknown error')
+        // Continue without PDF storage - the meal plan is still saved to database
+      }
     }
 
     // Send email with meal plan content and PDF attachment
-    try {
-      await sendMealPlanEmail(
-        userEmail,
-        user.name || 'User',
-        validatedMealPlan,
-        pdfBuffer
-      )
-      console.log('✅ Email sent successfully with meal plan content and PDF attachment')
-    } catch (emailError) {
-      console.error('❌ Failed to send email:', emailError)
-      // Don't fail the request if email fails
+    if (pdfBuffer) {
+      try {
+        await sendMealPlanEmail(
+          userEmail,
+          user.name || 'User',
+          validatedMealPlan,
+          pdfBuffer
+        )
+        console.log('✅ Email sent successfully with meal plan content and PDF attachment')
+      } catch (emailError) {
+        console.error('❌ Failed to send email:', emailError)
+        // Don't fail the request if email fails
+      }
     }
 
     console.log('✅ Meal plan generation completed successfully')
@@ -355,6 +390,25 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   } finally {
-    await client.end()
+    if (client) {
+      try {
+        await client.end()
+      } catch (closeError) {
+        console.warn('Warning: Failed to close database connection:', closeError)
+      }
+    }
   }
+}
+
+// Add GET method for health checks
+export async function GET() {
+  if (isBuildTime) {
+    return NextResponse.json({ status: 'build-time', available: false })
+  }
+  
+  return NextResponse.json({ 
+    status: 'ok', 
+    available: !!process.env.DATABASE_URL,
+    timestamp: new Date().toISOString()
+  })
 }
