@@ -1,10 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { stripe } from '@/lib/stripe'
-import { prisma } from '@/lib/supabase'
 import { headers } from 'next/headers'
+
+// Dynamic imports to prevent build-time issues
+const loadDependencies = async () => {
+  const { stripe } = await import('@/lib/stripe')
+  const { prisma } = await import('@/lib/supabase')
+  return { stripe, prisma }
+}
 
 export async function POST(request: NextRequest) {
   try {
+    // Load dependencies dynamically
+    const { stripe, prisma } = await loadDependencies()
+
     const body = await request.text()
     const signature = headers().get('stripe-signature')
 
@@ -17,13 +25,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Stripe not configured' }, { status: 500 })
     }
 
+    if (!process.env.STRIPE_WEBHOOK_SECRET) {
+      console.error('Stripe webhook secret not configured')
+      return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 500 })
+    }
+
     let event: any
 
     try {
       event = stripe.webhooks.constructEvent(
         body,
         signature,
-        process.env.STRIPE_WEBHOOK_SECRET!
+        process.env.STRIPE_WEBHOOK_SECRET
       )
     } catch (err) {
       console.error('Webhook signature verification failed:', err)
@@ -134,4 +147,12 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
+}
+
+// Add GET method for testing
+export async function GET() {
+  return NextResponse.json({ 
+    status: 'Stripe webhook endpoint',
+    timestamp: new Date().toISOString()
+  })
 }
