@@ -1,5 +1,6 @@
+
 {
-  "buildCommand": "pnpm build",
+  "buildCommand": "pnpm prisma generate && pnpm build",
   "outputDirectory": ".next",
   "installCommand": "pnpm install"
 }
