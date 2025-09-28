@@ -1,46 +1,51 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { Client } from 'pg'
-import { mealPreferenceSchema, mealPlanResponseSchema } from '@/lib/zod-schemas'
-import { generateMealPlanPDF } from '@/lib/pdf'
-import { uploadPDF, createSignedUrl } from '@/lib/supabase'
-import { sendMealPlanEmail } from '@/lib/email'
-import { canGeneratePlan } from '@/lib/pricing'
 
-// Check if we're in build environment
-const isBuildTime = process.env.NODE_ENV === 'production' && !process.env.VERCEL_URL && !process.env.DATABASE_URL
-
-// Direct PostgreSQL connection to avoid Prisma prepared statement issues
-const getDbClient = () => {
-  if (isBuildTime || !process.env.DATABASE_URL) {
-    throw new Error('Database not available during build')
-  }
+// Dynamic imports to prevent build-time execution
+const loadDependencies = async () => {
+  const { Client } = await import('pg')
+  const { mealPreferenceSchema, mealPlanResponseSchema } = await import('@/lib/zod-schemas')
+  const { generateMealPlanPDF } = await import('@/lib/pdf')
+  const { uploadPDF, createSignedUrl } = await import('@/lib/supabase')
+  const { sendMealPlanEmail } = await import('@/lib/email')
+  const { canGeneratePlan } = await import('@/lib/pricing')
   
-  return new Client({
-    connectionString: process.env.DATABASE_URL,
-  })
+  return {
+    Client,
+    mealPreferenceSchema,
+    mealPlanResponseSchema,
+    generateMealPlanPDF,
+    uploadPDF,
+    createSignedUrl,
+    sendMealPlanEmail,
+    canGeneratePlan
+  }
 }
 
 export async function POST(request: NextRequest) {
-  // Handle build-time execution
-  if (isBuildTime) {
-    return NextResponse.json({
-      error: 'Service temporarily unavailable',
-      issues: ['API not available during build']
-    }, { status: 503 })
-  }
-
-  // Check required environment variables
-  if (!process.env.DATABASE_URL) {
-    return NextResponse.json({
-      error: 'Database configuration missing',
-      issues: ['Database connection not configured']
-    }, { status: 500 })
-  }
-
-  let client: Client | null = null
-  
   try {
-    client = getDbClient()
+    // Load dependencies dynamically to avoid build-time issues
+    const {
+      Client,
+      mealPreferenceSchema,
+      mealPlanResponseSchema,
+      generateMealPlanPDF,
+      uploadPDF,
+      createSignedUrl,
+      sendMealPlanEmail,
+      canGeneratePlan
+    } = await loadDependencies()
+
+    // Check required environment variables
+    if (!process.env.DATABASE_URL) {
+      return NextResponse.json({
+        error: 'Database configuration missing',
+        issues: ['Database connection not configured']
+      }, { status: 500 })
+    }
+
+    const client = new Client({
+      connectionString: process.env.DATABASE_URL,
+    })
     
     // Get user email and plan from request headers (passed from dashboard)
     const userEmail = request.headers.get('x-user-email')
@@ -389,26 +394,13 @@ export async function POST(request: NextRequest) {
       },
       { status: 500 }
     )
-  } finally {
-    if (client) {
-      try {
-        await client.end()
-      } catch (closeError) {
-        console.warn('Warning: Failed to close database connection:', closeError)
-      }
-    }
   }
 }
 
-// Add GET method for health checks
+// Simple GET method that won't cause build issues
 export async function GET() {
-  if (isBuildTime) {
-    return NextResponse.json({ status: 'build-time', available: false })
-  }
-  
   return NextResponse.json({ 
     status: 'ok', 
-    available: !!process.env.DATABASE_URL,
     timestamp: new Date().toISOString()
   })
 }
