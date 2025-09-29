@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-
+export const dynamic = 'force-dynamic'
 // Dynamic import to prevent build-time issues
 const getDbClient = async () => {
   const { Client } = await import('pg')
