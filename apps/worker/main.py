@@ -30,10 +30,16 @@ app = FastAPI(
     version="1.1.1"
 )
 
-# CORS middleware
+# CORS middleware - updated to include Vercel URL
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:4321", "http://localhost:3000"],
+    allow_origins=[
+        "http://localhost:4321",
+        "http://localhost:3000",
+        "https://well-plate-app-webb.vercel.app",
+        "https://well-plate-app-webb-git-main-marklukai54s-projects.vercel.app",
+        "https://well-plate-app-642b7k7x8-marklukai54s-projects.vercel.app"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -404,7 +410,7 @@ Return ONLY valid JSON, with this top-level shape:
 
         # -------- OpenAI Call (force JSON mode) --------
         response = openai_client.chat.completions.create(
-            model="gpt-4.1",
+            model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "assistant", "content": "Return ONLY one valid JSON object. No markdown."},
@@ -533,4 +539,3 @@ if __name__ == "__main__":
     port = int(os.getenv("PORT", "8420"))
     print(f"🚀 Starting NutriAI Worker Service on port {port}...")
     uvicorn.run(app, host="0.0.0.0", port=port, log_level="info")
-
