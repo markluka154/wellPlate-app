@@ -15,12 +15,24 @@ export const supabase = supabaseUrl && supabaseKey
   : null
 
 // PostgreSQL client for direct database queries
-export const client = new Client({
-  connectionString: process.env.DATABASE_URL,
-})
+// Don't create or connect during build time
+let _client: Client | null = null
 
-// Initialize the client connection
-client.connect().catch(console.error)
+export const getClient = () => {
+  if (!_client && process.env.DATABASE_URL) {
+    _client = new Client({
+      connectionString: process.env.DATABASE_URL,
+    })
+    // Connect lazily when first requested
+    _client.connect().catch(console.error)
+  }
+  return _client
+}
+
+// For backwards compatibility - but don't connect at module level
+export const client = process.env.DATABASE_URL ? new Client({
+  connectionString: process.env.DATABASE_URL,
+}) : null as any
 
 // Singleton Prisma client to avoid prepared statement conflicts
 const globalForPrisma = globalThis as unknown as {
