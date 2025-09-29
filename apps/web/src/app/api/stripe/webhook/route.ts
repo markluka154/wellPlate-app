@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { headers } from 'next/headers'
 
 // Dynamic imports to prevent build-time issues
 const loadDependencies = async () => {
@@ -14,7 +13,7 @@ export async function POST(request: NextRequest) {
     const { stripe, prisma } = await loadDependencies()
 
     const body = await request.text()
-    const signature = headers().get('stripe-signature')
+    const signature = request.headers.get('stripe-signature')
 
     if (!signature) {
       return NextResponse.json({ error: 'No signature' }, { status: 400 })
