@@ -35,7 +35,17 @@ export const mealPlanResponseSchema = z.object({
         qty: z.string(),
       })),
       steps: z.array(z.string()),
+      substitution: z.string().optional(),
+      labels: z.array(z.string()).optional(),
+      prep_note: z.string().optional(),
+      tip: z.string().optional(),
     })),
+    daily_nutrition_summary: z.object({
+      kcal: z.number(),
+      protein_g: z.number(),
+      carbs_g: z.number(),
+      fat_g: z.number(),
+    }).optional(),
   })),
   totals: z.object({
     kcal: z.number(),

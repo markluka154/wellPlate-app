@@ -3,14 +3,30 @@ import { NextAuthOptions } from 'next-auth'
 import EmailProvider from 'next-auth/providers/email'
 import GoogleProvider from 'next-auth/providers/google'
 import { prisma } from './supabase'
-import { Resend } from 'resend'
 
-// Only initialize Resend if we have a valid API key (not placeholder)
-const resend = process.env.RESEND_API_KEY && 
-  process.env.RESEND_API_KEY.startsWith('re_') && 
-  process.env.RESEND_API_KEY !== 're_your-resend-api-key'
-  ? new Resend(process.env.RESEND_API_KEY) 
-  : null
+// Dynamic import for Resend to avoid build-time issues
+let resendInstance: any = null
+
+async function getResend() {
+  if (resendInstance !== null) return resendInstance
+  
+  if (!process.env.RESEND_API_KEY || 
+      !process.env.RESEND_API_KEY.startsWith('re_') || 
+      process.env.RESEND_API_KEY === 're_your-resend-api-key') {
+    resendInstance = false
+    return resendInstance
+  }
+  
+  try {
+    const { Resend } = await import('resend')
+    resendInstance = new Resend(process.env.RESEND_API_KEY)
+    return resendInstance
+  } catch (error) {
+    console.error('Failed to load Resend:', error)
+    resendInstance = false
+    return resendInstance
+  }
+}
 
 export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET || 'fallback-secret-for-development',
@@ -23,6 +39,8 @@ export const authOptions: NextAuthOptions = {
         try {
           console.log('🔐 Sending magic link to:', email)
           console.log('🔗 Magic link URL:', url)
+          
+          const resend = await getResend()
           
           if (!resend) {
             console.warn('⚠️ Resend API key not configured. Email sending disabled.')
@@ -51,7 +69,6 @@ export const authOptions: NextAuthOptions = {
           if (error) {
             console.error('❌ Resend error:', error)
             console.log('📧 Magic link URL for manual use:', url)
-            // Don't throw error - just log it and continue
             return
           }
 
@@ -59,7 +76,6 @@ export const authOptions: NextAuthOptions = {
         } catch (error) {
           console.error('❌ Email sending error:', error)
           console.log('📧 Magic link URL for manual use:', url)
-          // Don't throw error - just log it and continue
         }
       },
     }),
