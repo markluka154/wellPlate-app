@@ -1,10 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { stripe } from '@/lib/stripe'
-import { prisma } from '@/lib/supabase'
-import { getStripePriceId } from '@/lib/pricing'
+
+// Mark as dynamic to prevent static generation
+export const dynamic = 'force-dynamic'
+
+// Dynamic imports to prevent build-time issues
+const loadDependencies = async () => {
+  const { stripe } = await import('@/lib/stripe')
+  const { prisma } = await import('@/lib/supabase')
+  const { getStripePriceId } = await import('@/lib/pricing')
+  return { stripe, prisma, getStripePriceId }
+}
 
 export async function GET(request: NextRequest) {
   try {
+    const { stripe, getStripePriceId } = await loadDependencies()
+    
     const { searchParams } = new URL(request.url)
     const plan = searchParams.get('plan')
 
