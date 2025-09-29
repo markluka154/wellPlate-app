@@ -1,8 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { StoreAPIManager, openFoodFactsAPI } from '@/lib/store-apis'
+
+// Dynamic imports to prevent build-time issues
+const loadStoreAPIs = async () => {
+  const module = await import('@/lib/store-apis')
+  return {
+    StoreAPIManager: module.StoreAPIManager,
+    openFoodFactsAPI: module.openFoodFactsAPI
+  }
+}
 
 export async function GET(request: NextRequest) {
   try {
+    const { StoreAPIManager, openFoodFactsAPI } = await loadStoreAPIs()
+    
     const { searchParams } = new URL(request.url)
     const query = searchParams.get('q')
     const store = searchParams.get('store')
@@ -57,6 +67,7 @@ export async function GET(request: NextRequest) {
     
     // Fallback to Open Food Facts
     try {
+      const { openFoodFactsAPI } = await loadStoreAPIs()
       const query = new URL(request.url).searchParams.get('q')
       if (query) {
         const products = await openFoodFactsAPI.searchProducts(query)
@@ -80,6 +91,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const { StoreAPIManager } = await loadStoreAPIs()
+    
     const body = await request.json()
     const { query, stores, preferences } = body
     

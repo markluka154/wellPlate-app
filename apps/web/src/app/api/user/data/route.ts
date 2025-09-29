@@ -1,17 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { Client } from 'pg'
 
-// Direct PostgreSQL connection to avoid Prisma prepared statement issues
-const getDbClient = () => {
+// Dynamic import to prevent build-time issues
+const getDbClient = async () => {
+  const { Client } = await import('pg')
+  
+  if (!process.env.DATABASE_URL) {
+    throw new Error('Database URL not configured')
+  }
+  
   return new Client({
     connectionString: process.env.DATABASE_URL,
   })
 }
 
 export async function GET(request: NextRequest) {
-  const client = getDbClient()
+  let client: any = null
   
   try {
+    client = await getDbClient()
+    
     // Get user email from request headers (passed from dashboard)
     const userEmail = request.headers.get('x-user-email')
     if (!userEmail) {
@@ -104,6 +111,8 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   } finally {
-    await client.end()
+    if (client) {
+      await client.end()
+    }
   }
 }
