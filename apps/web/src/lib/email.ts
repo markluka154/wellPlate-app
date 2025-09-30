@@ -15,7 +15,7 @@ export async function sendMagicLinkEmail(email: string, url: string) {
         }
 
         const { data, error } = await resend.emails.send({
-          from: 'WellPlate <onboarding@resend.dev>',
+          from: 'WellPlate <noreply@wellplate.eu>',
       to: [email],
       subject: 'Sign in to WellPlate',
       html: `
@@ -139,7 +139,7 @@ export async function sendMealPlanEmail(email: string, name: string, mealPlanDat
     }
 
     const { data, error } = await resend.emails.send({
-      from: 'WellPlate <onboarding@resend.dev>',
+      from: 'WellPlate <noreply@wellplate.eu>',
       to: [email],
       subject: 'Your Personalized Meal Plan is Ready!',
       html: `

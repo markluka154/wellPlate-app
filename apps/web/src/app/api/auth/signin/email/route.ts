@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { data, error } = await resend.emails.send({
-      from: 'WellPlate <onboarding@resend.dev>',
+      from: 'WellPlate <noreply@wellplate.eu>',
       to: [email],
       subject: 'Sign in to WellPlate',
       html: `
