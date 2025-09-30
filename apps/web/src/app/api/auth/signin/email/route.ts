@@ -9,7 +9,18 @@ const resend = process.env.RESEND_API_KEY &&
 
 export async function POST(request: NextRequest) {
   try {
-    const { email } = await request.json()
+    // Handle both JSON and form data
+    let email: string
+    
+    const contentType = request.headers.get('content-type')
+    if (contentType?.includes('application/json')) {
+      const body = await request.json()
+      email = body.email
+    } else {
+      // Handle form data (NextAuth sends this)
+      const formData = await request.formData()
+      email = formData.get('email') as string
+    }
     
     if (!email) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 })
