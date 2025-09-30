@@ -95,14 +95,14 @@ const Comparison = () => {
   ]
 
   return (
-    <section className="py-24 bg-white relative overflow-hidden">
-      {/* Background decoration */}
-      <div className="absolute inset-0 -z-10">
-        <div className="absolute top-1/2 left-0 w-96 h-96 bg-green-50 rounded-full blur-3xl opacity-50"></div>
-        <div className="absolute top-1/2 right-0 w-96 h-96 bg-blue-50 rounded-full blur-3xl opacity-50"></div>
+    <section className="py-24 bg-gradient-to-b from-gray-50 via-white to-gray-50 relative">
+      {/* Enhanced background decoration */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 -left-32 w-[600px] h-[600px] bg-green-200/40 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/3 -right-32 w-[600px] h-[600px] bg-blue-200/40 rounded-full blur-3xl"></div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Header */}
         <div className="text-center mb-16">
           <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
@@ -116,21 +116,21 @@ const Comparison = () => {
 
         {/* Desktop Table */}
         <div className="hidden lg:block">
-          <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden">
+          <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-visible relative">
             {/* Table Header */}
             <div className="grid grid-cols-3 border-b-2 border-gray-200">
-              <div className="p-6 bg-gray-50">
+              <div className="p-6 bg-gray-50 rounded-tl-3xl">
                 <span className="text-sm font-semibold text-gray-500 uppercase tracking-wider">
                   Feature
                 </span>
               </div>
               <div className="p-6 bg-gradient-to-br from-green-50 to-emerald-50 border-x-2 border-gray-200 relative">
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-green-600 to-emerald-600 text-white px-4 py-1 rounded-full text-xs font-bold shadow-lg">
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-green-600 to-emerald-600 text-white px-4 py-1.5 rounded-full text-xs font-bold shadow-lg z-10">
                   RECOMMENDED
                 </div>
                 <span className="text-lg font-bold text-green-800">WellPlate</span>
               </div>
-              <div className="p-6 bg-gray-50">
+              <div className="p-6 bg-gray-50 rounded-tr-3xl">
                 <span className="text-lg font-bold text-gray-700">Manual Planning</span>
               </div>
             </div>
