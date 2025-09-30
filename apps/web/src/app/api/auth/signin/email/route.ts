@@ -30,7 +30,13 @@ export async function POST(request: NextRequest) {
 
     // Generate a simple token (in production, use a proper JWT or crypto token)
     const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
-    const magicLink = `${process.env.NEXTAUTH_URL}/api/auth/callback/email?callbackUrl=${encodeURIComponent('/dashboard')}&token=${token}&email=${encodeURIComponent(email)}`
+    
+    // Get the base URL from the request or environment
+    const baseUrl = process.env.NEXTAUTH_URL || 
+                   process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` :
+                   `${request.nextUrl.protocol}//${request.nextUrl.host}`
+    
+    const magicLink = `${baseUrl}/api/auth/callback/email?callbackUrl=${encodeURIComponent('/dashboard')}&token=${token}&email=${encodeURIComponent(email)}`
 
     // For now, skip database storage and just send the email
     // TODO: Implement proper token storage and validation

@@ -22,18 +22,21 @@ export default function SignInPage() {
     setIsSuccess(false)
     
     try {
-      // Use NextAuth's built-in email signin
-      const result = await signIn('email', { 
-        email, 
-        redirect: false,
-        callbackUrl: '/dashboard'
+      const response = await fetch('/api/auth/signin/email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
       })
       
-      if (result?.ok) {
+      const data = await response.json()
+      
+      if (response.ok && data.success) {
         setMessage('Check your email for a magic link to sign in!')
         setIsSuccess(true)
       } else {
-        setMessage(result?.error || 'Failed to send magic link. Please try again.')
+        setMessage(data.error || 'Failed to send magic link. Please try again.')
         setIsSuccess(false)
       }
     } catch (error) {
