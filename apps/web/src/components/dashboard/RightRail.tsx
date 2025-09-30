@@ -1,6 +1,5 @@
 'use client'
 import { Crown, Check, ArrowRight, Star, Zap, Shield, Download, Users } from 'lucide-react'
-import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 
@@ -205,18 +204,46 @@ export function RightRail() {
           </div>
 
           {/* CTA Button */}
-          <Link href="/pricing" className="block">
-            <button className={`w-full rounded-xl py-3 text-base font-semibold text-white shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-105 focus:outline-none focus:ring-4 ${
+          <button 
+            onClick={async () => {
+              try {
+                const userData = localStorage.getItem('wellplate:user')
+                const userEmail = userData ? JSON.parse(userData).email : null
+                const planId = isFamilyPage ? 'FAMILY_MONTHLY' : 'PRO_MONTHLY'
+                
+                const response = await fetch(`/api/stripe/checkout?plan=${planId}`, {
+                  method: 'GET',
+                  headers: {
+                    'x-user-email': userEmail || '',
+                  },
+                })
+
+                if (response.redirected) {
+                  window.location.href = response.url
+                } else {
+                  const data = await response.json()
+                  if (data.error) {
+                    console.error('Checkout error:', data.error)
+                    alert('Error: ' + data.error)
+                  }
+                }
+              } catch (error) {
+                console.error('Error calling checkout API:', error)
+                // Fallback to pricing page
+                window.location.href = '/pricing'
+              }
+            }}
+            className={`w-full rounded-xl py-3 text-base font-semibold text-white shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-105 focus:outline-none focus:ring-4 ${
               isFamilyPage 
                 ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 focus:ring-purple-200'
                 : 'bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-700 hover:to-blue-700 focus:ring-emerald-200'
-            }`}>
-              <div className="flex items-center justify-center gap-2">
-                <span>Upgrade Now</span>
-                <ArrowRight className="h-4 w-4" />
-              </div>
-            </button>
-          </Link>
+            }`}
+          >
+            <div className="flex items-center justify-center gap-2">
+              <span>Upgrade Now</span>
+              <ArrowRight className="h-4 w-4" />
+            </div>
+          </button>
 
           {/* Trust Indicators */}
           <div className="mt-4 flex items-center justify-center gap-4 text-xs text-gray-500">

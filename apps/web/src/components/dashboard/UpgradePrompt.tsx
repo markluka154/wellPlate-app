@@ -92,8 +92,33 @@ export function UpgradePrompt({ isOpen, onClose, title, message, feature }: Upgr
           {/* CTA Buttons */}
           <div className="space-y-3">
             <button
-              onClick={() => {
-                window.open('/pricing', '_blank')
+              onClick={async () => {
+                try {
+                  const userData = localStorage.getItem('wellplate:user')
+                  const userEmail = userData ? JSON.parse(userData).email : null
+                  const planId = isFamilyFeature ? 'FAMILY_MONTHLY' : 'PRO_MONTHLY'
+                  
+                  const response = await fetch(`/api/stripe/checkout?plan=${planId}`, {
+                    method: 'GET',
+                    headers: {
+                      'x-user-email': userEmail || '',
+                    },
+                  })
+
+                  if (response.redirected) {
+                    window.location.href = response.url
+                  } else {
+                    const data = await response.json()
+                    if (data.error) {
+                      console.error('Checkout error:', data.error)
+                      alert('Error: ' + data.error)
+                    }
+                  }
+                } catch (error) {
+                  console.error('Error calling checkout API:', error)
+                  // Fallback to pricing page
+                  window.open('/pricing', '_blank')
+                }
                 onClose()
               }}
               className="w-full bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-700 hover:to-blue-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 hover:scale-105"
