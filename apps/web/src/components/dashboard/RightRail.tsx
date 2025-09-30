@@ -10,14 +10,38 @@ export function RightRail() {
   const isFamilyPage = pathname?.includes('/family')
 
   useEffect(() => {
-    const loadUserPlan = () => {
+    const loadUserPlan = async () => {
       const userData = localStorage.getItem('wellplate:user')
       if (userData) {
         try {
           const user = JSON.parse(userData)
-          setUserPlan(user.plan || 'FREE')
+          const userEmail = user.email
+          
+          if (userEmail) {
+            // Fetch the actual plan from database
+            const response = await fetch('/api/user/data', {
+              headers: {
+                'x-user-email': userEmail,
+              },
+            })
+            
+            if (response.ok) {
+              const data = await response.json()
+              const plan = data.subscription?.plan || 'FREE'
+              setUserPlan(plan)
+              
+              // Update localStorage with the correct plan from database
+              user.plan = plan
+              localStorage.setItem('wellplate:user', JSON.stringify(user))
+            } else {
+              setUserPlan(user.plan || 'FREE')
+            }
+          } else {
+            setUserPlan(user.plan || 'FREE')
+          }
         } catch (error) {
           console.error('Error loading user plan:', error)
+          setUserPlan('FREE')
         }
       }
     }

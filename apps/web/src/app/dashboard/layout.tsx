@@ -87,9 +87,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // Fetch plan usage data
   const fetchPlanUsage = async () => {
     try {
-      const userEmail = localStorage.getItem('wellplate:user') 
-        ? JSON.parse(localStorage.getItem('wellplate:user') || '{}').email 
-        : 'test@example.com'
+      const userEmail = user?.email
+      if (!userEmail) return
 
       const response = await fetch('/api/user/data', {
         headers: {
@@ -99,7 +98,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       if (response.ok) {
         const data = await response.json()
+        const plan = data.subscription?.plan || 'FREE'
+        setUserPlan(plan)
         setPlansUsedThisMonth(data.mealPlans?.length || 0)
+        
+        // Update localStorage with the correct plan from database
+        try {
+          const userData = localStorage.getItem('wellplate:user')
+          if (userData) {
+            const userObj = JSON.parse(userData)
+            userObj.plan = plan
+            localStorage.setItem('wellplate:user', JSON.stringify(userObj))
+          }
+        } catch (error) {
+          console.error('Error updating localStorage plan:', error)
+        }
       }
     } catch (error) {
       console.error('Error fetching plan usage:', error)

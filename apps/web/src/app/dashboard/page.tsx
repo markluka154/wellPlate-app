@@ -151,6 +151,22 @@ export default function DashboardPage() {
       if (response.ok) {
         const data = await response.json()
         setUserMealPlans(data.mealPlans || [])
+        
+        // Update user plan from database
+        const plan = data.subscription?.plan || 'FREE'
+        setUserPlan(plan)
+        
+        // Update localStorage with the correct plan from database
+        try {
+          const userData = localStorage.getItem('wellplate:user')
+          if (userData) {
+            const userObj = JSON.parse(userData)
+            userObj.plan = plan
+            localStorage.setItem('wellplate:user', JSON.stringify(userObj))
+          }
+        } catch (error) {
+          console.error('Error updating localStorage plan:', error)
+        }
       }
     } catch (error) {
       console.error('Error fetching meal plans:', error)
