@@ -13,8 +13,6 @@ const loadDependencies = async () => {
 
 export async function GET(request: NextRequest) {
   try {
-    const { stripe, getStripePriceId } = await loadDependencies()
-    
     const { searchParams } = new URL(request.url)
     const plan = searchParams.get('plan')
     const userEmail = request.headers.get('x-user-email')
@@ -23,39 +21,43 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid plan' }, { status: 400 })
     }
 
+    if (!userEmail) {
+      return NextResponse.json({ error: 'User email required' }, { status: 401 })
+    }
+
     // Check if this is the demo user
     const isDemoUser = userEmail === 'markluka154@gmail.com'
     
-    // For demo user, always use demo mode regardless of Stripe configuration
+    // Demo user always gets demo mode
     if (isDemoUser) {
-      console.log('🎭 Demo user detected, using demo mode:', userEmail)
+      console.log('Demo user detected, using demo mode:', userEmail)
       return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/dashboard?demo_upgrade=true&plan=${plan}`)
     }
 
-    // For real users, check if Stripe is configured
+    // For real users, verify Stripe is configured
+    const { stripe, prisma, getStripePriceId } = await loadDependencies()
+    
     if (!stripe || !process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY.startsWith('sk_test_your')) {
-      console.warn('⚠️ Stripe not configured for real user. Redirecting to demo success page.')
-      return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/dashboard?demo_upgrade=true&plan=${plan}`)
+      console.error('Stripe not configured for real user:', userEmail)
+      return NextResponse.json({ 
+        error: 'Payment system is not configured. Please contact support.' 
+      }, { status: 503 })
     }
 
     const priceId = getStripePriceId(plan as any)
 
     // Get user ID from database
-    const { prisma } = await loadDependencies()
     let userId = null
-    
-    if (userEmail) {
-      try {
-        const user = await prisma.user.findUnique({
-          where: { email: userEmail }
-        })
-        userId = user?.id
-      } catch (error) {
-        console.warn('Could not find user in database:', error)
-      }
+    try {
+      const user = await prisma.user.findUnique({
+        where: { email: userEmail }
+      })
+      userId = user?.id
+    } catch (error) {
+      console.warn('Could not find user in database:', error)
     }
 
-    // Create checkout session
+    // Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       payment_method_types: ['card'],
@@ -67,27 +69,38 @@ export async function GET(request: NextRequest) {
       ],
       success_url: `${process.env.NEXTAUTH_URL}/dashboard?success=true`,
       cancel_url: `${process.env.NEXTAUTH_URL}/pricing`,
+      customer_email: userEmail,
       metadata: {
         userId: userId || '',
-        userEmail: userEmail || '',
+        userEmail: userEmail,
+        plan: plan,
       },
     })
 
-    return NextResponse.redirect(session.url!)
+    if (!session.url) {
+      throw new Error('No checkout URL returned from Stripe')
+    }
+
+    console.log('Redirecting to Stripe checkout:', session.id)
+    return NextResponse.redirect(session.url)
 
   } catch (error) {
     console.error('Checkout error:', error)
-    // Fallback to demo mode if Stripe fails
-    const plan = new URL(request.url).searchParams.get('plan')
+    
     const userEmail = request.headers.get('x-user-email')
     const isDemoUser = userEmail === 'markluka154@gmail.com'
     
+    // Only demo user gets fallback to demo mode
     if (isDemoUser) {
-      console.log('🎭 Demo user fallback, using demo mode:', userEmail)
-    } else {
-      console.log('⚠️ Real user fallback, using demo mode due to error')
+      const plan = new URL(request.url).searchParams.get('plan')
+      console.log('Demo user fallback to demo mode')
+      return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/dashboard?demo_upgrade=true&plan=${plan}`)
     }
     
-    return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/dashboard?demo_upgrade=true&plan=${plan}`)
+    // Real users see error
+    return NextResponse.json({ 
+      error: 'Failed to create checkout session. Please try again or contact support.',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 })
   }
 }
