@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { PRICING_PLANS, formatPrice } from "@wellplate/shared"
 import Link from "next/link"
+import { useState, useEffect } from "react"
 
 const GuaranteeBadge = () => {
   return (
@@ -28,10 +29,53 @@ const GuaranteeBadge = () => {
 }
 
 export function PricingTables() {
+  const [userEmail, setUserEmail] = useState<string | null>(null)
+
+  useEffect(() => {
+    // Get user email from localStorage
+    try {
+      const userData = localStorage.getItem('wellplate:user')
+      if (userData) {
+        const user = JSON.parse(userData)
+        setUserEmail(user.email)
+      }
+    } catch (error) {
+      console.error('Error loading user data:', error)
+    }
+  }, [])
+
   const handleCtaClick = (planId: string) => {
     if (typeof window !== 'undefined') {
       ;(window as any).dataLayer = (window as any).dataLayer || []
       ;(window as any).dataLayer.push({ event: 'cta_click', id: `pricing_${planId.toLowerCase()}` })
+    }
+  }
+
+  const handleUpgradeClick = async (planId: string) => {
+    try {
+      // Make a request to the checkout API with user email
+      const response = await fetch(`/api/stripe/checkout?plan=${planId}`, {
+        method: 'GET',
+        headers: {
+          'x-user-email': userEmail || '',
+        },
+      })
+
+      if (response.redirected) {
+        // If it's a redirect (demo mode), follow it
+        window.location.href = response.url
+      } else {
+        // If it's a JSON response, handle it
+        const data = await response.json()
+        if (data.error) {
+          console.error('Checkout error:', data.error)
+          alert('Error: ' + data.error)
+        }
+      }
+    } catch (error) {
+      console.error('Error calling checkout API:', error)
+      // Fallback to direct link
+      window.location.href = `/api/stripe/checkout?plan=${planId}`
     }
   }
 
@@ -82,7 +126,7 @@ export function PricingTables() {
                 <CardDescription className="mt-4">
                   {plan.id === 'PRO_ANNUAL' && (
                     <span className="text-green-600 font-semibold">
-                      Save 51% vs monthly
+                      Save 33% vs monthly
                     </span>
                   )}
                 </CardDescription>
@@ -120,15 +164,15 @@ export function PricingTables() {
                     </Button>
                   ) : (
                     <Button 
-                      asChild 
                       className="w-full bg-green-600 hover:bg-green-700"
-                      onClick={() => handleCtaClick(plan.id)}
+                      onClick={() => {
+                        handleCtaClick(plan.id)
+                        handleUpgradeClick(plan.id)
+                      }}
                     >
-                      <Link href={`/api/stripe/checkout?plan=${plan.id}`}>
-                        {plan.id === 'FAMILY_MONTHLY' ? 'Go Family' : 
-                         plan.id === 'PRO_ANNUAL' ? 'Go Pro — Annual' : 
-                         'Go Pro — Monthly'}
-                      </Link>
+                      {plan.id === 'FAMILY_MONTHLY' ? 'Go Family' : 
+                       plan.id === 'PRO_ANNUAL' ? 'Go Pro — Annual' : 
+                       'Go Pro — Monthly'}
                     </Button>
                   )}
                 </div>

@@ -15,7 +15,7 @@ const items = [
 export function SidebarNav() {
   const pathname = usePathname()
   return (
-    <nav className="flex items-center justify-center space-x-2">
+    <nav className="flex items-center justify-center space-x-1 sm:space-x-2 overflow-x-auto pb-2">
       {items.map(({ href, label, icon: Icon }) => {
         const active = pathname === href
         return (
@@ -23,14 +23,14 @@ export function SidebarNav() {
             key={href}
             href={href}
             className={[
-              'flex items-center gap-2 rounded-xl px-4 py-2 text-sm transition',
+              'flex items-center gap-1 sm:gap-2 rounded-xl px-2 sm:px-4 py-2 text-xs sm:text-sm transition whitespace-nowrap',
               active
                 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                 : 'hover:bg-neutral-50 text-neutral-700'
             ].join(' ')}
           >
-            <Icon className="h-4 w-4" />
-            <span>{label}</span>
+            <Icon className="h-3 w-3 sm:h-4 sm:w-4" />
+            <span className="hidden xs:inline">{label}</span>
           </Link>
         )
       })}

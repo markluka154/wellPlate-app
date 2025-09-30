@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, createContext, useContext } from 'react'
 import { useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import { Header } from '@/components/layout/Header' // keep your current header
 import { SidebarNav } from '@/components/dashboard/SidebarNav'
 import { RightRail } from '@/components/dashboard/RightRail'
@@ -15,6 +16,7 @@ const AuthContext = createContext<AuthContextType>({ user: null })
 export const useAuth = () => useContext(AuthContext)
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const { data: session, status } = useSession()
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [user, setUser] = useState<{ email: string; token: string } | null>(null)
@@ -25,39 +27,62 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const authProcessed = useRef(false)
 
   useEffect(() => {
-    if (authProcessed.current) return
+    if (status === 'loading') return
 
-    const urlParams = new URLSearchParams(window.location.search)
-    const auth = urlParams.get('auth')
-    const email = urlParams.get('email')
-    const token = urlParams.get('token')
-
-    // Check for plan upgrades
-    if (urlParams.get('demo_upgrade') === 'true' || urlParams.get('success') === 'true') {
-      const plan = urlParams.get('plan') || 'PRO_MONTHLY'
-      setUserPlan(plan as 'PRO_MONTHLY' | 'PRO_ANNUAL')
-    }
-
-    // Try URL first, then fall back to localStorage (so refresh keeps session)
-    const lsUser = !auth && typeof window !== 'undefined'
-      ? JSON.parse(localStorage.getItem('wellplate:user') || 'null')
-      : null
-
-    if ((auth === 'success' && email && token) || lsUser) {
-      const nextUser = lsUser ?? { email: decodeURIComponent(email!), token: token! }
+    if (status === 'authenticated' && session?.user?.email) {
+      // User is authenticated via NextAuth
+      const nextUser = { 
+        email: session.user.email, 
+        token: 'nextauth-session' // Placeholder token for NextAuth sessions
+      }
       setUser(nextUser)
       setIsAuthenticated(true)
       setIsLoading(false)
-      authProcessed.current = true
-
-      // Persist & clean URL
+      
+      // Save to localStorage for backward compatibility
       localStorage.setItem('wellplate:user', JSON.stringify(nextUser))
-      if (auth) window.history.replaceState({}, document.title, window.location.pathname)
-    } else {
-      setIsLoading(false)
-      router.push('/signin')
+    } else if (status === 'unauthenticated') {
+      // Check for URL parameters (fallback for magic link flow)
+      const urlParams = new URLSearchParams(window.location.search)
+      const auth = urlParams.get('auth')
+      const email = urlParams.get('email')
+      const token = urlParams.get('token')
+
+      // Check for plan upgrades
+      if (urlParams.get('demo_upgrade') === 'true' || urlParams.get('success') === 'true') {
+        const plan = urlParams.get('plan') || 'PRO_MONTHLY'
+        setUserPlan(plan as 'PRO_MONTHLY' | 'PRO_ANNUAL')
+      }
+
+      if (auth === 'success' && email && token) {
+        const nextUser = { email: decodeURIComponent(email), token: token }
+        setUser(nextUser)
+        setIsAuthenticated(true)
+        setIsLoading(false)
+        
+        // Save to localStorage for persistence
+        localStorage.setItem('wellplate:user', JSON.stringify(nextUser))
+        
+        // Clean up URL
+        window.history.replaceState({}, '', '/dashboard')
+      } else {
+        // Check localStorage as fallback
+        const lsUser = typeof window !== 'undefined'
+          ? JSON.parse(localStorage.getItem('wellplate:user') || 'null')
+          : null
+
+        if (lsUser) {
+          setUser(lsUser)
+          setIsAuthenticated(true)
+          setIsLoading(false)
+        } else {
+          // No valid session found, redirect to signin
+          setIsLoading(false)
+          router.push('/signin')
+        }
+      }
     }
-  }, [router])
+  }, [status, session, router])
 
   // Fetch plan usage data
   const fetchPlanUsage = async () => {
@@ -137,7 +162,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
 
             {/* Premium Dashboard Header */}
-            <div className="relative overflow-hidden rounded-3xl border border-gradient-to-r from-purple-200/50 to-pink-200/50 bg-gradient-to-br from-white via-purple-50/20 to-pink-50/20 shadow-xl p-8">
+            <div className="relative overflow-hidden rounded-3xl border border-gradient-to-r from-purple-200/50 to-pink-200/50 bg-gradient-to-br from-white via-purple-50/20 to-pink-50/20 shadow-xl p-4 sm:p-6 lg:p-8">
               {/* Premium Background Pattern */}
               <div className="absolute inset-0 opacity-5">
                 <div className="absolute top-0 right-0 h-40 w-40 rounded-full bg-gradient-to-r from-purple-400 to-pink-400 blur-3xl"></div>
@@ -146,39 +171,40 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </div>
               
               <div className="relative">
-                <div className="flex items-center justify-between flex-wrap gap-6">
-                  <div className="flex items-center gap-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6">
+                  <div className="flex items-center gap-3 sm:gap-4">
                     {/* Premium Icon */}
-                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-r from-purple-500 via-purple-400 to-pink-500 shadow-xl">
-                      <span className="text-white font-bold text-2xl">👑</span>
+                    <div className="flex h-12 w-12 sm:h-16 sm:w-16 items-center justify-center rounded-2xl bg-gradient-to-r from-purple-500 via-purple-400 to-pink-500 shadow-xl">
+                      <span className="text-white font-bold text-lg sm:text-2xl">👑</span>
                     </div>
                     
                     {/* Premium Text */}
                     <div>
-                      <h1 className="text-4xl font-bold leading-none tracking-tight bg-gradient-to-r from-gray-900 via-purple-800 to-pink-800 bg-clip-text text-transparent">
+                      <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold leading-none tracking-tight bg-gradient-to-r from-gray-900 via-purple-800 to-pink-800 bg-clip-text text-transparent">
                         Dashboard
                       </h1>
-                      <p className="mt-2 text-lg text-gray-600 font-medium">
+                      <p className="mt-1 sm:mt-2 text-sm sm:text-base lg:text-lg text-gray-600 font-medium">
                         Welcome back{user?.email ? `, ${user.email.split('@')[0]}` : ''}! 👋
                       </p>
-                      <div className="mt-2 flex items-center gap-2 text-sm text-gray-500">
+                      <div className="mt-1 sm:mt-2 flex items-center gap-2 text-xs sm:text-sm text-gray-500">
                         <div className="h-2 w-2 bg-purple-500 rounded-full animate-pulse"></div>
-                        <span>Ready to create your next meal plan</span>
+                        <span className="hidden sm:inline">Ready to create your next meal plan</span>
+                        <span className="sm:hidden">Ready to create</span>
                       </div>
                     </div>
                   </div>
                   
                   {/* Premium Plan Badge */}
-                  <div className="flex items-center gap-4">
-                    <div className="relative">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 w-full sm:w-auto">
+                    <div className="relative w-full sm:w-auto">
                       <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-purple-500 to-pink-500 blur-sm opacity-50"></div>
-                      <div className="relative rounded-2xl border border-purple-200/50 bg-gradient-to-r from-purple-50 to-pink-50 px-6 py-3 shadow-lg">
+                      <div className="relative rounded-2xl border border-purple-200/50 bg-gradient-to-r from-purple-50 to-pink-50 px-4 sm:px-6 py-3 shadow-lg">
                         <div className="flex items-center gap-3">
-                          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-r from-purple-500 to-pink-500">
-                            <span className="text-white font-bold text-sm">✨</span>
+                          <div className="flex h-6 w-6 sm:h-8 sm:w-8 items-center justify-center rounded-xl bg-gradient-to-r from-purple-500 to-pink-500">
+                            <span className="text-white font-bold text-xs sm:text-sm">✨</span>
                           </div>
                           <div>
-                            <div className="text-sm font-bold text-purple-800">
+                            <div className="text-xs sm:text-sm font-bold text-purple-800">
                               {userPlan === 'FREE' ? 'FREE Plan' : 
                                userPlan === 'PRO_MONTHLY' ? 'PRO Monthly' : 
                                userPlan === 'PRO_ANNUAL' ? 'PRO Annual' :
@@ -199,9 +225,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     {userPlan === 'FREE' && (
                       <button 
                         onClick={() => window.open('/pricing', '_blank')}
-                        className="group relative inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 px-4 py-2 text-sm font-bold text-white shadow-lg shadow-purple-500/25 transition-all duration-300 hover:shadow-xl hover:shadow-purple-500/40 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-purple-300/50"
+                        className="group relative inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold text-white shadow-lg shadow-purple-500/25 transition-all duration-300 hover:shadow-xl hover:shadow-purple-500/40 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-purple-300/50 w-full sm:w-auto justify-center"
                       >
-                        <span className="text-sm">🚀</span>
+                        <span className="text-xs sm:text-sm">🚀</span>
                         <span>Upgrade</span>
                       </button>
                     )}
@@ -212,8 +238,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 {userPlan === 'FREE' && (
                   <div className="mt-4">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-purple-700">Monthly Plan Usage</span>
-                      <span className="text-sm text-purple-600">{plansUsedThisMonth}/3 used</span>
+                      <span className="text-xs sm:text-sm font-medium text-purple-700">Monthly Plan Usage</span>
+                      <span className="text-xs sm:text-sm text-purple-600">{plansUsedThisMonth}/3 used</span>
                     </div>
                     <div className="w-full bg-purple-100 rounded-full h-2">
                       <div 

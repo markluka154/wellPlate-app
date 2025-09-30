@@ -82,6 +82,7 @@ export default function DashboardPage() {
     plan: string
     isDemo: boolean
   }>({ plan: '', isDemo: false })
+  const [showMealPlanSuccess, setShowMealPlanSuccess] = useState(false)
 
   // Handle URL parameters for demo upgrades and success messages
   React.useEffect(() => {
@@ -591,8 +592,8 @@ export default function DashboardPage() {
       const result = await response.json()
       console.log('Meal plan generated successfully:', result)
 
-      // Show success message
-      alert('🎉 Meal plan generated successfully! Check your email for the complete plan with PDF attachment.')
+      // Show success modal
+      setShowMealPlanSuccess(true)
 
       // Refresh meal plans to show the new one
       await fetchUserMealPlans()
@@ -600,15 +601,16 @@ export default function DashboardPage() {
       // Refresh plan usage in the layout
       refreshPlanUsage()
 
-      // Redirect to meal plans page to view and favorite meals
+      // Redirect to meal plans page to view and favorite meals after modal is shown
       setTimeout(() => {
         window.location.href = '/dashboard/plans'
-      }, 1500)
+      }, 3000)
 
     } catch (error) {
       console.error('Error generating meal plan:', error)
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
-      alert(`❌ Failed to generate meal plan: ${errorMessage}`)
+      // Show error notification instead of alert
+      showUpgrade('Generation Failed', `Failed to generate meal plan: ${errorMessage}`, 'Meal Plan Generation')
     } finally {
       // Reset button state
       const button = document.querySelector('[data-generate-button]') as HTMLButtonElement
@@ -677,7 +679,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       {/* Main Content Grid - Side by Side */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Meal Preferences */}
         <section>
           <div className="relative overflow-hidden rounded-3xl border border-gradient-to-r from-emerald-200/50 to-blue-200/50 bg-gradient-to-br from-white via-emerald-50/30 to-blue-50/30 shadow-xl h-full flex flex-col">
@@ -688,14 +690,14 @@ export default function DashboardPage() {
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 h-16 w-16 rounded-full bg-gradient-to-r from-emerald-300 to-blue-300 blur-xl"></div>
             </div>
             
-            <div className="relative p-8">
-              <header className="mb-8">
+            <div className="relative p-4 sm:p-6 lg:p-8">
+              <header className="mb-6 sm:mb-8">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-r from-emerald-500 to-blue-500 shadow-lg">
-                    <span className="text-white font-bold text-lg">⚡</span>
+                  <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-gradient-to-r from-emerald-500 to-blue-500 shadow-lg">
+                    <span className="text-white font-bold text-sm sm:text-lg">⚡</span>
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold leading-none tracking-tight bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                    <h2 className="text-xl sm:text-2xl font-bold leading-none tracking-tight bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
                       Meal Preferences
                     </h2>
                     <p className="mt-1 text-sm text-gray-600 font-medium">
@@ -707,7 +709,7 @@ export default function DashboardPage() {
               </header>
 
               {/* Premium Form Grid */}
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2">
                 <FormField label="Age">
                   <input
                     type="number"
@@ -1007,10 +1009,10 @@ export default function DashboardPage() {
                     />
                     </div>
          {/* Quick Actions Section */}
-         <section className="mt-6">
-           <div className="rounded-2xl border border-neutral-100 bg-white p-6 shadow-sm">
+         <section className="mt-4 sm:mt-6">
+           <div className="rounded-2xl border border-neutral-100 bg-white p-4 sm:p-6 shadow-sm">
              <div className="flex items-center justify-between mb-4">
-               <h3 className="text-lg font-semibold text-gray-900">Quick Actions</h3>
+               <h3 className="text-base sm:text-lg font-semibold text-gray-900">Quick Actions</h3>
                {userPlan === 'FREE' && (
                  <div className="flex items-center gap-1 text-xs text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
                    <Crown className="h-3 w-3" />
@@ -1018,7 +1020,7 @@ export default function DashboardPage() {
                  </div>
                )}
              </div>
-             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4">
                <button 
                  onClick={() => {
                    if (userPlan === 'FREE') {
@@ -1028,25 +1030,25 @@ export default function DashboardPage() {
                    }
                  }}
                  disabled={userPlan === 'FREE'}
-                 className={`relative overflow-hidden flex flex-col items-center p-6 rounded-2xl border transition-all duration-300 group ${
+                 className={`relative overflow-hidden flex flex-col items-center p-3 sm:p-6 rounded-2xl border transition-all duration-300 group ${
                    userPlan === 'FREE' 
                      ? 'border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100 cursor-not-allowed opacity-60' 
                      : 'border-gray-200 bg-gradient-to-br from-white to-emerald-50/30 hover:border-emerald-200 hover:shadow-lg hover:shadow-emerald-100/50 hover:-translate-y-1'
                  }`}
                >
                  <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                 <div className={`relative w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-all duration-300 ${
+                 <div className={`relative w-8 h-8 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center mb-2 sm:mb-4 transition-all duration-300 ${
                    userPlan === 'FREE' 
                      ? 'bg-gray-100' 
                      : 'bg-gradient-to-br from-emerald-100 to-emerald-200 group-hover:from-emerald-200 group-hover:to-emerald-300 group-hover:scale-110'
                  }`}>
-                   <svg className={`w-6 h-6 ${
+                   <svg className={`w-4 h-4 sm:w-6 sm:h-6 ${
                      userPlan === 'FREE' ? 'text-gray-400' : 'text-emerald-600'
                    }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                    </svg>
                  </div>
-                 <span className={`text-sm font-semibold ${
+                 <span className={`text-xs sm:text-sm font-semibold ${
                    userPlan === 'FREE' ? 'text-gray-400' : 'text-gray-800'
                  }`}>Analytics</span>
                  <span className={`text-xs mt-1 ${
@@ -1063,25 +1065,25 @@ export default function DashboardPage() {
                    }
                  }}
                  disabled={userPlan === 'FREE'}
-                 className={`relative overflow-hidden flex flex-col items-center p-6 rounded-2xl border transition-all duration-300 group ${
+                 className={`relative overflow-hidden flex flex-col items-center p-3 sm:p-6 rounded-2xl border transition-all duration-300 group ${
                    userPlan === 'FREE' 
                      ? 'border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100 cursor-not-allowed opacity-60' 
                      : 'border-gray-200 bg-gradient-to-br from-white to-blue-50/30 hover:border-blue-200 hover:shadow-lg hover:shadow-blue-100/50 hover:-translate-y-1'
                  }`}
                >
                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                 <div className={`relative w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-all duration-300 ${
+                 <div className={`relative w-8 h-8 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center mb-2 sm:mb-4 transition-all duration-300 ${
                    userPlan === 'FREE' 
                      ? 'bg-gray-100' 
                      : 'bg-gradient-to-br from-blue-100 to-blue-200 group-hover:from-blue-200 group-hover:to-blue-300 group-hover:scale-110'
                  }`}>
-                   <svg className={`w-6 h-6 ${
+                   <svg className={`w-4 h-4 sm:w-6 sm:h-6 ${
                      userPlan === 'FREE' ? 'text-gray-400' : 'text-blue-600'
                    }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                    </svg>
                  </div>
-                 <span className={`text-sm font-semibold ${
+                 <span className={`text-xs sm:text-sm font-semibold ${
                    userPlan === 'FREE' ? 'text-gray-400' : 'text-gray-800'
                  }`}>My Favorites</span>
                  <span className={`text-xs mt-1 ${
@@ -1568,6 +1570,83 @@ export default function DashboardPage() {
                   Demo mode • No real charges
                 </p>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Meal Plan Generation Success Modal */}
+      {showMealPlanSuccess && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden">
+            {/* Header with gradient */}
+            <div className="relative bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 p-8 text-center">
+              <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
+              <div className="relative">
+                <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
+                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <h2 className="text-2xl font-bold text-white mb-2">
+                  🎉 Meal Plan Generated!
+                </h2>
+                <p className="text-emerald-100 text-lg">
+                  Your personalized meal plan is ready
+                </p>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="p-8">
+              <div className="text-center mb-6">
+                <div className="w-12 h-12 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  Check Your Email
+                </h3>
+                <p className="text-gray-600 leading-relaxed">
+                  Your complete meal plan with PDF attachment has been sent to your email address. You can also view it in the meal plans section.
+                </p>
+              </div>
+
+              {/* Features list */}
+              <div className="space-y-3 mb-8">
+                {[
+                  'Complete meal plan with recipes',
+                  'PDF attachment for offline access',
+                  'Nutritional information included',
+                  'Shopping list generated',
+                  'Ready to favorite meals'
+                ].map((feature, index) => (
+                  <div key={index} className="flex items-center gap-3">
+                    <div className="w-5 h-5 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <svg className="w-3 h-3 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <span className="text-gray-700 font-medium">{feature}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Action button */}
+              <button
+                onClick={() => {
+                  setShowMealPlanSuccess(false)
+                  window.location.href = '/dashboard/plans'
+                }}
+                className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold py-4 px-6 rounded-2xl transition-all duration-200 transform hover:scale-[1.02] hover:shadow-lg"
+              >
+                View Meal Plans
+              </button>
+
+              <p className="text-center text-sm text-gray-500 mt-4">
+                Redirecting automatically in a few seconds...
+              </p>
             </div>
           </div>
         </div>

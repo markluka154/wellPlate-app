@@ -81,7 +81,7 @@ export const PRICING_PLANS: PricingPlan[] = [
   {
     id: 'PRO_MONTHLY',
     name: 'Pro Monthly',
-    price: 9.99,
+    price: 14.99,
     features: [
       'Unlimited plans',
       'Custom macros target',
@@ -111,7 +111,7 @@ export const PRICING_PLANS: PricingPlan[] = [
   {
     id: 'PRO_ANNUAL',
     name: 'Pro Annual',
-    price: 59,
+    price: 119.99,
     features: [
       'Unlimited plans',
       'Custom macros target',
@@ -120,7 +120,7 @@ export const PRICING_PLANS: PricingPlan[] = [
       'Email delivery',
       'PDF download',
       'Seasonal recipe packs',
-      'Best value - 51% off'
+      'Best value - 33% off'
     ]
   }
 ];
