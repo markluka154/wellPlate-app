@@ -597,6 +597,42 @@ html {
   color: #1f2937;
 }
 
+/* Mobile Optimization - Prevent jiggle/bounce on swipe */
+@media (max-width: 768px) {
+  html {
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  body {
+    overflow-x: hidden;
+    position: relative;
+    width: 100%;
+    -webkit-text-size-adjust: 100%;
+  }
+  
+  * {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  
+  /* Prevent horizontal scroll/bounce */
+  body, html {
+    overscroll-behavior-x: none;
+  }
+  
+  /* Smooth font rendering */
+  * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* Prevent zoom on input focus */
+  input, select, textarea, button {
+    font-size: 16px !important;
+  }
+}
+
 @media print {
   .print-header,
   .print-footer {

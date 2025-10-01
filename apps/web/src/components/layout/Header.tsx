@@ -33,38 +33,38 @@ export function Header() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2">
+          <Link href="/" className="flex items-center space-x-2 flex-shrink-0">
             <div className="h-8 w-8 rounded-full bg-brand flex items-center justify-center">
               <span className="text-white font-bold text-sm">W</span>
             </div>
             <span className="text-xl font-bold text-gray-900">WellPlate</span>
           </Link>
 
-          {/* Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
-            <Link href="/pricing" className="text-gray-600 hover:text-gray-900">
+          {/* Navigation - Centered */}
+          <nav className="hidden md:flex items-center justify-center flex-1 space-x-8">
+            <Link href="/pricing" className="text-gray-600 hover:text-gray-900 transition-colors">
               Pricing
-            </Link>
-            <Link href="/faq" className="text-gray-600 hover:text-gray-900">
-              FAQ
             </Link>
             {user ? (
               <Link 
                 href="/dashboard" 
-                className="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium text-white bg-brand hover:bg-brand/90 transition-colors"
+                className="text-gray-600 hover:text-gray-900 transition-colors font-medium"
               >
                 Dashboard
               </Link>
             ) : null}
+            <Link href="/faq" className="text-gray-600 hover:text-gray-900 transition-colors">
+              FAQ
+            </Link>
           </nav>
 
           {/* Desktop Auth buttons */}
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden md:flex items-center space-x-4 flex-shrink-0">
             {isLoading ? (
               <div className="h-9 w-20 bg-gray-200 rounded animate-pulse"></div>
             ) : user ? (
               <div className="flex items-center space-x-4">
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-gray-600 truncate max-w-[150px]">
                   {user.email}
                 </span>
                 <Button
@@ -96,10 +96,11 @@ export function Header() {
           </div>
 
           {/* Mobile menu button */}
-          <div className="md:hidden">
+          <div className="md:hidden flex-shrink-0">
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+              className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 touch-manipulation"
+              aria-label="Toggle menu"
             >
               {isMobileMenuOpen ? (
                 <X className="h-6 w-6" />
@@ -116,28 +117,30 @@ export function Header() {
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white border-t">
               <Link
                 href="/pricing"
-                className="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                className="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 touch-manipulation active:bg-gray-100"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Pricing
               </Link>
+              {user ? (
+                <Link
+                  href="/dashboard"
+                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 touch-manipulation active:bg-gray-100"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Dashboard
+                </Link>
+              ) : null}
               <Link
                 href="/faq"
-                className="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                className="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 touch-manipulation active:bg-gray-100"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 FAQ
               </Link>
               {user ? (
                 <>
-                  <Link
-                    href="/dashboard"
-                    className="block px-3 py-2 rounded-md text-base font-medium text-white bg-brand hover:bg-brand/90"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    Dashboard
-                  </Link>
-                  <div className="px-3 py-2 text-sm text-gray-600">
+                  <div className="px-3 py-2 text-sm text-gray-600 truncate">
                     {user.email}
                   </div>
                   <button
@@ -145,7 +148,7 @@ export function Header() {
                       handleSignOut()
                       setIsMobileMenuOpen(false)
                     }}
-                    className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                    className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 touch-manipulation active:bg-gray-100"
                   >
                     Sign Out
                   </button>
@@ -154,14 +157,14 @@ export function Header() {
                 <>
                   <Link
                     href="/signin"
-                    className="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                    className="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 touch-manipulation active:bg-gray-100"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     Sign In
                   </Link>
                   <Link
                     href="/signin"
-                    className="block px-3 py-2 rounded-md text-base font-medium text-white bg-brand hover:bg-brand/90"
+                    className="block px-3 py-2 rounded-md text-base font-medium text-white bg-brand hover:bg-brand/90 touch-manipulation active:bg-brand"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     Get Started
