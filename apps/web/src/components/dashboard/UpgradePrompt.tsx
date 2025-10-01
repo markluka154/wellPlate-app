@@ -37,6 +37,66 @@ export function UpgradePrompt({ isOpen, onClose, title, message, feature }: Upgr
   const planName = isFamilyFeature ? 'Family Monthly' : 'Pro'
   const planPrice = isFamilyFeature ? '€24.99' : '€9.99'
 
+  const handleUpgrade = async () => {
+    try {
+      // Check if user is logged in
+      const userData = localStorage.getItem('wellplate:user')
+      
+      if (!userData) {
+        alert('Please sign in first to upgrade your plan')
+        window.location.href = '/signin'
+        return
+      }
+
+      const user = JSON.parse(userData)
+      const userEmail = user.email
+
+      if (!userEmail) {
+        alert('Unable to find your email. Please sign in again.')
+        window.location.href = '/signin'
+        return
+      }
+
+      const planId = isFamilyFeature ? 'FAMILY_MONTHLY' : 'PRO_MONTHLY'
+      
+      console.log('Initiating checkout with email:', userEmail, 'plan:', planId)
+      
+      const response = await fetch(`/api/stripe/checkout?plan=${planId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-email': userEmail,
+        },
+      })
+
+      console.log('Checkout response status:', response.status)
+
+      if (response.redirected) {
+        console.log('Redirecting to:', response.url)
+        window.location.href = response.url
+        return
+      }
+
+      const data = await response.json()
+      
+      if (data.error) {
+        console.error('Checkout error:', data.error)
+        alert(`Error: ${data.error}`)
+        return
+      }
+
+      // If we get here with no redirect and no error, something unexpected happened
+      console.warn('Unexpected response:', data)
+      alert('Something went wrong. Please try again or contact support.')
+      
+    } catch (error) {
+      console.error('Error calling checkout API:', error)
+      alert('Unable to start checkout. Please try again or contact support.')
+    } finally {
+      onClose()
+    }
+  }
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
       <div className="relative bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden">
@@ -92,35 +152,7 @@ export function UpgradePrompt({ isOpen, onClose, title, message, feature }: Upgr
           {/* CTA Buttons */}
           <div className="space-y-3">
             <button
-              onClick={async () => {
-                try {
-                  const userData = localStorage.getItem('wellplate:user')
-                  const userEmail = userData ? JSON.parse(userData).email : null
-                  const planId = isFamilyFeature ? 'FAMILY_MONTHLY' : 'PRO_MONTHLY'
-                  
-                  const response = await fetch(`/api/stripe/checkout?plan=${planId}`, {
-                    method: 'GET',
-                    headers: {
-                      'x-user-email': userEmail || '',
-                    },
-                  })
-
-                  if (response.redirected) {
-                    window.location.href = response.url
-                  } else {
-                    const data = await response.json()
-                    if (data.error) {
-                      console.error('Checkout error:', data.error)
-                      alert('Error: ' + data.error)
-                    }
-                  }
-                } catch (error) {
-                  console.error('Error calling checkout API:', error)
-                  // Fallback to pricing page
-                  window.open('/pricing', '_blank')
-                }
-                onClose()
-              }}
+              onClick={handleUpgrade}
               className="w-full bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-700 hover:to-blue-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 hover:scale-105"
             >
               Upgrade to {planName} - {planPrice}/month
