@@ -4,10 +4,37 @@ import React, { useState } from 'react'
 import { ChevronLeft, ChevronRight, Crown, Edit2, Check, X, ArrowLeft } from 'lucide-react'
 import { UpgradePrompt } from '@/components/dashboard/UpgradePrompt'
 import { ProBadge } from '@/components/dashboard/ProBadge'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useEffect } from 'react'
 
 export default function DashboardPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  // Handle magic link authentication on first visit
+  useEffect(() => {
+    if (!searchParams) return
+
+    const auth = searchParams.get('auth')
+    const email = searchParams.get('email')
+    const token = searchParams.get('token')
+
+    if (auth === 'success' && email && token) {
+      console.log('🔐 Setting up authentication from magic link')
+      
+      // Set user data in localStorage
+      localStorage.setItem('wellplate:user', JSON.stringify({
+        email: decodeURIComponent(email),
+        token: token,
+        plan: 'FREE'
+      }))
+
+      // Clean up URL by removing query params
+      router.replace('/dashboard')
+      
+      console.log('✅ Authentication complete')
+    }
+  }, [searchParams, router])
   
   // Demo state — wire up to your real state/actions
   const [age, setAge] = useState(30)
