@@ -52,13 +52,16 @@ export function PricingTables() {
   }
 
   const handleUpgradeClick = async (planId: string) => {
+    if (!userEmail) {
+      alert('Please sign in first to upgrade')
+      window.location.href = '/signin'
+      return
+    }
+
     try {
       // Make a request to the checkout API with user email
-      const response = await fetch(`/api/stripe/checkout?plan=${planId}`, {
+      const response = await fetch(`/api/stripe/checkout?plan=${planId}&email=${encodeURIComponent(userEmail)}`, {
         method: 'GET',
-        headers: {
-          'x-user-email': userEmail || '',
-        },
       })
 
       if (response.redirected) {
@@ -74,8 +77,7 @@ export function PricingTables() {
       }
     } catch (error) {
       console.error('Error calling checkout API:', error)
-      // Fallback to direct link
-      window.location.href = `/api/stripe/checkout?plan=${planId}`
+      alert('Unable to start checkout. Please try again.')
     }
   }
 

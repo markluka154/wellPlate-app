@@ -211,11 +211,8 @@ export function RightRail() {
                 const userEmail = userData ? JSON.parse(userData).email : null
                 const planId = isFamilyPage ? 'FAMILY_MONTHLY' : 'PRO_MONTHLY'
                 
-                const response = await fetch(`/api/stripe/checkout?plan=${planId}`, {
+                const response = await fetch(`/api/stripe/checkout?plan=${planId}&email=${encodeURIComponent(userEmail || '')}`, {
                   method: 'GET',
-                  headers: {
-                    'x-user-email': userEmail || '',
-                  },
                 })
 
                 if (response.redirected) {
