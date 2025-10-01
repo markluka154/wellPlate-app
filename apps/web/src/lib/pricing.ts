@@ -7,11 +7,11 @@ export function getPricingPlan(planId: PlanType) {
 export function getStripePriceId(planId: PlanType): string {
   switch (planId) {
     case 'PRO_MONTHLY':
-      return process.env.STRIPE_PRICE_PRO_MONTHLY_EUR || 'price_demo_monthly'
+      return process.env.STRIPE_PRICE_PRO_MONTHLY_EUR || 'price_1SDLIUJRslGm2z7TXfbI3YEs'
     case 'PRO_ANNUAL':
-      return process.env.STRIPE_PRICE_PRO_ANNUAL_EUR || 'price_demo_annual'
+      return process.env.STRIPE_PRICE_PRO_ANNUAL_EUR || 'price_1SDLJYJRslGm2z7TUVNos00w'
     case 'FAMILY_MONTHLY':
-      return process.env.STRIPE_PRICE_FAMILY_MONTHLY_EUR || 'price_demo_family'
+      return process.env.STRIPE_PRICE_FAMILY_MONTHLY_EUR || 'price_1SDLK8JRslGm2z7TJMsddb6z'
     default:
       throw new Error(`No Stripe price ID for plan: ${planId}`)
   }
