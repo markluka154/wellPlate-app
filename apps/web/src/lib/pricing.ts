@@ -7,11 +7,11 @@ export function getPricingPlan(planId: PlanType) {
 export function getStripePriceId(planId: PlanType): string {
   switch (planId) {
     case 'PRO_MONTHLY':
-      return process.env.STRIPE_PRICE_PRO_MONTHLY_EUR || 'price_1SDLIUJRslGm2z7TXfbI3YEs'
+      return process.env.STRIPE_PRICE_PRO_MONTHLY_EUR || 'price_1SDLwYJRslGm2z7T2BrjzEP4'
     case 'PRO_ANNUAL':
-      return process.env.STRIPE_PRICE_PRO_ANNUAL_EUR || 'price_1SDLJYJRslGm2z7TUVNos00w'
+      return process.env.STRIPE_PRICE_PRO_ANNUAL_EUR || 'price_1SDLxLJRslGm2z7Td0qfarao'
     case 'FAMILY_MONTHLY':
-      return process.env.STRIPE_PRICE_FAMILY_MONTHLY_EUR || 'price_1SDLK8JRslGm2z7TJMsddb6z'
+      return process.env.STRIPE_PRICE_FAMILY_MONTHLY_EUR || 'price_1SDLxsJRslGm2z7TuTKM8Zpv'
     default:
       throw new Error(`No Stripe price ID for plan: ${planId}`)
   }
@@ -28,7 +28,7 @@ export function getPlanLimits(planId: PlanType) {
   switch (planId) {
     case 'FREE':
       return {
-        plansPerMonth: 3, // Free users get 3 plans per month
+        plansPerMonth: 3,
         hasCustomMacros: false,
         hasPriorityGeneration: false,
         hasHistory: false,
@@ -37,7 +37,7 @@ export function getPlanLimits(planId: PlanType) {
     case 'PRO_MONTHLY':
     case 'PRO_ANNUAL':
       return {
-        plansPerMonth: -1, // unlimited
+        plansPerMonth: -1,
         hasCustomMacros: true,
         hasPriorityGeneration: true,
         hasHistory: true,
@@ -45,7 +45,7 @@ export function getPlanLimits(planId: PlanType) {
       }
     case 'FAMILY_MONTHLY':
       return {
-        plansPerMonth: -1, // unlimited
+        plansPerMonth: -1,
         hasCustomMacros: true,
         hasPriorityGeneration: true,
         hasHistory: true,
