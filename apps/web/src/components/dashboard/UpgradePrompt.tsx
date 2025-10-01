@@ -61,12 +61,8 @@ export function UpgradePrompt({ isOpen, onClose, title, message, feature }: Upgr
       
       console.log('Initiating checkout with email:', userEmail, 'plan:', planId)
       
-      const response = await fetch(`/api/stripe/checkout?plan=${planId}`, {
+      const response = await fetch(`/api/stripe/checkout?plan=${planId}&email=${encodeURIComponent(userEmail)}`, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-email': userEmail,
-        },
       })
 
       console.log('Checkout response status:', response.status)

@@ -15,13 +15,18 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const plan = searchParams.get('plan')
-    const userEmail = request.headers.get('x-user-email')
+    
+    // Try to get email from header first, then from query parameter
+    const userEmail = request.headers.get('x-user-email') || searchParams.get('email')
+
+    console.log('Checkout request:', { plan, userEmail, hasHeader: !!request.headers.get('x-user-email'), hasParam: !!searchParams.get('email') })
 
     if (!plan || !['PRO_MONTHLY', 'PRO_ANNUAL', 'FAMILY_MONTHLY'].includes(plan)) {
       return NextResponse.json({ error: 'Invalid plan' }, { status: 400 })
     }
 
     if (!userEmail) {
+      console.error('No email found in headers or query params')
       return NextResponse.json({ error: 'User email required' }, { status: 401 })
     }
 
@@ -87,12 +92,13 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Checkout error:', error)
     
-    const userEmail = request.headers.get('x-user-email')
+    const { searchParams } = new URL(request.url)
+    const userEmail = request.headers.get('x-user-email') || searchParams.get('email')
     const isDemoUser = userEmail === 'markluka154@gmail.com'
     
     // Only demo user gets fallback to demo mode
     if (isDemoUser) {
-      const plan = new URL(request.url).searchParams.get('plan')
+      const plan = searchParams.get('plan')
       console.log('Demo user fallback to demo mode')
       return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/dashboard?demo_upgrade=true&plan=${plan}`)
     }
