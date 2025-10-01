@@ -4,80 +4,56 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { PRICING_PLANS, formatPrice } from "@wellplate/shared"
 import Link from "next/link"
-import { useState, useEffect } from "react"
 
-const GuaranteeBadge = () => {
-  return (
-    <div className="mt-12 text-center">
-      <div className="inline-flex items-center px-6 py-3 bg-green-50 border border-green-200 rounded-full">
-        <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-            <span className="text-white text-sm font-bold">✓</span>
+const GuaranteeBadge = () => (
+  <div className="mt-12 text-center">
+    <div className="inline-flex items-center px-6 py-3 bg-green-50 border border-green-200 rounded-full">
+      <div className="flex items-center space-x-2">
+        <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+          <span className="text-white text-sm font-bold">✓</span>
+        </div>
+        <div className="text-left">
+          <div className="text-sm font-semibold text-green-800">
+            30-day money-back guarantee
           </div>
-          <div className="text-left">
-            <div className="text-sm font-semibold text-green-800">
-              30-day money-back guarantee
-            </div>
-            <div className="text-xs text-green-600">
-              No hidden fees • Cancel anytime
-            </div>
+          <div className="text-xs text-green-600">
+            No hidden fees • Cancel anytime
           </div>
         </div>
       </div>
     </div>
-  )
-}
+  </div>
+)
 
 export function PricingTables() {
-  const [userEmail, setUserEmail] = useState<string | null>(null)
-
-  useEffect(() => {
-    // Get user email from localStorage
-    try {
-      const userData = localStorage.getItem('wellplate:user')
-      if (userData) {
-        const user = JSON.parse(userData)
-        setUserEmail(user.email)
-      }
-    } catch (error) {
-      console.error('Error loading user data:', error)
-    }
-  }, [])
-
   const handleCtaClick = (planId: string) => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       ;(window as any).dataLayer = (window as any).dataLayer || []
-      ;(window as any).dataLayer.push({ event: 'cta_click', id: `pricing_${planId.toLowerCase()}` })
+      ;(window as any).dataLayer.push({
+        event: "cta_click",
+        id: `pricing_${planId.toLowerCase()}`,
+      })
     }
   }
 
   const handleUpgradeClick = async (planId: string) => {
-    if (!userEmail) {
-      alert('Please sign in first to upgrade')
-      window.location.href = '/signin'
-      return
-    }
-
     try {
-      // Make a request to the checkout API with user email
-      const response = await fetch(`/api/stripe/checkout?plan=${planId}&email=${encodeURIComponent(userEmail)}`, {
-        method: 'GET',
+      // 🔑 Only send plan — server gets email from NextAuth
+      const response = await fetch(`/api/checkout?plan=${planId}`, {
+        method: "GET",
       })
 
       if (response.redirected) {
-        // If it's a redirect (demo mode), follow it
         window.location.href = response.url
       } else {
-        // If it's a JSON response, handle it
         const data = await response.json()
         if (data.error) {
-          console.error('Checkout error:', data.error)
-          alert('Error: ' + data.error)
+          alert("Error: " + data.error)
         }
       }
-    } catch (error) {
-      console.error('Error calling checkout API:', error)
-      alert('Unable to start checkout. Please try again.')
+    } catch (err) {
+      console.error("Checkout error:", err)
+      alert("Unable to start checkout. Please try again.")
     }
   }
 
@@ -98,7 +74,7 @@ export function PricingTables() {
             <Card
               key={plan.id}
               className={`relative ${
-                plan.popular ? 'border-green-500 shadow-lg scale-105' : ''
+                plan.popular ? "border-green-500 shadow-lg scale-105" : ""
               }`}
             >
               {plan.popular && (
@@ -107,12 +83,11 @@ export function PricingTables() {
                     <span className="rounded-full bg-green-500 px-4 py-1 text-sm font-medium text-white">
                       Most Popular
                     </span>
-                    {/* Corner Ribbon */}
                     <div className="absolute -top-2 -right-2 w-0 h-0 border-l-[20px] border-l-transparent border-r-[20px] border-r-transparent border-b-[20px] border-b-green-600 transform rotate-45"></div>
                   </div>
                 </div>
               )}
-              
+
               <CardHeader className="text-center">
                 <CardTitle className="text-2xl">{plan.name}</CardTitle>
                 <div className="mt-4">
@@ -121,12 +96,12 @@ export function PricingTables() {
                   </span>
                   {plan.price > 0 && (
                     <span className="text-gray-500">
-                      {plan.id === 'PRO_ANNUAL' ? '/year' : '/month'}
+                      {plan.id === "PRO_ANNUAL" ? "/year" : "/month"}
                     </span>
                   )}
                 </div>
                 <CardDescription className="mt-4">
-                  {plan.id === 'PRO_ANNUAL' && (
+                  {plan.id === "PRO_ANNUAL" && (
                     <span className="text-green-600 font-semibold">
                       Save 33% vs monthly
                     </span>
@@ -136,8 +111,8 @@ export function PricingTables() {
 
               <CardContent>
                 <ul className="space-y-3">
-                  {plan.features.map((feature, index) => (
-                    <li key={index} className="flex items-start">
+                  {plan.features.map((feature, idx) => (
+                    <li key={idx} className="flex items-start">
                       <svg
                         className="mr-3 mt-0.5 h-5 w-5 text-green-500"
                         fill="currentColor"
@@ -155,26 +130,28 @@ export function PricingTables() {
                 </ul>
 
                 <div className="mt-8">
-                  {plan.id === 'FREE' ? (
-                    <Button 
-                      asChild 
-                      className="w-full" 
+                  {plan.id === "FREE" ? (
+                    <Button
+                      asChild
+                      className="w-full"
                       variant="outline"
                       onClick={() => handleCtaClick(plan.id)}
                     >
                       <Link href="/signin">Get Started</Link>
                     </Button>
                   ) : (
-                    <Button 
+                    <Button
                       className="w-full bg-green-600 hover:bg-green-700"
                       onClick={() => {
                         handleCtaClick(plan.id)
                         handleUpgradeClick(plan.id)
                       }}
                     >
-                      {plan.id === 'FAMILY_MONTHLY' ? 'Go Family' : 
-                       plan.id === 'PRO_ANNUAL' ? 'Go Pro — Annual' : 
-                       'Go Pro — Monthly'}
+                      {plan.id === "FAMILY_MONTHLY"
+                        ? "Go Family"
+                        : plan.id === "PRO_ANNUAL"
+                        ? "Go Pro — Annual"
+                        : "Go Pro — Monthly"}
                     </Button>
                   )}
                 </div>
