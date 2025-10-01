@@ -33,7 +33,7 @@ export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
     EmailProvider({
-      from: 'noreply@wellplate.eu',
+      from: 'WellPlate <hello@wellplate.eu>',
       maxAge: 24 * 60 * 60, // 24 hours
       sendVerificationRequest: async ({ identifier: email, url, provider }) => {
         try {
@@ -49,7 +49,7 @@ export const authOptions: NextAuthOptions = {
           }
           
           const { data, error } = await resend.emails.send({
-            from: 'WellPlate <noreply@wellplate.eu>',
+            from: 'WellPlate <hello@wellplate.eu>',
             to: [email],
             subject: 'Sign in to WellPlate',
             html: `
@@ -116,5 +116,7 @@ export const authOptions: NextAuthOptions = {
   },
   session: {
     strategy: 'database',
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+    updateAge: 24 * 60 * 60, // Update session every 24 hours
   },
 }

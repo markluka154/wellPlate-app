@@ -1,14 +1,32 @@
 'use client'
 
 import Link from 'next/link'
-import { useSession, signIn, signOut } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Menu, X } from 'lucide-react'
 
 export function Header() {
-  const { data: session, status } = useSession()
+  const [user, setUser] = useState<{ email: string; plan: string } | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+
+  useEffect(() => {
+    const userData = localStorage.getItem('wellplate:user')
+    if (userData) {
+      try {
+        setUser(JSON.parse(userData))
+      } catch (e) {
+        console.error('Failed to parse user data:', e)
+      }
+    }
+    setIsLoading(false)
+  }, [])
+
+  const handleSignOut = () => {
+    localStorage.removeItem('wellplate:user')
+    setUser(null)
+    window.location.href = '/'
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
@@ -30,7 +48,7 @@ export function Header() {
             <Link href="/faq" className="text-gray-600 hover:text-gray-900">
               FAQ
             </Link>
-            {session ? (
+            {user ? (
               <Link 
                 href="/dashboard" 
                 className="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium text-white bg-brand hover:bg-brand/90 transition-colors"
@@ -42,17 +60,17 @@ export function Header() {
 
           {/* Desktop Auth buttons */}
           <div className="hidden md:flex items-center space-x-4">
-            {status === 'loading' ? (
+            {isLoading ? (
               <div className="h-9 w-20 bg-gray-200 rounded animate-pulse"></div>
-            ) : session ? (
+            ) : user ? (
               <div className="flex items-center space-x-4">
                 <span className="text-sm text-gray-600">
-                  {session.user?.email}
+                  {user.email}
                 </span>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => signOut()}
+                  onClick={handleSignOut}
                 >
                   Sign Out
                 </Button>
@@ -62,16 +80,16 @@ export function Header() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => signIn()}
+                  asChild
                 >
-                  Sign In
+                  <Link href="/signin">Sign In</Link>
                 </Button>
                 <Button
                   size="sm"
                   className="bg-brand hover:bg-brand/90"
-                  onClick={() => signIn()}
+                  asChild
                 >
-                  Get Started
+                  <Link href="/signin">Get Started</Link>
                 </Button>
               </div>
             )}
@@ -110,7 +128,7 @@ export function Header() {
               >
                 FAQ
               </Link>
-              {session ? (
+              {user ? (
                 <>
                   <Link
                     href="/dashboard"
@@ -120,11 +138,11 @@ export function Header() {
                     Dashboard
                   </Link>
                   <div className="px-3 py-2 text-sm text-gray-600">
-                    {session.user?.email}
+                    {user.email}
                   </div>
                   <button
                     onClick={() => {
-                      signOut()
+                      handleSignOut()
                       setIsMobileMenuOpen(false)
                     }}
                     className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50"
@@ -134,24 +152,20 @@ export function Header() {
                 </>
               ) : (
                 <>
-                  <button
-                    onClick={() => {
-                      signIn()
-                      setIsMobileMenuOpen(false)
-                    }}
-                    className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                  <Link
+                    href="/signin"
+                    className="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                    onClick={() => setIsMobileMenuOpen(false)}
                   >
                     Sign In
-                  </button>
-                  <button
-                    onClick={() => {
-                      signIn()
-                      setIsMobileMenuOpen(false)
-                    }}
-                    className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-white bg-brand hover:bg-brand/90"
+                  </Link>
+                  <Link
+                    href="/signin"
+                    className="block px-3 py-2 rounded-md text-base font-medium text-white bg-brand hover:bg-brand/90"
+                    onClick={() => setIsMobileMenuOpen(false)}
                   >
                     Get Started
-                  </button>
+                  </Link>
                 </>
               )}
             </div>
@@ -161,4 +175,3 @@ export function Header() {
     </header>
   )
 }
-
