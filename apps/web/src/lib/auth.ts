@@ -40,11 +40,19 @@ export const authOptions: NextAuthOptions = {
           console.log('🔐 Sending magic link to:', email)
           console.log('🔗 Magic link URL:', url)
           
+          // Force magic link to use wellplate.eu instead of Vercel URL
+          let magicLinkUrl = url
+          if (magicLinkUrl.includes('vercel.app')) {
+            magicLinkUrl = magicLinkUrl.replace(/https:\/\/[^/]+\.vercel\.app/, 'https://wellplate.eu')
+          }
+          
+          console.log('🔗 Corrected magic link URL:', magicLinkUrl)
+          
           const resend = await getResend()
           
           if (!resend) {
             console.warn('⚠️ Resend API key not configured. Email sending disabled.')
-            console.log('📧 Magic link URL for manual use:', url)
+            console.log('📧 Magic link URL for manual use:', magicLinkUrl)
             return
           }
           
@@ -81,7 +89,7 @@ export const authOptions: NextAuthOptions = {
                             <table cellpadding="0" cellspacing="0">
                               <tr>
                                 <td style="background-color:#10b981;border-radius:6px;text-align:center;">
-                                  <a href="${url}" style="display:inline-block;padding:14px 40px;color:#ffffff;text-decoration:none;font-size:16px;font-weight:600;">
+                                  <a href="${magicLinkUrl}" style="display:inline-block;padding:14px 40px;color:#ffffff;text-decoration:none;font-size:16px;font-weight:600;">
                                     Sign In to WellPlate
                                   </a>
                                 </td>
@@ -90,7 +98,7 @@ export const authOptions: NextAuthOptions = {
 
                             <p style="margin:30px 0 10px;color:#6b7280;font-size:14px;">Or copy this link:</p>
                             <p style="margin:0;padding:12px;background-color:#f9fafb;border-radius:4px;word-break:break-all;font-size:13px;">
-                              <a href="${url}" style="color:#3b82f6;">${url}</a>
+                              <a href="${magicLinkUrl}" style="color:#3b82f6;">${magicLinkUrl}</a>
                             </p>
                           </td>
                         </tr>
@@ -134,7 +142,7 @@ export const authOptions: NextAuthOptions = {
 
           if (error) {
             console.error('❌ Resend error:', error)
-            console.log('📧 Magic link URL for manual use:', url)
+            console.log('📧 Magic link URL for manual use:', magicLinkUrl)
             return
           }
 
