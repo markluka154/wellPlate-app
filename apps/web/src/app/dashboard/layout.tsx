@@ -167,128 +167,95 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <Header />
 
         {/* Page container */}
-        <main className="mx-auto max-w-7xl px-4 pt-6 pb-10 lg:pt-10">
-          <div className="space-y-6">
+        <main className="mx-auto max-w-7xl px-4 pt-3 sm:pt-4 lg:pt-6 pb-6 sm:pb-8 lg:pb-10">
+          <div className="space-y-3 sm:space-y-4">
             {/* Dashboard Header Navigation */}
-            <div className="bg-white rounded-2xl border border-neutral-100 shadow-sm p-4">
+            <div className="bg-white rounded-xl sm:rounded-2xl border border-neutral-100 shadow-sm p-2.5 sm:p-4">
               <SidebarNav />
             </div>
 
-            {/* Premium Dashboard Header */}
-            <div className="relative overflow-hidden rounded-3xl border border-gradient-to-r from-purple-200/50 to-pink-200/50 bg-gradient-to-br from-white via-purple-50/20 to-pink-50/20 shadow-xl p-4 sm:p-6 lg:p-8">
-              {/* Premium Background Pattern */}
-              <div className="absolute inset-0 opacity-5">
-                <div className="absolute top-0 right-0 h-40 w-40 rounded-full bg-gradient-to-r from-purple-400 to-pink-400 blur-3xl"></div>
-                <div className="absolute bottom-0 left-0 h-32 w-32 rounded-full bg-gradient-to-r from-pink-400 to-rose-400 blur-2xl"></div>
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 h-20 w-20 rounded-full bg-gradient-to-r from-purple-300 to-pink-300 blur-xl"></div>
+            {/* Compact Dashboard Header - Mobile Optimized */}
+            <div className="relative overflow-hidden rounded-xl sm:rounded-2xl border border-purple-100 bg-gradient-to-br from-purple-50 via-pink-50 to-purple-50 shadow-md p-3 sm:p-4">
+              {/* Subtle background */}
+              <div className="absolute inset-0 opacity-20">
+                <div className="absolute top-0 right-0 h-20 w-20 rounded-full bg-purple-300 blur-2xl"></div>
+                <div className="absolute bottom-0 left-0 h-16 w-16 rounded-full bg-pink-300 blur-xl"></div>
               </div>
               
               <div className="relative">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6">
-                  <div className="flex items-center gap-3 sm:gap-4">
-                    {/* Premium Icon */}
-                    <div className="flex h-12 w-12 sm:h-16 sm:w-16 items-center justify-center rounded-2xl bg-gradient-to-r from-purple-500 via-purple-400 to-pink-500 shadow-xl">
-                      <span className="text-white font-bold text-lg sm:text-2xl">👑</span>
+                {/* Compact header layout */}
+                <div className="flex items-center justify-between gap-2 sm:gap-3">
+                  {/* Left: Icon + Name */}
+                  <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                    <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center shadow-md flex-shrink-0">
+                      <span className="text-base sm:text-lg">🔥</span>
                     </div>
-                    
-                    {/* Premium Text */}
-                    <div>
-                      <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold leading-none tracking-tight bg-gradient-to-r from-gray-900 via-purple-800 to-pink-800 bg-clip-text text-transparent">
+                    <div className="flex-1 min-w-0">
+                      <h1 className="text-sm sm:text-base font-bold text-gray-900 truncate">
                         Dashboard
                       </h1>
-                      <p className="mt-1 sm:mt-2 text-sm sm:text-base lg:text-lg text-gray-600 font-medium">
-                        Welcome back{user?.email ? `, ${user.email.split('@')[0]}` : ''}! 👋
+                      <p className="text-xs text-gray-600 truncate">
+                        Welcome, {user?.email ? user.email.split('@')[0] : 'User'}! 👋
                       </p>
-                      <div className="mt-1 sm:mt-2 flex items-center gap-2 text-xs sm:text-sm text-gray-500">
-                        <div className="h-2 w-2 bg-purple-500 rounded-full animate-pulse"></div>
-                        <span className="hidden sm:inline">Ready to create your next meal plan</span>
-                        <span className="sm:hidden">Ready to create</span>
-                      </div>
                     </div>
                   </div>
                   
-                  {/* Premium Plan Badge */}
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 w-full sm:w-auto">
-                    <div className="relative w-full sm:w-auto">
-                      <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-purple-500 to-pink-500 blur-sm opacity-50"></div>
-                      <div className="relative rounded-2xl border border-purple-200/50 bg-gradient-to-r from-purple-50 to-pink-50 px-4 sm:px-6 py-3 shadow-lg">
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-6 w-6 sm:h-8 sm:w-8 items-center justify-center rounded-xl bg-gradient-to-r from-purple-500 to-pink-500">
-                            <span className="text-white font-bold text-xs sm:text-sm">✨</span>
+                  {/* Right: Plan badge + Upgrade */}
+                  <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+                    {/* Plan badge */}
+                    <div className="rounded-lg bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200/50 px-2 py-1.5 shadow-sm">
+                      <div className="flex items-center gap-1.5">
+                        <div className="h-5 w-5 rounded-md bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
+                          <span className="text-white text-[10px] font-bold">✨</span>
+                        </div>
+                        <div>
+                          <div className="text-[11px] font-bold text-purple-800 leading-none">
+                            {userPlan === 'FREE' ? 'FREE' : userPlan === 'FAMILY_MONTHLY' ? 'FAMILY' : 'PRO'}
                           </div>
-                          <div>
-                            <div className="text-xs sm:text-sm font-bold text-purple-800">
-                              {userPlan === 'FREE' ? 'FREE Plan' : 
-                               userPlan === 'PRO_MONTHLY' ? 'PRO Monthly' : 
-                               userPlan === 'PRO_ANNUAL' ? 'PRO Annual' :
-                               'Family Monthly'}
-                            </div>
-                            <div className="text-xs text-purple-600">
-                              {userPlan === 'FREE' ? `${plansUsedThisMonth}/3 plans this month` : 
-                               userPlan === 'PRO_MONTHLY' ? 'Unlimited plans' : 
-                               userPlan === 'PRO_ANNUAL' ? 'Unlimited plans' :
-                               'Unlimited family plans'}
-                            </div>
+                          <div className="text-[9px] text-purple-600 leading-none mt-0.5">
+                            {userPlan === 'FREE' ? `${plansUsedThisMonth}/3` : 'Unlimited'}
                           </div>
                         </div>
                       </div>
                     </div>
                     
-                    {/* Upgrade Button - Only show for FREE users */}
+                    {/* Upgrade button for FREE */}
                     {userPlan === 'FREE' && (
                       <button 
                         onClick={() => window.open('/pricing', '_blank')}
-                        className="group relative inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold text-white shadow-lg shadow-purple-500/25 transition-all duration-300 hover:shadow-xl hover:shadow-purple-500/40 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-purple-300/50 w-full sm:w-auto justify-center"
+                        className="rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 px-2 py-1.5 text-[11px] font-bold text-white shadow-md hover:shadow-lg transition-all active:scale-95"
                       >
-                        <span className="text-xs sm:text-sm">🚀</span>
-                        <span>Upgrade</span>
+                        <span className="hidden xs:inline">🚀 Upgrade</span>
+                        <span className="xs:hidden">🚀</span>
                       </button>
                     )}
                   </div>
                 </div>
                 
-                {/* Plan Usage Progress Bar - Only show for FREE users */}
+                {/* Compact progress bar for FREE */}
                 {userPlan === 'FREE' && (
-                  <div className="mt-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs sm:text-sm font-medium text-purple-700">Monthly Plan Usage</span>
-                      <span className="text-xs sm:text-sm text-purple-600">{plansUsedThisMonth}/3 used</span>
+                  <div className="mt-2.5">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[10px] font-medium text-purple-700">Usage</span>
+                      <span className="text-[10px] text-purple-600">{plansUsedThisMonth}/3</span>
                     </div>
-                    <div className="w-full bg-purple-100 rounded-full h-2">
+                    <div className="w-full bg-purple-100 rounded-full h-1.5">
                       <div 
-                        className={`h-2 rounded-full transition-all duration-300 ${
-                          plansUsedThisMonth >= 3 
-                            ? 'bg-gradient-to-r from-red-500 to-red-600' 
-                            : plansUsedThisMonth >= 2 
-                            ? 'bg-gradient-to-r from-yellow-500 to-orange-500'
-                            : 'bg-gradient-to-r from-emerald-500 to-emerald-600'
+                        className={`h-1.5 rounded-full transition-all ${
+                          plansUsedThisMonth >= 3 ? 'bg-red-500' :
+                          plansUsedThisMonth >= 2 ? 'bg-yellow-500' :
+                          'bg-emerald-500'
                         }`}
                         style={{ width: `${Math.min((plansUsedThisMonth / 3) * 100, 100)}%` }}
                       />
                     </div>
-                    {plansUsedThisMonth >= 2 && (
-                      <div className="mt-2">
-                        <p className="text-xs text-red-600 font-medium mb-2">
-                          ⚠️ Only {3 - plansUsedThisMonth} plans remaining this month
-                        </p>
-                        <button
-                          onClick={() => setShowUpgradePrompt(true)}
-                          className="text-xs bg-red-50 text-red-700 px-2 py-1 rounded-md hover:bg-red-100 transition-colors"
-                        >
-                          Upgrade to Pro
-                        </button>
-                      </div>
-                    )}
                   </div>
                 )}
-                
-                {/* Premium Divider */}
-                <div className="mt-6 h-px bg-gradient-to-r from-transparent via-purple-200 to-transparent"></div>
               </div>
             </div>
 
             {/* Main content area */}
-            <section aria-label="Main" className="space-y-4">
+            <section aria-label="Main" className="space-y-3 sm:space-y-4">
               {/* Child pages render here (e.g., preferences form, etc.) */}
               {children}
             </section>

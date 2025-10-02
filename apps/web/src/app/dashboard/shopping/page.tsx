@@ -758,85 +758,84 @@ export default function ShoppingListPage() {
     <div className="min-h-screen bg-gray-50">
       <NotificationComponent />
       
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center">
+      {/* Compact Header */}
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
+          <div className="flex items-center justify-between h-12 sm:h-14">
+            <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
               <button
                 onClick={() => router.back()}
-                className="mr-4 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                className="p-1.5 sm:p-2 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0"
               >
-                <ArrowLeft className="h-5 w-5 text-gray-600" />
+                <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
               </button>
-              <div className="flex items-center">
-                <ShoppingCart className="h-8 w-8 text-emerald-600 mr-3" />
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900">Shopping List</h1>
-                  <p className="text-sm text-gray-600">Organize your grocery shopping • Auto-saved</p>
-                </div>
+              <ShoppingCart className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-600 flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <h1 className="text-base sm:text-lg font-bold text-gray-900 truncate">Shopping List</h1>
+                <p className="text-[10px] sm:text-xs text-gray-600 truncate">Organize your shopping • Auto-saved</p>
               </div>
             </div>
             
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
               <button
                 onClick={refreshMealPlans}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                className="hidden sm:flex px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 Refresh Plans
               </button>
               <button
                 onClick={() => setShowMealSelector(true)}
-                className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors"
+                className="px-2.5 sm:px-3 py-1.5 text-xs font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors whitespace-nowrap"
               >
-                From Meal Plan
+                <span className="hidden sm:inline">From Meal Plan</span>
+                <span className="sm:hidden">From Plan</span>
               </button>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-            <div className="flex items-center">
-              <div className="p-2 bg-emerald-100 rounded-lg">
-                <Package className="h-6 w-6 text-emerald-600" />
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-3 sm:py-4 lg:py-6">
+        {/* Compact Stats */}
+        <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-3 sm:mb-4">
+          <div className="bg-white rounded-lg p-3 sm:p-4 shadow-sm border border-gray-100">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+              <div className="p-1.5 sm:p-2 bg-emerald-100 rounded-lg self-start">
+                <Package className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600" />
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Items</p>
-                <p className="text-2xl font-bold text-gray-900">{shoppingList.length}</p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-            <div className="flex items-center">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <CheckCircle2 className="h-6 w-6 text-blue-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Completed</p>
-                <p className="text-2xl font-bold text-gray-900">{shoppingList.filter(item => item.checked).length}</p>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] sm:text-xs font-medium text-gray-600 truncate">Total Items</p>
+                <p className="text-lg sm:text-xl font-bold text-gray-900">{shoppingList.length}</p>
               </div>
             </div>
           </div>
           
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-            <div className="flex items-center">
-              <div className="p-2 bg-orange-100 rounded-lg">
-                <Clock className="h-6 w-6 text-orange-600" />
+          <div className="bg-white rounded-lg p-3 sm:p-4 shadow-sm border border-gray-100">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+              <div className="p-1.5 sm:p-2 bg-blue-100 rounded-lg self-start">
+                <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Remaining</p>
-                <p className="text-2xl font-bold text-gray-900">{shoppingList.filter(item => !item.checked).length}</p>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] sm:text-xs font-medium text-gray-600 truncate">Completed</p>
+                <p className="text-lg sm:text-xl font-bold text-gray-900">{shoppingList.filter(item => item.checked).length}</p>
               </div>
             </div>
           </div>
           
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-            <div className="flex items-center">
+          <div className="bg-white rounded-lg p-3 sm:p-4 shadow-sm border border-gray-100">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+              <div className="p-1.5 sm:p-2 bg-orange-100 rounded-lg self-start">
+                <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] sm:text-xs font-medium text-gray-600 truncate">Remaining</p>
+                <p className="text-lg sm:text-xl font-bold text-gray-900">{shoppingList.filter(item => !item.checked).length}</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="hidden md:block bg-white rounded-lg p-3 sm:p-4 shadow-sm border border-gray-100">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
               <div className="p-2 bg-purple-100 rounded-lg">
                 <DollarSign className="h-6 w-6 text-purple-600" />
               </div>

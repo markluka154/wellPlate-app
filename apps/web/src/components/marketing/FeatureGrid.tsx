@@ -45,7 +45,7 @@ const features = [
 
 export function FeatureGrid() {
   return (
-    <section className="py-32 bg-gradient-to-b from-white via-gray-50 to-white relative overflow-hidden">
+    <section className="py-12 sm:py-16 lg:py-32 bg-gradient-to-b from-white via-gray-50 to-white relative overflow-hidden">
       {/* Subtle background decoration */}
       <div className="absolute inset-0 -z-10">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-green-100/20 rounded-full blur-3xl"></div>
@@ -53,21 +53,21 @@ export function FeatureGrid() {
       </div>
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* Section header */}
-        <div className="text-center max-w-3xl mx-auto mb-20">
-          <h2 className="text-4xl sm:text-5xl font-bold tracking-tight text-gray-900 mb-6">
+        {/* Section header - mobile optimized */}
+        <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-16 lg:mb-20">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-gray-900 mb-4 sm:mb-6 px-2">
             Everything you need for{' '}
             <span className="bg-gradient-to-r from-green-600 to-green-500 bg-clip-text text-transparent">
               healthy eating
             </span>
           </h2>
-          <p className="text-xl text-gray-600 leading-relaxed">
+          <p className="text-base sm:text-lg lg:text-xl text-gray-600 leading-relaxed px-4">
             Our AI creates comprehensive meal plans tailored to your unique preferences and goals.
           </p>
         </div>
 
-        {/* Feature cards */}
-        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Feature cards - mobile optimized */}
+        <div className="grid grid-cols-1 gap-6 sm:gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {features.map((feature, index) => (
             <div
               key={feature.title}
@@ -75,17 +75,19 @@ export function FeatureGrid() {
               style={{ animationDelay: `${index * 100}ms` }}
             >
               {/* Card with hover effect */}
-              <div className="relative h-full bg-white rounded-2xl p-8 shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+              <div className="relative h-full bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
                 {/* Icon container with gradient */}
-                <div className={`inline-flex p-3 rounded-xl bg-gradient-to-br ${feature.gradient} text-white mb-6 shadow-lg`}>
-                  {feature.icon}
+                <div className={`inline-flex p-2.5 sm:p-3 rounded-xl bg-gradient-to-br ${feature.gradient} text-white mb-4 sm:mb-6 shadow-lg`}>
+                  <div className="w-8 h-8 sm:w-10 sm:h-10">
+                    {feature.icon}
+                  </div>
                 </div>
 
                 {/* Content */}
-                <h3 className="text-xl font-bold text-gray-900 mb-3">
+                <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">
                   {feature.title}
                 </h3>
-                <p className="text-gray-600 leading-relaxed">
+                <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
                   {feature.description}
                 </p>
 
@@ -97,9 +99,9 @@ export function FeatureGrid() {
         </div>
 
         {/* Optional CTA or trust indicator */}
-        <div className="mt-16 text-center">
-          <p className="text-sm text-gray-500 font-medium">
-            Join 12,000+ users who've simplified their nutrition planning
+        <div className="mt-10 sm:mt-16 text-center px-4">
+          <p className="text-xs sm:text-sm text-gray-500 font-medium">
+            Save 2-3 hours per week with automated meal planning
           </p>
         </div>
       </div>

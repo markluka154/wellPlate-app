@@ -32,9 +32,13 @@ export async function POST(request: NextRequest) {
     const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
     
     // Get the base URL from the request or environment
-    const baseUrl = process.env.NEXTAUTH_URL || 
-                   process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` :
-                   `${request.nextUrl.protocol}//${request.nextUrl.host}`
+    const baseUrl = (
+      process.env.NEXTAUTH_URL
+        ? process.env.NEXTAUTH_URL
+        : process.env.VERCEL_URL
+          ? `https://${process.env.VERCEL_URL}`
+          : `${request.nextUrl.protocol}//${request.nextUrl.host}`
+    )
     
     const magicLink = `${baseUrl}/api/auth/callback/email?callbackUrl=${encodeURIComponent('/dashboard')}&token=${token}&email=${encodeURIComponent(email)}`
 
@@ -92,3 +96,4 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
