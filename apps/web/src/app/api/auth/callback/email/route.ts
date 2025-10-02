@@ -14,12 +14,12 @@ export async function GET(request: NextRequest) {
 
     if (!token || !email) {
       console.log('❌ Missing token or email')
-      return NextResponse.redirect(new URL('/signin?error=InvalidLink', request.url))
+      const errorUrl = new URL('/signin?error=InvalidLink', process.env.NEXTAUTH_URL || 'https://wellplate.eu')
+      return NextResponse.redirect(errorUrl)
     }
 
-    // For now, just redirect to dashboard with success parameters
-    // TODO: Implement proper user creation and session management
-    const redirectUrl = new URL(callbackUrl, request.url)
+    // Force redirect to use wellplate.eu domain
+    const redirectUrl = new URL(callbackUrl, process.env.NEXTAUTH_URL || 'https://wellplate.eu')
     redirectUrl.searchParams.set('auth', 'success')
     redirectUrl.searchParams.set('email', decodeURIComponent(email))
     redirectUrl.searchParams.set('token', token)
@@ -30,6 +30,7 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('❌ Magic link callback error:', error)
-    return NextResponse.redirect(new URL('/signin?error=CallbackError', request.url))
+    const errorUrl = new URL('/signin?error=CallbackError', process.env.NEXTAUTH_URL || 'https://wellplate.eu')
+    return NextResponse.redirect(errorUrl)
   }
 }
