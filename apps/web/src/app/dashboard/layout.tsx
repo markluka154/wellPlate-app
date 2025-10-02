@@ -187,14 +187,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <div className="flex items-center justify-between gap-2 sm:gap-3">
                   {/* Left: Icon + Name */}
                   <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-                    <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center shadow-md flex-shrink-0">
-                      <span className="text-base sm:text-lg">🔥</span>
+                    <div className="h-11 w-11 sm:h-12 sm:w-12 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center shadow-md flex-shrink-0">
+                      <span className="text-xl sm:text-2xl">🔥</span>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h1 className="text-sm sm:text-base font-bold text-gray-900 truncate">
+                      <h1 className="text-base sm:text-lg font-bold text-gray-900 truncate">
                         Dashboard
                       </h1>
-                      <p className="text-xs text-gray-600 truncate">
+                      <p className="text-xs sm:text-sm text-gray-600 truncate">
                         Welcome, {user?.email ? user.email.split('@')[0] : 'User'}! 👋
                       </p>
                     </div>
@@ -203,10 +203,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   {/* Right: Plan badge + Upgrade */}
                   <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
                     {/* Plan badge */}
-                    <div className="rounded-lg bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200/50 px-2 py-1.5 shadow-sm">
-                      <div className="flex items-center gap-1.5">
-                        <div className="h-5 w-5 rounded-md bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
-                          <span className="text-white text-[10px] font-bold">✨</span>
+                    <div className="rounded-lg bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200/50 px-2.5 py-2 shadow-sm">
+                      <div className="flex items-center gap-2">
+                        <div className="h-6 w-6 rounded-md bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
+                          <span className="text-white text-xs font-bold">✨</span>
                         </div>
                         <div>
                           <div className="text-[11px] font-bold text-purple-800 leading-none">

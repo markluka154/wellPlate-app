@@ -190,8 +190,8 @@ export default function DashboardPage() {
             const userObj = JSON.parse(userData)
             userObj.plan = plan
             localStorage.setItem('wellplate:user', JSON.stringify(userObj))
-          }
-        } catch (error) {
+      }
+    } catch (error) {
           console.error('Error updating localStorage plan:', error)
         }
       }
@@ -874,21 +874,21 @@ export default function DashboardPage() {
                 >
                   <FormField label="Custom Macros (Pro)" hint="Set precise macro targets for your goals">
                     <div className="grid grid-cols-3 gap-3">
-                      <div>
+                <div>
                         <label className="block text-xs font-medium text-gray-600 mb-1">Protein (g)</label>
                         <input
-                          type="number"
+                    type="number"
                           value={customProtein}
                           onChange={(e) => setCustomProtein(e.target.value)}
                           placeholder="120"
                           disabled={userPlan === 'FREE'}
                           className="w-full rounded-lg border-2 border-gray-200 bg-white/80 backdrop-blur-sm px-3 py-2 text-sm font-medium text-gray-900 placeholder-gray-400 outline-none transition-all duration-200 focus:border-emerald-400 focus:bg-white focus:shadow-lg focus:shadow-emerald-100 hover:border-gray-300 hover:bg-white disabled:bg-gray-100 disabled:text-gray-500"
                         />
-                      </div>
-                      <div>
+                </div>
+                <div>
                         <label className="block text-xs font-medium text-gray-600 mb-1">Carbs (g)</label>
                         <input
-                          type="number"
+                    type="number"
                           value={customCarbs}
                           onChange={(e) => setCustomCarbs(e.target.value)}
                           placeholder="200"
@@ -906,7 +906,7 @@ export default function DashboardPage() {
                           disabled={userPlan === 'FREE'}
                           className="w-full rounded-lg border-2 border-gray-200 bg-white/80 backdrop-blur-sm px-3 py-2 text-sm font-medium text-gray-900 placeholder-gray-400 outline-none transition-all duration-200 focus:border-emerald-400 focus:bg-white focus:shadow-lg focus:shadow-emerald-100 hover:border-gray-300 hover:bg-white disabled:bg-gray-100 disabled:text-gray-500"
                         />
-                </div>
+              </div>
               </div>
                   </FormField>
                 </ProBadge>
@@ -917,7 +917,7 @@ export default function DashboardPage() {
                 >
                   <FormField label="Allergies & Dislikes (Pro)" hint="Specify foods to avoid for personalized meal plans">
                     <div className="space-y-3">
-                      <div>
+                <div>
                         <label className="block text-xs font-medium text-gray-600 mb-2">Food Allergies</label>
                         <input
                           type="text"
@@ -972,8 +972,8 @@ export default function DashboardPage() {
                     </a>{' '}
                     for unlimited plans.
                   </div>
-                )}
-              </div>
+                  )}
+                </div>
             </div>
           </div>
         </section>
@@ -1090,7 +1090,7 @@ export default function DashboardPage() {
                    }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                    </svg>
-                 </div>
+                </div>
                  <span className={`text-xs sm:text-sm font-semibold ${
                    userPlan === 'FREE' ? 'text-gray-400' : 'text-gray-800'
                  }`}>Analytics</span>
@@ -1125,7 +1125,7 @@ export default function DashboardPage() {
                    }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                    </svg>
-                 </div>
+              </div>
                  <span className={`text-xs sm:text-sm font-semibold ${
                    userPlan === 'FREE' ? 'text-gray-400' : 'text-gray-800'
                  }`}>My Favorites</span>
@@ -1160,7 +1160,7 @@ export default function DashboardPage() {
                    }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                    </svg>
-                 </div>
+                </div>
                  <span className={`text-sm font-semibold ${
                    userPlan === 'FREE' ? 'text-gray-400' : 'text-gray-800'
                  }`}>Set Goals</span>
@@ -1195,7 +1195,7 @@ export default function DashboardPage() {
                    }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                    </svg>
-                 </div>
+                </div>
                  <span className={`text-sm font-semibold ${
                    userPlan === 'FREE' ? 'text-gray-400' : 'text-gray-800'
                  }`}>Learn More</span>
@@ -1213,7 +1213,7 @@ export default function DashboardPage() {
                    <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                    </svg>
-                 </div>
+              </div>
                  <span className="text-sm font-semibold text-gray-800">Templates</span>
                  <span className="text-xs mt-1 text-gray-500">Quick Start</span>
                </button>
@@ -1308,7 +1308,7 @@ export default function DashboardPage() {
           <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-2xl">
               <div className="flex items-center justify-between">
-                <div>
+              <div>
                   <h2 className="text-2xl font-bold text-gray-900">{selectedPlan.title}</h2>
                   <p className="text-gray-600">{selectedPlan.date} • {selectedPlan.calories} calories/day</p>
                 </div>
@@ -1319,8 +1319,8 @@ export default function DashboardPage() {
                   ×
                 </button>
               </div>
-            </div>
-            
+              </div>
+
             <div className="p-6">
               {selectedPlan.plan ? (
                 <div className="space-y-8">
@@ -1368,7 +1368,7 @@ export default function DashboardPage() {
                             
                             <div className="grid md:grid-cols-2 gap-6">
                               {/* Ingredients */}
-                              <div>
+              <div>
                                 <h5 className="font-semibold text-gray-900 mb-2">Ingredients:</h5>
                                 <ul className="space-y-1">
                                   {meal.ingredients.map((ing: any, ingIndex: number) => (
@@ -1559,7 +1559,7 @@ export default function DashboardPage() {
                   You've been upgraded to {upgradeSuccessData.plan} plan!
                 </p>
               </div>
-            </div>
+              </div>
 
             {/* Content */}
             <div className="p-8">
@@ -1762,8 +1762,8 @@ function CategoryContent({ category, content, onSelectArticle }: any) {
             </div>
             <p className="text-sm text-gray-600 mt-2">
               💡 Answer: 20-30% - Protein should make up 20-30% of your daily calories (RDA - Recommended Daily Allowance) for optimal health and muscle maintenance.
-            </p>
-          </div>
+                      </p>
+                    </div>
         </div>
       </div>
     </div>
@@ -2055,7 +2055,7 @@ function ProfessionalPlanCard({
           onClick={() => userPlan === 'FREE' && showUpgrade('PDF Downloads', 'Download your meal plans as PDF files with Pro.', 'PDF downloads')}
         >
           <button 
-            onClick={() => {
+                        onClick={() => {
               if (userPlan === 'FREE') {
                 showUpgrade('PDF Downloads', 'Download your meal plans as PDF files with Pro.', 'PDF downloads')
                 return
@@ -2084,8 +2084,8 @@ function ProfessionalPlanCard({
         >
           {copyFeedback || '📋'}
         </button>
-      </div>
-    </div>
+                    </div>
+                  </div>
   )
 }
 
@@ -2115,7 +2115,7 @@ function GoalSettingModal({ goalData, setGoalData, onSave, onClose }: any) {
             >
               ×
             </button>
-          </div>
+              </div>
           <div className="flex gap-2 mt-4">
             <button
               onClick={() => setActiveTab('nutrition')}
@@ -2160,7 +2160,7 @@ function GoalSettingModal({ goalData, setGoalData, onSave, onClose }: any) {
           {activeTab === 'lifestyle' && (
             <LifestyleGoalsTab goalData={goalData.lifestyle} updateGoalData={updateGoalData} />
           )}
-        </div>
+      </div>
 
         <div className="sticky bottom-0 bg-white border-t border-gray-200 p-6 rounded-b-2xl">
           <div className="flex gap-3 justify-end">
@@ -2225,7 +2225,7 @@ function NutritionGoalsTab({ goalData, updateGoalData }: any) {
               <option>6 months</option>
               <option>1 year</option>
             </select>
-          </div>
+        </div>
         </div>
       </div>
 

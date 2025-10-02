@@ -758,38 +758,44 @@ export default function ShoppingListPage() {
     <div className="min-h-screen bg-gray-50">
       <NotificationComponent />
       
-      {/* Compact Header */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
-          <div className="flex items-center justify-between h-12 sm:h-14">
-            <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-              <button
-                onClick={() => router.back()}
-                className="p-1.5 sm:p-2 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0"
-              >
-                <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
-              </button>
-              <ShoppingCart className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-600 flex-shrink-0" />
-              <div className="flex-1 min-w-0">
-                <h1 className="text-base sm:text-lg font-bold text-gray-900 truncate">Shopping List</h1>
-                <p className="text-[10px] sm:text-xs text-gray-600 truncate">Organize your shopping • Auto-saved</p>
-              </div>
-            </div>
+      {/* Clean Header Section */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-5">
+          <div className="space-y-3 sm:space-y-4">
+            {/* Back Button */}
+            <button
+              onClick={() => router.back()}
+              className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span>Back to Dashboard</span>
+            </button>
             
-            <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
-              <button
-                onClick={refreshMealPlans}
-                className="hidden sm:flex px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                Refresh Plans
-              </button>
-              <button
-                onClick={() => setShowMealSelector(true)}
-                className="px-2.5 sm:px-3 py-1.5 text-xs font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors whitespace-nowrap"
-              >
-                <span className="hidden sm:inline">From Meal Plan</span>
-                <span className="sm:hidden">From Plan</span>
-              </button>
+            {/* Title and Actions */}
+            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <ShoppingCart className="h-7 w-7 sm:h-8 sm:w-8 text-emerald-600 flex-shrink-0" />
+                <div className="space-y-1">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Shopping List</h1>
+                  <p className="text-sm sm:text-base text-gray-600">Organize your shopping • Auto-saved</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={refreshMealPlans}
+                  className="hidden sm:flex px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Refresh Plans
+                </button>
+                <button
+                  onClick={() => setShowMealSelector(true)}
+                  className="px-3 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors whitespace-nowrap"
+                >
+                  <span className="hidden sm:inline">From Meal Plan</span>
+                  <span className="sm:hidden">From Plan</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>

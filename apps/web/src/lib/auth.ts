@@ -62,80 +62,65 @@ export const authOptions: NextAuthOptions = {
             subject: 'Your sign-in link for WellPlate',
             html: `
               <!DOCTYPE html>
-              <html>
-              <body style="margin:0;padding:0;background-color:#f3f4f6;font-family:Arial,sans-serif;">
-                <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f3f4f6;padding:40px 0;">
-                  <tr>
-                    <td align="center">
-                      <table width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1);">
-                        
-                        <!-- Header -->
-                        <tr>
-                          <td style="background-color:#10b981;padding:40px;text-align:center;border-radius:8px 8px 0 0;">
-                            <h1 style="margin:0;color:#ffffff;font-size:32px;font-weight:bold;">WellPlate</h1>
-                            <p style="margin:10px 0 0;color:#ffffff;font-size:16px;">Your meal planning journey starts here</p>
-                          </td>
-                        </tr>
-
-                        <!-- Content -->
-                        <tr>
-                          <td style="padding:40px;">
-                            <h2 style="margin:0 0 20px;color:#1f2937;font-size:24px;">Welcome!</h2>
-                            <p style="margin:0 0 30px;color:#4b5563;font-size:16px;line-height:1.6;">
-                              Click the button below to securely sign in to your WellPlate account. This link expires in 24 hours.
-                            </p>
-
-                            <!-- Button -->
-                            <table cellpadding="0" cellspacing="0">
-                              <tr>
-                                <td style="background-color:#10b981;border-radius:6px;text-align:center;">
-                                  <a href="${magicLinkUrl}" style="display:inline-block;padding:14px 40px;color:#ffffff;text-decoration:none;font-size:16px;font-weight:600;">
-                                    Sign In to WellPlate
-                                  </a>
-                                </td>
-                              </tr>
-                            </table>
-
-                            <p style="margin:30px 0 10px;color:#6b7280;font-size:14px;">Or copy this link:</p>
-                            <p style="margin:0;padding:12px;background-color:#f9fafb;border-radius:4px;word-break:break-all;font-size:13px;">
-                              <a href="${magicLinkUrl}" style="color:#3b82f6;">${magicLinkUrl}</a>
-                            </p>
-                          </td>
-                        </tr>
-
-                        <!-- Features -->
-                        <tr>
-                          <td style="padding:0 40px 40px;">
-                            <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f0fdf4;border-radius:6px;padding:20px;">
-                              <tr>
-                                <td style="padding:8px 0;color:#374151;font-size:14px;">✓ Generate personalized meal plans in 30 seconds</td>
-                              </tr>
-                              <tr>
-                                <td style="padding:8px 0;color:#374151;font-size:14px;">✓ Complete recipes with nutrition info</td>
-                              </tr>
-                              <tr>
-                                <td style="padding:8px 0;color:#374151;font-size:14px;">✓ Organized shopping lists</td>
-                              </tr>
-                              <tr>
-                                <td style="padding:8px 0;color:#374151;font-size:14px;">✓ Track calories and macros</td>
-                              </tr>
-                            </table>
-                          </td>
-                        </tr>
-
-                        <!-- Footer -->
-                        <tr>
-                          <td style="padding:20px 40px;border-top:1px solid #e5e7eb;text-align:center;">
-                            <p style="margin:0 0 10px;color:#9ca3af;font-size:13px;">Link expires in 24 hours</p>
-                            <p style="margin:0;color:#9ca3af;font-size:12px;">© ${new Date().getFullYear()} WellPlate</p>
-                          </td>
-                        </tr>
-
-                      </table>
-                    </td>
-                  </tr>
-                </table>
-              </body>
+              <html lang="en" style="background-color:#f4f6fb;margin:0;padding:0;">
+                <head>
+                  <meta charset="UTF-8" />
+                  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+                  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+                  <title>Sign in to WellPlate</title>
+                </head>
+                <body style="margin:0;padding:0;background-color:#f4f6fb;font-family:'Segoe UI',Arial,sans-serif;color:#0f172a;">
+                  <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="padding:32px 16px;">
+                    <tr>
+                      <td align="center">
+                        <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="max-width:560px;background-color:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 18px 40px rgba(15,23,42,0.12);">
+                          <tr>
+                            <td style="padding:32px 40px;background:linear-gradient(135deg,#0f172a,#0ea5e9);color:#ffffff;">
+                              <p style="margin:0;font-size:13px;letter-spacing:0.08em;text-transform:uppercase;opacity:0.85;">WellPlate</p>
+                              <h1 style="margin:12px 0 0;font-size:28px;font-weight:600;">Your sign-in link is ready</h1>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td style="padding:40px;">
+                              <p style="margin:0 0 16px;font-size:16px;color:#334155;">Hi there,</p>
+                              <p style="margin:0 0 24px;font-size:16px;line-height:1.6;color:#475569;">
+                                We received a request to sign in to WellPlate. Use the button below to access your account within the next 24 hours.
+                              </p>
+                              <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto 32px;">
+                                <tr>
+                                  <td style="border-radius:999px;background-color:#0f172a;">
+                                    <a href="${magicLinkUrl}" style="display:inline-block;padding:14px 36px;font-size:16px;font-weight:600;color:#ffffff;text-decoration:none;">
+                                      Open WellPlate
+                                    </a>
+                                  </td>
+                                </tr>
+                              </table>
+                              <p style="margin:0 0 12px;font-size:14px;font-weight:600;color:#0f172a;">Prefer to copy the link?</p>
+                              <p style="margin:0;padding:16px;border:1px solid #e2e8f0;border-radius:12px;font-size:13px;line-height:1.6;color:#475569;background-color:#f8fafc;word-break:break-all;">
+                                <a href="${magicLinkUrl}" style="color:#0f172a;text-decoration:none;">${magicLinkUrl}</a>
+                              </p>
+                              <p style="margin:24px 0 0;font-size:13px;color:#94a3b8;line-height:1.6;">
+                                If this was not you, please disregard this email. Only someone with access to your inbox can use the link.
+                              </p>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td style="padding:28px 40px;background-color:#0f172a;color:#e2e8f0;">
+                              <p style="margin:0 0 8px;font-size:14px;font-weight:600;">WellPlate Premium Experience</p>
+                              <p style="margin:0;font-size:13px;line-height:1.6;opacity:0.75;">Meal intelligence, curated recipes, and balanced nutrition planned for you.</p>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td style="padding:20px 40px;background-color:#ffffff;color:#94a3b8;font-size:12px;text-align:center;">
+                              &copy; ${new Date().getFullYear()} WellPlate. All rights reserved.<br />
+                              27 Old Gloucester Street, London WC1N 3AX
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                  </table>
+                </body>
               </html>
             `,
           })

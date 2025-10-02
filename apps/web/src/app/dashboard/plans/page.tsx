@@ -440,33 +440,39 @@ export default function PlansPage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link 
-            href="/dashboard"
-            className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Dashboard
-          </Link>
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight">All Meal Plans</h1>
-            <p className="text-sm text-gray-600">Manage and view all your personalized nutrition plans</p>
+    <div className="space-y-4 sm:space-y-6">
+      {/* Header - Clean Layout */}
+      <div className="space-y-3 sm:space-y-4">
+        {/* Back Button */}
+        <Link 
+          href="/dashboard"
+          className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          <span>Back to Dashboard</span>
+        </Link>
+        
+        {/* Title Section */}
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+          <div className="space-y-1">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">All Meal Plans</h1>
+            <p className="text-sm sm:text-base text-gray-600">Manage and view all your personalized nutrition plans</p>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <div className="text-sm font-medium text-gray-500 bg-gray-100 px-3 py-1.5 rounded-lg">
+              {allPlans.length} total plans
+            </div>
+            {userPlan === 'FREE' && (
+              <button
+                onClick={() => setShowHistoryUpgradePrompt(true)}
+                className="text-xs text-amber-600 bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-200 hover:bg-amber-100 transition-colors whitespace-nowrap"
+              >
+                ⏰ Plans older than 3 days are hidden
+              </button>
+            )}
           </div>
         </div>
-        <div className="text-sm text-gray-500">
-          {allPlans.length} total plans
-        </div>
-        {userPlan === 'FREE' && (
-          <button
-            onClick={() => setShowHistoryUpgradePrompt(true)}
-            className="text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded-full border border-amber-200 hover:bg-amber-100 transition-colors"
-          >
-            ⏰ Plans older than 3 days are hidden
-          </button>
-        )}
       </div>
 
       {/* Tab Navigation */}

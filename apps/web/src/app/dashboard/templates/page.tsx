@@ -203,16 +203,22 @@ export default function TemplatesPage() {
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
+        {/* Header - Clean Layout */}
+        <div className="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
+          {/* Back Button */}
           <button
             onClick={() => router.back()}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+            className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
           >
-            <ArrowLeft className="h-5 w-5" />
-            Back to Dashboard
+            <ArrowLeft className="h-4 w-4" />
+            <span>Back to Dashboard</span>
           </button>
-          <h1 className="text-3xl font-bold text-gray-900">Meal Plan Templates</h1>
+          
+          {/* Title Section */}
+          <div className="space-y-1">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Meal Plan Templates</h1>
+            <p className="text-sm sm:text-base text-gray-600">Pre-designed meal plans for your specific goals</p>
+          </div>
         </div>
 
         {/* Category Filter */}

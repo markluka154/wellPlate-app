@@ -116,25 +116,29 @@ Added to favorites: ${meal.addedDate}`
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link 
-            href="/dashboard"
-            className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Dashboard
-          </Link>
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Favorite Meals</h1>
-            <p className="text-sm text-gray-600">Your saved meals for quick access</p>
+    <div className="space-y-4 sm:space-y-6">
+      {/* Header - Clean Layout */}
+      <div className="space-y-3 sm:space-y-4">
+        {/* Back Button */}
+        <Link 
+          href="/dashboard"
+          className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          <span>Back to Dashboard</span>
+        </Link>
+        
+        {/* Title Section */}
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+          <div className="space-y-1">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Favorite Meals</h1>
+            <p className="text-sm sm:text-base text-gray-600">Your saved meals for quick access</p>
           </div>
-        </div>
-        <div className="flex items-center gap-2 text-sm text-gray-500">
-          <Heart className="h-4 w-4 text-red-500" />
-          <span>{favoriteMeals.length} favorite meals</span>
+          
+          <div className="flex items-center gap-2 text-sm font-medium text-gray-500 bg-gray-100 px-3 py-1.5 rounded-lg self-start sm:self-auto">
+            <Heart className="h-4 w-4 text-red-500" />
+            <span>{favoriteMeals.length} favorites</span>
+          </div>
         </div>
       </div>
 
