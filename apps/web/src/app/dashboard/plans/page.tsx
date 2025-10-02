@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { ArrowLeft, Eye, FileText, Copy, Archive, CheckCircle, Clock, Heart, Crown, Edit2, Check, X } from 'lucide-react'
+import { ArrowLeft, Eye, Copy, Archive, CheckCircle, Clock, Heart, Crown, Edit2, Check, X, Download, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { UpgradePrompt } from '@/components/dashboard/UpgradePrompt'
 import { ProBadge } from '@/components/dashboard/ProBadge'
@@ -18,6 +18,7 @@ export default function PlansPage() {
   const [showHistoryUpgradePrompt, setShowHistoryUpgradePrompt] = useState(false)
   const [planNames, setPlanNames] = useState<{[key: string]: string}>({})
   const [editingPlanId, setEditingPlanId] = useState<string | null>(null)
+  const [downloadingPlanId, setDownloadingPlanId] = useState<string | null>(null)
 
   // Fetch user meal plans
   const fetchUserMealPlans = async () => {
@@ -35,6 +36,7 @@ export default function PlansPage() {
       if (response.ok) {
         const data = await response.json()
         setUserMealPlans(data.mealPlans || [])
+        setUserPlan(data.subscription?.plan || 'FREE')
         console.log('✅ Loaded meal plans:', data.mealPlans)
       }
     } catch (error) {
@@ -68,6 +70,52 @@ export default function PlansPage() {
 
   const cancelEditingPlan = () => {
     setEditingPlanId(null)
+  }
+
+  const openDownloadUrl = (url: string) => {
+    const link = document.createElement('a')
+    link.href = url
+    link.target = '_blank'
+    link.rel = 'noopener'
+    link.click()
+  }
+
+  const handleDownloadPlan = async (planId: string, fallbackUrl?: string | null) => {
+    if (!planId) return
+
+    if (fallbackUrl) {
+      openDownloadUrl(fallbackUrl)
+      return
+    }
+
+    if (downloadingPlanId) return
+
+    try {
+      setDownloadingPlanId(planId)
+      const response = await fetch(`/api/mealplan/${planId}/download`)
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => null)
+        const message = data?.error || 'We couldn\'t generate a fresh PDF link right now. Please try again in a moment.'
+        window.alert(message)
+        console.warn('Download unavailable:', message)
+        return
+      }
+
+      const data = await response.json()
+
+      if (data.downloadUrl) {
+        openDownloadUrl(data.downloadUrl)
+      } else {
+        window.alert('We could not find a download link. Please try again later.')
+        console.warn('Download unavailable: missing URL in response')
+      }
+    } catch (error) {
+      console.error('Error downloading meal plan PDF:', error)
+      window.alert('Something went wrong fetching the PDF. Please try again shortly.')
+    } finally {
+      setDownloadingPlanId(null)
+    }
   }
 
   // Load user plan and meal plans on component mount
@@ -136,7 +184,8 @@ export default function PlansPage() {
       fat: plan.macros?.fat_g ? `${plan.macros.fat_g}g` : 'N/A'
     },
     status: 'active', // All plans are active for now
-    plan: plan.jsonData // Full meal plan data
+    plan: plan.jsonData, // Full meal plan data
+    document: plan.document || null
   }))
 
   // Mock data - fallback when no real data
@@ -705,17 +754,29 @@ export default function PlansPage() {
                       setShowUpgradePrompt(true)
                       return
                     }
-                    // TODO: Implement PDF download functionality
+                    if (!plan.document) {
+                      window.alert('This plan does not have a PDF yet. Try regenerating or check your email.')
+                      return
+                    }
+                    handleDownloadPlan(plan.id, plan.document.downloadUrl)
                   }}
                   className={`rounded-lg border px-3 py-2 text-sm font-medium transition focus:outline-none focus:ring-2 ${
-                    userPlan === 'FREE' 
-                      ? 'border-gray-300 text-gray-500 cursor-not-allowed' 
-                      : 'border-gray-300 text-gray-700 hover:bg-gray-50 focus:ring-gray-300'
+                    userPlan === 'FREE'
+                      ? 'border-gray-300 text-gray-500 cursor-not-allowed'
+                      : plan.document
+                        ? downloadingPlanId === plan.id
+                          ? 'border-emerald-200 text-emerald-600 bg-emerald-50 cursor-wait'
+                          : 'border-gray-300 text-gray-700 hover:bg-gray-50 focus:ring-gray-300'
+                        : 'border-gray-300 text-gray-400 cursor-not-allowed'
                   }`}
-                  title={userPlan === 'FREE' ? 'PDF downloads require Pro' : 'Download PDF'}
-                  disabled={userPlan === 'FREE'}
+                  title={userPlan === 'FREE' ? 'PDF downloads require Pro' : plan.document ? 'Download PDF' : 'PDF not available for this plan'}
+                  disabled={userPlan === 'FREE' || !plan.document || downloadingPlanId === plan.id}
                 >
-                  <FileText className="h-4 w-4" />
+                  {downloadingPlanId === plan.id ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Download className="h-4 w-4" />
+                  )}
                 </button>
               </ProBadge>
             </div>
@@ -968,3 +1029,9 @@ export default function PlansPage() {
     </div>
   )
 }
+
+
+
+
+
+

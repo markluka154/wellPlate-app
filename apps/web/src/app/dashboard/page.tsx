@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { ChevronLeft, ChevronRight, Crown, Edit2, Check, X, ArrowLeft } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Crown, Edit2, Check, X, ArrowLeft, Download, Loader2 } from 'lucide-react'
 import { UpgradePrompt } from '@/components/dashboard/UpgradePrompt'
 import { ProBadge } from '@/components/dashboard/ProBadge'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -110,6 +110,8 @@ export default function DashboardPage() {
     isDemo: boolean
   }>({ plan: '', isDemo: false })
   const [showMealPlanSuccess, setShowMealPlanSuccess] = useState(false)
+  const [downloadingPlanId, setDownloadingPlanId] = useState<string | null>(null)
+  const [latestGeneratedPlan, setLatestGeneratedPlan] = useState<{ id: string; pdfUrl?: string | null } | null>(null)
 
   // Handle URL parameters for demo upgrades and success messages
   React.useEffect(() => {
@@ -238,6 +240,50 @@ export default function DashboardPage() {
 
   const cancelEditingPlan = () => {
     setEditingPlanId(null)
+  }
+
+  const openDownloadUrl = (url: string) => {
+    const link = document.createElement('a')
+    link.href = url
+    link.target = '_blank'
+    link.rel = 'noopener'
+    link.click()
+  }
+
+  const handleDownloadPlan = async (planId: string, fallbackUrl?: string | null) => {
+    if (!planId) return
+
+    if (fallbackUrl) {
+      openDownloadUrl(fallbackUrl)
+      return
+    }
+
+    if (downloadingPlanId) return
+
+    try {
+      setDownloadingPlanId(planId)
+      const response = await fetch(`/api/mealplan/${planId}/download`)
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => null)
+        const message = data?.error || 'We couldn\'t prepare your PDF right now. Please try again shortly.'
+        showUpgrade('Download unavailable', message, 'PDF downloads')
+        return
+      }
+
+      const data = await response.json()
+
+      if (data.downloadUrl) {
+        openDownloadUrl(data.downloadUrl)
+      } else {
+        showUpgrade('Download unavailable', 'The download link was missing. Please try again.', 'PDF downloads')
+      }
+    } catch (error) {
+      console.error('Error downloading meal plan PDF:', error)
+      showUpgrade('Download failed', 'We hit a snag fetching the PDF. Please try again.', 'PDF downloads')
+    } finally {
+      setDownloadingPlanId(null)
+    }
   }
 
   // Goal setting functions
@@ -634,6 +680,8 @@ export default function DashboardPage() {
 
       const result = await response.json()
       console.log('Meal plan generated successfully:', result)
+
+      setLatestGeneratedPlan({ id: result.mealPlanId, pdfUrl: result.pdfUrl || null })
 
       // Show success modal
       setShowMealPlanSuccess(true)
@@ -1049,6 +1097,9 @@ export default function DashboardPage() {
                       onStartEdit={() => startEditingPlan(userMealPlans[currentPlanIndex]?.id)}
                       onSaveEdit={(newName) => savePlanName(userMealPlans[currentPlanIndex]?.id, newName)}
                       onCancelEdit={cancelEditingPlan}
+                      onDownload={() => handleDownloadPlan(userMealPlans[currentPlanIndex]?.id, userMealPlans[currentPlanIndex]?.document?.downloadUrl)}
+                      isDownloading={downloadingPlanId === userMealPlans[currentPlanIndex]?.id}
+                      downloadReady={Boolean(userMealPlans[currentPlanIndex]?.document)}
                     />
                     </div>
          {/* Quick Actions Section */}
@@ -1676,16 +1727,43 @@ export default function DashboardPage() {
                 ))}
               </div>
 
-              {/* Action button */}
-              <button
-                onClick={() => {
-                  setShowMealPlanSuccess(false)
-                  window.location.href = '/dashboard/plans'
-                }}
-                className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold py-4 px-6 rounded-2xl transition-all duration-200 transform hover:scale-[1.02] hover:shadow-lg"
-              >
-                View Meal Plans
-              </button>
+              <div className="space-y-3">
+                {latestGeneratedPlan && (
+                  <button
+                    onClick={() => {
+                      if (userPlan === 'FREE') {
+                        showUpgrade('PDF downloads require Pro', 'Upgrade to download meal plans instantly from your dashboard.', 'PDF downloads')
+                        return
+                      }
+                      handleDownloadPlan(latestGeneratedPlan.id, latestGeneratedPlan.pdfUrl)
+                    }}
+                    className="w-full flex items-center justify-center gap-2 border border-emerald-200 text-emerald-700 font-semibold py-4 px-6 rounded-2xl transition-all duration-200 hover:bg-emerald-50 focus:outline-none focus:ring-2 focus:ring-emerald-200 disabled:opacity-60 disabled:cursor-not-allowed"
+                    disabled={userPlan === 'FREE' || downloadingPlanId === latestGeneratedPlan.id}
+                  >
+                    {downloadingPlanId === latestGeneratedPlan.id ? (
+                      <>
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        <span>Preparing download…</span>
+                      </>
+                    ) : (
+                      <>
+                        <Download className="h-5 w-5" />
+                        <span>Download PDF Now</span>
+                      </>
+                    )}
+                  </button>
+                )}
+
+                <button
+                  onClick={() => {
+                    setShowMealPlanSuccess(false)
+                    window.location.href = '/dashboard/plans'
+                  }}
+                  className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold py-4 px-6 rounded-2xl transition-all duration-200 transform hover:scale-[1.02] hover:shadow-lg"
+                >
+                  View Meal Plans
+                </button>
+              </div>
 
               <p className="text-center text-sm text-gray-500 mt-4">
                 Redirecting automatically in a few seconds...
@@ -1880,7 +1958,10 @@ function ProfessionalPlanCard({
   isEditing,
   onStartEdit,
   onSaveEdit,
-  onCancelEdit
+  onCancelEdit,
+  onDownload,
+  isDownloading,
+  downloadReady
 }: { 
   title: string
   calories: string
@@ -1897,6 +1978,9 @@ function ProfessionalPlanCard({
   onStartEdit: () => void
   onSaveEdit: (newName: string) => void
   onCancelEdit: () => void
+  onDownload: () => void
+  isDownloading: boolean
+  downloadReady: boolean
 }) {
   const showUpgrade = (title: string, message: string, feature?: string) => {
     // Dispatch event to parent component to show upgrade prompt
@@ -2055,22 +2139,41 @@ function ProfessionalPlanCard({
           onClick={() => userPlan === 'FREE' && showUpgrade('PDF Downloads', 'Download your meal plans as PDF files with Pro.', 'PDF downloads')}
         >
           <button 
-                        onClick={() => {
+            onClick={() => {
               if (userPlan === 'FREE') {
                 showUpgrade('PDF Downloads', 'Download your meal plans as PDF files with Pro.', 'PDF downloads')
                 return
               }
-              // TODO: Implement PDF download functionality
+              if (!downloadReady) {
+                window.alert('Give us a moment to finish preparing your PDF, then try again.')
+                return
+              }
+              onDownload()
             }}
             className={`rounded-lg border px-3 py-2 text-sm font-medium transition focus:outline-none focus:ring-2 ${
-              userPlan === 'FREE' 
-                ? 'border-gray-300 text-gray-500 cursor-not-allowed' 
-                : 'border-gray-300 text-gray-700 hover:bg-gray-50 focus:ring-gray-300'
+              userPlan === 'FREE'
+                ? 'border-gray-300 text-gray-500 cursor-not-allowed'
+                : !downloadReady
+                  ? 'border-gray-300 text-gray-400 cursor-not-allowed'
+                  : 'border-gray-300 text-gray-700 hover:bg-gray-50 focus:ring-gray-300'
             }`}
-            title={userPlan === 'FREE' ? 'PDF downloads require Pro' : 'Download PDF'}
-            disabled={userPlan === 'FREE'}
+            title={
+              userPlan === 'FREE'
+                ? 'PDF downloads require Pro'
+                : downloadReady
+                  ? 'Download PDF'
+                  : 'Preparing your PDF—please try again shortly'
+            }
+            disabled={userPlan === 'FREE' || !downloadReady || isDownloading}
           >
-            📄
+            {isDownloading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <div className="flex items-center gap-1">
+                <Download className="h-4 w-4" />
+                <span>Download</span>
+              </div>
+            )}
           </button>
         </ProBadge>
         <button 
@@ -2494,3 +2597,4 @@ function LifestyleGoalsTab({ goalData, updateGoalData }: any) {
     </div>
   )
 }
+

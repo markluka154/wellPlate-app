@@ -94,9 +94,64 @@ export async function GET(request: NextRequest) {
 
     console.log('✅ User data loaded successfully, meal plans:', mealPlansResult.rows.length)
 
+    const mealPlans = mealPlansResult.rows
+
+    let documentsByMealPlan: Record<string, {
+      id: string
+      pdfPath: string
+      downloadUrl: string | null
+      expiresAt: string | null
+    }> = {}
+
+    if (mealPlans.length > 0) {
+      const mealPlanIds = mealPlans.map((plan: any) => plan.id)
+
+      const documentsResult = await client.query(
+        'SELECT DISTINCT ON ("mealPlanId") id, "mealPlanId", "pdfPath", "signedUrl", "expiresAt", "createdAt" FROM "Document" WHERE "mealPlanId" = ANY($1::text[]) ORDER BY "mealPlanId", "createdAt" DESC',
+        [mealPlanIds]
+      )
+
+      if (documentsResult.rows.length > 0) {
+        let createSignedUrl: ((path: string, expiresIn?: number) => Promise<string>) | null = null
+
+        try {
+          const supabaseModule = await import('@/lib/supabase')
+          createSignedUrl = supabaseModule.createSignedUrl
+        } catch (error) {
+          console.warn('⚠️ Supabase client unavailable for signed URLs:', error instanceof Error ? error.message : error)
+        }
+
+        for (const doc of documentsResult.rows) {
+          let downloadUrl: string | null = doc.signedUrl || null
+          let expiresAt: string | null = doc.expiresAt ? new Date(doc.expiresAt).toISOString() : null
+
+          if (createSignedUrl && doc.pdfPath) {
+            try {
+              downloadUrl = await createSignedUrl(doc.pdfPath, 60 * 30)
+              expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString()
+            } catch (signingError) {
+              console.warn('⚠️ Failed to refresh signed URL for meal plan', doc.mealPlanId, signingError instanceof Error ? signingError.message : signingError)
+            }
+          }
+
+          documentsByMealPlan[doc.mealPlanId] = {
+            id: doc.id,
+            pdfPath: doc.pdfPath,
+            downloadUrl,
+            expiresAt,
+          }
+        }
+      }
+    }
+
+    const enrichedMealPlans = mealPlans.map((plan: any) => ({
+      ...plan,
+      document: documentsByMealPlan[plan.id] || null,
+    }))
+
     return NextResponse.json({
       subscription,
-      mealPlans: mealPlansResult.rows,
+      mealPlans: enrichedMealPlans,
     })
 
   } catch (error) {
@@ -116,3 +171,4 @@ export async function GET(request: NextRequest) {
     }
   }
 }
+
