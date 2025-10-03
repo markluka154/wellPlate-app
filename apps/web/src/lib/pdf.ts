@@ -176,15 +176,12 @@ export async function generateMealPlanPDF(
         const columnWidth = (contentWidth - padding * 2 - columnGap) / 2
 
         const ingredientsText = meal.ingredients
-          .map((ingredient) => `${ingredient.qty} — ${ingredient.item}`)
-          .join('
-')
+          .map((ingredient) => `${ingredient.qty} - ${ingredient.item}`)
+          .join('\n')
 
         const instructionsText = meal.steps
           .map((step, index) => `${index + 1}. ${step}`)
-          .join('
-
-')
+          .join('\n\n')
 
         const ingredientsHeight = doc.heightOfString(ingredientsText, {
           width: columnWidth,
@@ -254,7 +251,6 @@ export async function generateMealPlanPDF(
 
         yPosition += cardHeight + 18
       }
-
       dayPlan.meals.forEach(renderMealCard)
 
       drawFooter()
