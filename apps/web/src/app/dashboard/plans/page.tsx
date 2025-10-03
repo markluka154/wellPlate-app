@@ -6,6 +6,44 @@ import Link from 'next/link'
 import { UpgradePrompt } from '@/components/dashboard/UpgradePrompt'
 import { ProBadge } from '@/components/dashboard/ProBadge'
 
+type PlanTier = 'FREE' | 'PRO_MONTHLY' | 'PRO_ANNUAL' | 'FAMILY_MONTHLY'
+
+const DEMO_EMAILS = new Set<string>(['markluka154@gmail.com'])
+
+const isDemoEmail = (email?: string | null): email is string => Boolean(email && DEMO_EMAILS.has(email))
+
+const readDemoOverride = (): { email: string; plan: PlanTier } | null => {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = localStorage.getItem('wellplate:demoUpgrade')
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    if (!parsed?.email || !parsed?.plan) return null
+    if (!isDemoEmail(parsed.email)) return null
+    return { email: parsed.email, plan: parsed.plan as PlanTier }
+  } catch (error) {
+    console.warn('[demo-plan] Failed to read demo override:', error)
+    return null
+  }
+}
+
+const applyDemoOverride = (planFromDb: PlanTier): PlanTier => {
+  if (typeof window === 'undefined') return planFromDb
+  const override = readDemoOverride()
+  if (!override) return planFromDb
+  try {
+    const userRaw = localStorage.getItem('wellplate:user')
+    if (!userRaw) return planFromDb
+    const user = JSON.parse(userRaw)
+    if (user?.email && user.email === override.email) {
+      return override.plan
+    }
+  } catch (error) {
+    console.warn('[demo-plan] Failed to apply demo override:', error)
+  }
+  return planFromDb
+}
+
 export default function PlansPage() {
   const [activeTab, setActiveTab] = useState<'all' | 'active' | 'completed' | 'archived'>('all')
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null)
@@ -13,7 +51,7 @@ export default function PlansPage() {
   const [selectedPlan, setSelectedPlan] = useState<any>(null)
   const [userMealPlans, setUserMealPlans] = useState<any[]>([])
   const [isLoadingPlans, setIsLoadingPlans] = useState(true)
-  const [userPlan, setUserPlan] = useState<'FREE' | 'PRO_MONTHLY' | 'PRO_ANNUAL'>('FREE')
+  const [userPlan, setUserPlan] = useState<PlanTier>('FREE')
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false)
   const [showHistoryUpgradePrompt, setShowHistoryUpgradePrompt] = useState(false)
   const [planNames, setPlanNames] = useState<{[key: string]: string}>({})
@@ -36,8 +74,29 @@ export default function PlansPage() {
       if (response.ok) {
         const data = await response.json()
         setUserMealPlans(data.mealPlans || [])
-        setUserPlan(data.subscription?.plan || 'FREE')
-        console.log('✅ Loaded meal plans:', data.mealPlans)
+
+        const planFromDb = (data.subscription?.plan || 'FREE') as PlanTier
+        const resolvedPlan = applyDemoOverride(planFromDb)
+        setUserPlan(resolvedPlan)
+
+        try {
+          const userData = localStorage.getItem('wellplate:user')
+          if (userData) {
+            const userObj = JSON.parse(userData)
+            userObj.plan = resolvedPlan
+            localStorage.setItem('wellplate:user', JSON.stringify(userObj))
+
+            if (isDemoEmail(userObj?.email) && resolvedPlan !== 'FREE') {
+              localStorage.setItem('wellplate:demoUpgrade', JSON.stringify({ email: userObj.email, plan: resolvedPlan }))
+            } else {
+              localStorage.removeItem('wellplate:demoUpgrade')
+            }
+          }
+        } catch (error) {
+          console.error('Error updating localStorage plan:', error)
+        }
+
+        console.log('[plans] Loaded meal plans:', data.mealPlans)
       }
     } catch (error) {
       console.error('Error fetching meal plans:', error)
@@ -382,7 +441,7 @@ export default function PlansPage() {
         existingFavorites.push(favoriteMeal)
         localStorage.setItem('wellplate:favorites', JSON.stringify(existingFavorites))
         setFavoriteFeedback(`Added "${meal.name}" to favorites!`)
-        console.log('✅ Meal added to favorites:', favoriteMeal)
+        console.log('[plans] Meal added to favorites:', favoriteMeal)
       } else {
         setFavoriteFeedback(`"${meal.name}" is already in favorites!`)
       }
@@ -723,7 +782,7 @@ export default function PlansPage() {
             <div className="flex gap-2">
               <button 
                 onClick={() => {
-                  console.log('🔍 Opening plan:', plan.title, 'Data structure:', plan.plan)
+                  console.log('[plans] Opening plan:', plan.title, 'Data structure:', plan.plan)
                   setSelectedPlan(plan)
                 }}
                 className="flex-1 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-300"
@@ -861,68 +920,65 @@ export default function PlansPage() {
 
       {/* Meal Plan Preview Modal */}
       {selectedPlan && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-2xl">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">{selectedPlan.title}</h2>
-                  <p className="text-gray-600">{selectedPlan.date} • {selectedPlan.calories} calories/day</p>
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-2 sm:p-4">
+          <div className="bg-white rounded-xl sm:rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            {/* Sticky Header */}
+            <div className="flex-shrink-0 bg-white border-b border-gray-200 p-3 sm:p-4 lg:p-6">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 truncate">{selectedPlan.title}</h2>
+                  <p className="text-xs sm:text-sm text-gray-600 truncate">{selectedPlan.date} • {selectedPlan.calories} calories/day</p>
                 </div>
                 <button
                   onClick={() => setSelectedPlan(null)}
-                  className="text-gray-400 hover:text-gray-600 text-2xl font-bold"
+                  className="flex-shrink-0 text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100"
                 >
-                  ×
+                  <X className="h-5 w-5 sm:h-6 sm:w-6" />
                 </button>
               </div>
             </div>
             
-            <div className="p-6">
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6">
               {selectedPlan.plan ? (
                 <div className="space-y-8">
-                  {/* Daily Totals */}
-                  <div className="bg-gradient-to-r from-emerald-50 to-blue-50 rounded-xl p-6">
-                    <h3 className="text-xl font-semibold text-gray-900 mb-4">Daily Totals</h3>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-emerald-600">{selectedPlan.plan.totals.kcal}</div>
-                        <div className="text-sm text-gray-600">Calories</div>
+                  {/* Daily Totals - Mobile Optimized */}
+                  <div className="bg-gradient-to-r from-emerald-50 to-blue-50 rounded-lg sm:rounded-xl p-3 sm:p-4 lg:p-6">
+                    <h3 className="text-base sm:text-lg lg:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">Daily Totals</h3>
+                    <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                      <div className="text-center bg-white/60 rounded-lg p-2 sm:p-3">
+                        <div className="text-lg sm:text-xl lg:text-2xl font-bold text-emerald-600">{selectedPlan.plan.totals.kcal}</div>
+                        <div className="text-xs sm:text-sm text-gray-600">Calories</div>
                       </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-red-600">{selectedPlan.plan.totals.protein_g}g</div>
-                        <div className="text-sm text-gray-600">Protein</div>
+                      <div className="text-center bg-white/60 rounded-lg p-2 sm:p-3">
+                        <div className="text-lg sm:text-xl lg:text-2xl font-bold text-red-600">{selectedPlan.plan.totals.protein_g}g</div>
+                        <div className="text-xs sm:text-sm text-gray-600">Protein</div>
                       </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-yellow-600">{selectedPlan.plan.totals.carbs_g}g</div>
-                        <div className="text-sm text-gray-600">Carbs</div>
+                      <div className="text-center bg-white/60 rounded-lg p-2 sm:p-3">
+                        <div className="text-lg sm:text-xl lg:text-2xl font-bold text-yellow-600">{selectedPlan.plan.totals.carbs_g}g</div>
+                        <div className="text-xs sm:text-sm text-gray-600">Carbs</div>
                       </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-blue-600">{selectedPlan.plan.totals.fat_g}g</div>
-                        <div className="text-sm text-gray-600">Fat</div>
+                      <div className="text-center bg-white/60 rounded-lg p-2 sm:p-3">
+                        <div className="text-lg sm:text-xl lg:text-2xl font-bold text-blue-600">{selectedPlan.plan.totals.fat_g}g</div>
+                        <div className="text-xs sm:text-sm text-gray-600">Fat</div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Meals */}
+                  {/* Meals - Mobile Optimized */}
                   {selectedPlan.plan && selectedPlan.plan.plan ? selectedPlan.plan.plan.map((day: any, dayIndex: number) => (
-                    <div key={dayIndex} className="border border-gray-200 rounded-xl p-6">
-                      <h3 className="text-xl font-semibold text-gray-900 mb-6">Day {day.day}</h3>
-                      <div className="space-y-6">
+                    <div key={dayIndex} className="border border-gray-200 rounded-lg sm:rounded-xl p-3 sm:p-4 lg:p-6">
+                      <h3 className="text-base sm:text-lg lg:text-xl font-semibold text-gray-900 mb-3 sm:mb-4 lg:mb-6">Day {day.day}</h3>
+                      <div className="space-y-3 sm:space-y-4 lg:space-y-6">
                         {day.meals.map((meal: any, mealIndex: number) => (
-                          <div key={mealIndex} className="bg-gray-50 rounded-lg p-4">
-                            <div className="flex items-center justify-between mb-4">
-                              <h4 className="text-lg font-semibold text-gray-900">{meal.name}</h4>
-                              <div className="flex items-center gap-4">
-                                <div className="flex gap-4 text-sm text-gray-600">
-                                  <span>{meal.kcal} kcal</span>
-                                  <span>{meal.protein_g}g protein</span>
-                                  <span>{meal.carbs_g}g carbs</span>
-                                  <span>{meal.fat_g}g fat</span>
-                                </div>
+                          <div key={mealIndex} className="bg-gray-50 rounded-lg p-3 sm:p-4">
+                            {/* Meal Header - Mobile Stacked */}
+                            <div className="space-y-2 mb-3 sm:mb-4">
+                              <div className="flex items-start justify-between gap-2">
+                                <h4 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 flex-1 min-w-0 break-words">{meal.name}</h4>
                                 <button
                                   onClick={() => addMealToFavorites(meal, selectedPlan.title, selectedPlan.date)}
-                                  className={`flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md transition-colors ${
+                                  className={`flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md transition-colors flex-shrink-0 ${
                                     isMealFavorited(meal.name, selectedPlan.title)
                                       ? 'text-red-600 bg-red-50 border border-red-200'
                                       : 'text-gray-600 hover:text-red-600 hover:bg-red-50'
@@ -930,18 +986,26 @@ export default function PlansPage() {
                                   title={isMealFavorited(meal.name, selectedPlan.title) ? "Already in favorites" : "Add to favorites"}
                                 >
                                   <Heart className={`h-3 w-3 ${isMealFavorited(meal.name, selectedPlan.title) ? 'fill-current' : ''}`} />
-                                  <span>{isMealFavorited(meal.name, selectedPlan.title) ? 'Favorited' : 'Favorite'}</span>
+                                  <span className="hidden sm:inline">{isMealFavorited(meal.name, selectedPlan.title) ? 'Favorited' : 'Favorite'}</span>
                                 </button>
+                              </div>
+                              {/* Macros - Full Width on Mobile */}
+                              <div className="flex flex-wrap gap-1.5 text-[10px] sm:text-xs">
+                                <span className="bg-white px-2 py-1 rounded border border-gray-200 text-gray-700">{meal.kcal} kcal</span>
+                                <span className="bg-white px-2 py-1 rounded border border-gray-200 text-gray-700">{meal.protein_g}g protein</span>
+                                <span className="bg-white px-2 py-1 rounded border border-gray-200 text-gray-700">{meal.carbs_g}g carbs</span>
+                                <span className="bg-white px-2 py-1 rounded border border-gray-200 text-gray-700">{meal.fat_g}g fat</span>
                               </div>
                             </div>
                             
-                            <div className="grid md:grid-cols-2 gap-6">
+                            {/* Ingredients & Instructions - Stack on Mobile */}
+                            <div className="space-y-3 sm:space-y-4 lg:grid lg:grid-cols-2 lg:gap-6 lg:space-y-0">
                               {/* Ingredients */}
                               <div>
-                                <h5 className="font-semibold text-gray-900 mb-2">Ingredients:</h5>
+                                <h5 className="font-semibold text-gray-900 mb-2 text-xs sm:text-sm">Ingredients:</h5>
                                 <ul className="space-y-1">
                                   {meal.ingredients.map((ing: any, ingIndex: number) => (
-                                    <li key={ingIndex} className="text-sm text-gray-700">
+                                    <li key={ingIndex} className="text-xs sm:text-sm text-gray-700 break-words">
                                       • {ing.item} — {ing.qty}
                                     </li>
                                   ))}
@@ -950,10 +1014,10 @@ export default function PlansPage() {
                               
                               {/* Instructions */}
                               <div>
-                                <h5 className="font-semibold text-gray-900 mb-2">Instructions:</h5>
+                                <h5 className="font-semibold text-gray-900 mb-2 text-xs sm:text-sm">Instructions:</h5>
                                 <ol className="space-y-1">
                                   {meal.steps.map((step: any, stepIndex: number) => (
-                                    <li key={stepIndex} className="text-sm text-gray-700">
+                                    <li key={stepIndex} className="text-xs sm:text-sm text-gray-700 break-words">
                                       {stepIndex + 1}. {step}
                                     </li>
                                   ))}
@@ -1029,6 +1093,8 @@ export default function PlansPage() {
     </div>
   )
 }
+
+
 
 
 

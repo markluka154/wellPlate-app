@@ -8,6 +8,44 @@ import { SidebarNav } from '@/components/dashboard/SidebarNav'
 import { RightRail } from '@/components/dashboard/RightRail'
 import { UpgradePrompt } from '@/components/dashboard/UpgradePrompt'
 
+type PlanTier = 'FREE' | 'PRO_MONTHLY' | 'PRO_ANNUAL' | 'FAMILY_MONTHLY'
+
+const DEMO_EMAILS = new Set<string>(['markluka154@gmail.com'])
+
+const isDemoEmail = (email?: string | null): email is string => Boolean(email && DEMO_EMAILS.has(email))
+
+const readDemoOverride = (): { email: string; plan: PlanTier } | null => {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = localStorage.getItem('wellplate:demoUpgrade')
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    if (!parsed?.email || !parsed?.plan) return null
+    if (!isDemoEmail(parsed.email)) return null
+    return { email: parsed.email, plan: parsed.plan as PlanTier }
+  } catch (error) {
+    console.warn('[demo-plan] Failed to read demo override:', error)
+    return null
+  }
+}
+
+const applyDemoOverride = (planFromDb: PlanTier): PlanTier => {
+  if (typeof window === 'undefined') return planFromDb
+  const override = readDemoOverride()
+  if (!override) return planFromDb
+  try {
+    const userRaw = localStorage.getItem('wellplate:user')
+    if (!userRaw) return planFromDb
+    const user = JSON.parse(userRaw)
+    if (user?.email && user.email === override.email) {
+      return override.plan
+    }
+  } catch (error) {
+    console.warn('[demo-plan] Failed to apply demo override:', error)
+  }
+  return planFromDb
+}
+
 interface AuthContextType {
   user: { email: string; token: string } | null
 }
@@ -20,7 +58,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [user, setUser] = useState<{ email: string; token: string } | null>(null)
-  const [userPlan, setUserPlan] = useState<'FREE' | 'PRO_MONTHLY' | 'PRO_ANNUAL' | 'FAMILY_MONTHLY'>('FREE')
+  const [userPlan, setUserPlan] = useState<PlanTier>('FREE')
   const [plansUsedThisMonth, setPlansUsedThisMonth] = useState(0)
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false)
   const router = useRouter()
@@ -49,9 +87,30 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       const token = urlParams.get('token')
 
       // Check for plan upgrades
-      if (urlParams.get('demo_upgrade') === 'true' || urlParams.get('success') === 'true') {
-        const plan = urlParams.get('plan') || 'PRO_MONTHLY'
-        setUserPlan(plan as 'PRO_MONTHLY' | 'PRO_ANNUAL')
+      if (urlParams.get('demo_upgrade') === 'true') {
+        const plan = (urlParams.get('plan') || 'PRO_MONTHLY') as PlanTier
+        setUserPlan(plan)
+
+        try {
+          const userData = localStorage.getItem('wellplate:user')
+          if (userData) {
+            const userObj = JSON.parse(userData)
+            userObj.plan = plan
+            localStorage.setItem('wellplate:user', JSON.stringify(userObj))
+
+            if (isDemoEmail(userObj?.email)) {
+              localStorage.setItem('wellplate:demoUpgrade', JSON.stringify({ email: userObj.email, plan }))
+            } else {
+              localStorage.removeItem('wellplate:demoUpgrade')
+            }
+          }
+        } catch (error) {
+          console.error('Error persisting demo upgrade info:', error)
+        }
+      } else if (urlParams.get('success') === 'true') {
+        const plan = (urlParams.get('plan') || 'PRO_MONTHLY') as PlanTier
+        setUserPlan(plan)
+        localStorage.removeItem('wellplate:demoUpgrade')
       }
 
       if (auth === 'success' && email && token) {
@@ -98,8 +157,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       if (response.ok) {
         const data = await response.json()
-        const plan = data.subscription?.plan || 'FREE'
-        setUserPlan(plan)
+        const planFromDb = (data.subscription?.plan || 'FREE') as PlanTier
+        const resolvedPlan = applyDemoOverride(planFromDb)
+        setUserPlan(resolvedPlan)
         setPlansUsedThisMonth(data.mealPlans?.length || 0)
         
         // Update localStorage with the correct plan from database
@@ -107,8 +167,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           const userData = localStorage.getItem('wellplate:user')
           if (userData) {
             const userObj = JSON.parse(userData)
-            userObj.plan = plan
+            userObj.plan = resolvedPlan
             localStorage.setItem('wellplate:user', JSON.stringify(userObj))
+
+            if (isDemoEmail(userObj?.email) && resolvedPlan !== 'FREE') {
+              localStorage.setItem('wellplate:demoUpgrade', JSON.stringify({ email: userObj.email, plan: resolvedPlan }))
+            } else {
+              localStorage.removeItem('wellplate:demoUpgrade')
+            }
           }
         } catch (error) {
           console.error('Error updating localStorage plan:', error)

@@ -7,6 +7,44 @@ import { ProBadge } from '@/components/dashboard/ProBadge'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect } from 'react'
 
+type PlanTier = 'FREE' | 'PRO_MONTHLY' | 'PRO_ANNUAL' | 'FAMILY_MONTHLY'
+
+const DEMO_EMAILS = new Set<string>(['markluka154@gmail.com'])
+
+const isDemoEmail = (email?: string | null): email is string => Boolean(email && DEMO_EMAILS.has(email))
+
+const readDemoOverride = (): { email: string; plan: PlanTier } | null => {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = localStorage.getItem('wellplate:demoUpgrade')
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    if (!parsed?.email || !parsed?.plan) return null
+    if (!isDemoEmail(parsed.email)) return null
+    return { email: parsed.email, plan: parsed.plan as PlanTier }
+  } catch (error) {
+    console.warn('[demo-plan] Failed to read demo override:', error)
+    return null
+  }
+}
+
+const applyDemoOverride = (planFromDb: PlanTier): PlanTier => {
+  if (typeof window === 'undefined') return planFromDb
+  const override = readDemoOverride()
+  if (!override) return planFromDb
+  try {
+    const userRaw = localStorage.getItem('wellplate:user')
+    if (!userRaw) return planFromDb
+    const user = JSON.parse(userRaw)
+    if (user?.email && user.email === override.email) {
+      return override.plan
+    }
+  } catch (error) {
+    console.warn('[demo-plan] Failed to apply demo override:', error)
+  }
+  return planFromDb
+}
+
 export default function DashboardPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -96,7 +134,7 @@ export default function DashboardPage() {
   const [userMealPlans, setUserMealPlans] = useState<any[]>([])
   const [isLoadingPlans, setIsLoadingPlans] = useState(true)
   const [currentPlanIndex, setCurrentPlanIndex] = useState(0)
-  const [userPlan, setUserPlan] = useState<'FREE' | 'PRO_MONTHLY' | 'PRO_ANNUAL' | 'FAMILY_MONTHLY'>('FREE')
+  const [userPlan, setUserPlan] = useState<PlanTier>('FREE')
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false)
   const [upgradePromptData, setUpgradePromptData] = useState<{
     title: string
@@ -119,7 +157,7 @@ export default function DashboardPage() {
     
     if (urlParams.get('demo_upgrade') === 'true') {
       const plan = urlParams.get('plan') || 'PRO_MONTHLY'
-      setUserPlan(plan as 'PRO_MONTHLY' | 'PRO_ANNUAL' | 'FAMILY_MONTHLY')
+      setUserPlan(plan as PlanTier)
       
       // Update localStorage to persist the change
       try {
@@ -128,6 +166,15 @@ export default function DashboardPage() {
           const user = JSON.parse(userData)
           user.plan = plan
           localStorage.setItem('wellplate:user', JSON.stringify(user))
+
+          if (isDemoEmail(user.email)) {
+            localStorage.setItem('wellplate:demoUpgrade', JSON.stringify({
+              email: user.email,
+              plan
+            }))
+          } else {
+            localStorage.removeItem('wellplate:demoUpgrade')
+          }
         }
       } catch (error) {
         console.error('Error updating user plan in localStorage:', error)
@@ -150,6 +197,7 @@ export default function DashboardPage() {
     }
     
     if (urlParams.get('success') === 'true') {
+      localStorage.removeItem('wellplate:demoUpgrade')
       // Show real upgrade success message
       setTimeout(() => {
         setUpgradeSuccessData({
@@ -182,18 +230,25 @@ export default function DashboardPage() {
         setUserMealPlans(data.mealPlans || [])
         
         // Update user plan from database
-        const plan = data.subscription?.plan || 'FREE'
-        setUserPlan(plan)
+        const planFromDb = (data.subscription?.plan || 'FREE') as PlanTier
+        const resolvedPlan = applyDemoOverride(planFromDb)
+        setUserPlan(resolvedPlan)
         
         // Update localStorage with the correct plan from database
         try {
           const userData = localStorage.getItem('wellplate:user')
           if (userData) {
             const userObj = JSON.parse(userData)
-            userObj.plan = plan
+            userObj.plan = resolvedPlan
             localStorage.setItem('wellplate:user', JSON.stringify(userObj))
-      }
-    } catch (error) {
+
+            if (isDemoEmail(userObj?.email) && resolvedPlan !== 'FREE') {
+              localStorage.setItem('wellplate:demoUpgrade', JSON.stringify({ email: userObj.email, plan: resolvedPlan }))
+            } else {
+              localStorage.removeItem('wellplate:demoUpgrade')
+            }
+          }
+        } catch (error) {
           console.error('Error updating localStorage plan:', error)
         }
       }

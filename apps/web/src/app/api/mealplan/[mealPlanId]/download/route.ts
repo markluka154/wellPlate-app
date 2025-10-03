@@ -61,7 +61,7 @@ export async function GET(
         expiresAt = new Date(Date.now() + 30 * 60 * 1000)
         refreshed = true
       } catch (error) {
-        console.warn('⚠️ Unable to refresh Supabase signed URL:', error)
+        console.warn('[download] Unable to refresh Supabase signed URL:', error)
       }
     }
 
@@ -76,7 +76,7 @@ export async function GET(
           [downloadUrl, expiresAt.toISOString(), document.id]
         )
       } catch (updateError) {
-        console.warn('⚠️ Failed to persist refreshed signed URL:', updateError)
+        console.warn('[download] Failed to persist refreshed signed URL:', updateError)
       }
     }
 
@@ -86,7 +86,7 @@ export async function GET(
       refreshed,
     })
   } catch (error) {
-    console.error('❌ Meal plan PDF download error:', error)
+    console.error('[download] Meal plan PDF download error:', error)
     return NextResponse.json(
       { error: 'Failed to generate download link for this meal plan' },
       { status: 500 }
@@ -96,8 +96,10 @@ export async function GET(
       try {
         await client.end()
       } catch (closeError) {
-        console.warn('⚠️ Failed to close database connection after download request:', closeError)
+        console.warn('[download] Failed to close database connection after download request:', closeError)
       }
     }
   }
 }
+
+
