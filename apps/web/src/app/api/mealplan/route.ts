@@ -1,6 +1,158 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 // Dynamic imports to prevent build-time execution
+type RawMeal = {
+  name: string
+  kcal: number
+  protein_g: number
+  carbs_g: number
+  fat_g: number
+  ingredients: { item: string; qty: string }[]
+  steps: string[]
+  substitution?: string
+  tip?: string
+}
+
+type RawDay = {
+  day: number
+  meals: RawMeal[]
+  daily_nutrition_summary?: {
+    kcal: number
+    protein_g: number
+    carbs_g: number
+    fat_g: number
+  }
+}
+
+type RawMealPlan = {
+  plan: RawDay[]
+  totals: {
+    kcal: number
+    protein_g: number
+    carbs_g: number
+    fat_g: number
+  }
+  groceries: { category: string; items: string[] }[]
+}
+
+const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max)
+
+const adjustMealPlanForCalorieTarget = (plan: any, target?: number): RawMealPlan => {
+  if (!plan || !Array.isArray(plan.plan) || !target) {
+    if (!plan.groceries) {
+      plan.groceries = []
+    }
+    return plan as RawMealPlan
+  }
+
+  const tolerance = Math.max(Math.round(target * 0.05), 50)
+  plan.groceries = Array.isArray(plan.groceries) ? plan.groceries : []
+
+  const ensureSnackCategory = () => {
+    const snackItems = [
+      'Greek yogurt (170g tub)',
+      'Mixed berries (1 cup)',
+      'Roasted almonds (20g)',
+    ]
+    let category = plan.groceries.find((cat: any) => cat && cat.category === 'Snacks & Boosters')
+    if (!category) {
+      category = { category: 'Snacks & Boosters', items: [] }
+      plan.groceries.push(category)
+    }
+    snackItems.forEach((item) => {
+      if (!category.items.includes(item)) {
+        category.items.push(item)
+      }
+    })
+  }
+
+  const totals = {
+    kcal: 0,
+    protein_g: 0,
+    carbs_g: 0,
+    fat_g: 0,
+  }
+
+  plan.plan = plan.plan.map((rawDay: any) => {
+    const day: RawDay = {
+      day: typeof rawDay.day === 'number' ? rawDay.day : 1,
+      meals: Array.isArray(rawDay.meals) ? rawDay.meals : [],
+      daily_nutrition_summary: rawDay.daily_nutrition_summary,
+    }
+
+    let dayTotal = day.meals.reduce((sum, meal) => sum + (Number(meal.kcal) || 0), 0)
+
+    if (Math.abs(target - dayTotal) > tolerance) {
+      if (dayTotal < target) {
+        const deficit = target - dayTotal
+        const snackCalories = clamp(Math.round(deficit), 150, 450)
+        const snackProtein = Math.round((snackCalories * 0.25) / 4)
+        const snackFat = Math.round((snackCalories * 0.25) / 9)
+        const snackCarbs = Math.max(
+          snackCalories - snackProtein * 4 - snackFat * 9,
+          0
+        )
+
+        day.meals.push({
+          name: 'Calorie Support Snack',
+          kcal: snackCalories,
+          protein_g: snackProtein,
+          carbs_g: Math.round(snackCarbs / 4),
+          fat_g: snackFat,
+          ingredients: [
+            { item: 'Greek yogurt (unsweetened)', qty: '170g' },
+            { item: 'Mixed berries', qty: '1 cup' },
+            { item: 'Roasted almonds', qty: '20g' },
+          ],
+          steps: [
+            'Layer the Greek yogurt in a bowl and fold in the berries.',
+            'Top with roasted almonds for crunch and healthy fats.',
+          ],
+          substitution: 'Swap almonds for walnuts or pistachios if preferred.',
+          tip: `Added to gently lift the day toward your ${target} kcal target.`,
+        })
+
+        ensureSnackCategory()
+        dayTotal += snackCalories
+      } else {
+        const ratio = clamp(target / dayTotal, 0.75, 0.98)
+        day.meals = day.meals.map((meal) => {
+          const updated: RawMeal = {
+            ...meal,
+            kcal: Math.max(120, Math.round((Number(meal.kcal) || 0) * ratio)),
+            protein_g: Math.max(0, Math.round((Number(meal.protein_g) || 0) * ratio)),
+            carbs_g: Math.max(0, Math.round((Number(meal.carbs_g) || 0) * ratio)),
+            fat_g: Math.max(0, Math.round((Number(meal.fat_g) || 0) * ratio)),
+            tip: meal.tip
+              ? `${meal.tip} Use slightly smaller portions to stay within your calorie target.`
+              : 'Serve a touch less than the full portion to align with your calorie goal.',
+          }
+          return updated
+        })
+        dayTotal = day.meals.reduce((sum, meal) => sum + (meal.kcal || 0), 0)
+      }
+    }
+
+    const summary = {
+      kcal: day.meals.reduce((sum, meal) => sum + (meal.kcal || 0), 0),
+      protein_g: day.meals.reduce((sum, meal) => sum + (meal.protein_g || 0), 0),
+      carbs_g: day.meals.reduce((sum, meal) => sum + (meal.carbs_g || 0), 0),
+      fat_g: day.meals.reduce((sum, meal) => sum + (meal.fat_g || 0), 0),
+    }
+
+    day.daily_nutrition_summary = summary
+
+    totals.kcal += summary.kcal
+    totals.protein_g += summary.protein_g
+    totals.carbs_g += summary.carbs_g
+    totals.fat_g += summary.fat_g
+
+    return day
+  })
+
+  plan.totals = totals
+  return plan as RawMealPlan
+}
 const loadDependencies = async () => {
   const { Client } = await import('pg')
   const { mealPreferenceSchema, mealPlanResponseSchema } = await import('@/lib/zod-schemas')
@@ -404,3 +556,6 @@ export async function GET() {
     timestamp: new Date().toISOString()
   })
 }
+
+
+
