@@ -299,9 +299,10 @@ export async function generateMealPlanPDF(
       const columnWidth = (contentWidth - 24) / 2
       let columnX = marginX
       let columnY = summaryY
+      const newline = '\n'
 
       mealPlan.groceries.forEach((category) => {
-        const itemsText = category.items.join('\n')
+        const itemsText = category.items.join(newline)
         const blockHeight = doc.heightOfString(itemsText, { width: columnWidth, lineGap: 3 }) + 32
 
         if (columnY + blockHeight > pageHeight - 80) {
