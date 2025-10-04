@@ -131,7 +131,7 @@ export async function generateMealPlanPDF(
     const renderDayPage = (dayPlan: MealPlanResponse['plan'][number]) => {
       doc.addPage()
 
-      const daySummary = dayPlan.daily_nutrition_summary || {
+      const daySummary = {
         kcal: dayPlan.meals.reduce((acc, meal) => acc + (meal.kcal || 0), 0),
         protein_g: dayPlan.meals.reduce((acc, meal) => acc + (meal.protein_g || 0), 0),
         carbs_g: dayPlan.meals.reduce((acc, meal) => acc + (meal.carbs_g || 0), 0),
