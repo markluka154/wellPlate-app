@@ -149,7 +149,7 @@ export default function DashboardPage() {
   }>({ plan: '', isDemo: false })
   const [showMealPlanSuccess, setShowMealPlanSuccess] = useState(false)
   const [downloadingPlanId, setDownloadingPlanId] = useState<string | null>(null)
-  const [latestGeneratedPlan, setLatestGeneratedPlan] = useState<{ id: string; pdfUrl?: string | null } | null>(null)
+  const [latestGeneratedPlan, setLatestGeneratedPlan] = useState<{ id: string; pdfUrl?: string | null; pdfDataUrl?: string | null } | null>(null)
 
   // Handle URL parameters for demo upgrades and success messages
   React.useEffect(() => {
@@ -302,6 +302,7 @@ export default function DashboardPage() {
     link.href = url
     link.target = '_blank'
     link.rel = 'noopener'
+    link.download = 'wellplate-meal-plan.pdf'
     link.click()
   }
 
@@ -330,6 +331,8 @@ export default function DashboardPage() {
 
       if (data.downloadUrl) {
         openDownloadUrl(data.downloadUrl)
+      } else if (data.dataUrl) {
+        openDownloadUrl(data.dataUrl)
       } else {
         showUpgrade('Download unavailable', 'The download link was missing. Please try again.', 'PDF downloads')
       }
@@ -736,7 +739,7 @@ export default function DashboardPage() {
       const result = await response.json()
       console.log('Meal plan generated successfully:', result)
 
-      setLatestGeneratedPlan({ id: result.mealPlanId, pdfUrl: result.pdfUrl || null })
+      setLatestGeneratedPlan({ id: result.mealPlanId, pdfUrl: result.pdfUrl || null, pdfDataUrl: result.pdfDataUrl || null })
 
       // Show success modal
       setShowMealPlanSuccess(true)
@@ -1790,7 +1793,7 @@ export default function DashboardPage() {
                         showUpgrade('PDF downloads require Pro', 'Upgrade to download meal plans instantly from your dashboard.', 'PDF downloads')
                         return
                       }
-                      handleDownloadPlan(latestGeneratedPlan.id, latestGeneratedPlan.pdfUrl)
+                      handleDownloadPlan(latestGeneratedPlan.id, latestGeneratedPlan.pdfUrl || latestGeneratedPlan.pdfDataUrl || null)
                     }}
                     className="w-full flex items-center justify-center gap-2 border border-emerald-200 text-emerald-700 font-semibold py-4 px-6 rounded-2xl transition-all duration-200 hover:bg-emerald-50 focus:outline-none focus:ring-2 focus:ring-emerald-200 disabled:opacity-60 disabled:cursor-not-allowed"
                     disabled={userPlan === 'FREE' || downloadingPlanId === latestGeneratedPlan.id}

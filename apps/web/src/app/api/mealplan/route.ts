@@ -467,6 +467,7 @@ export async function POST(request: NextRequest) {
 
     // Generate PDF - wrap in try-catch to handle build-time issues
     let pdfBuffer: Buffer | null = null
+    let pdfDataUrl: string | null = null
     try {
       pdfBuffer = await generateMealPlanPDF(
         validatedMealPlan,
@@ -500,6 +501,10 @@ export async function POST(request: NextRequest) {
         console.warn('⚠️ PDF upload failed, continuing without storage:', uploadError instanceof Error ? uploadError.message : 'Unknown error')
         // Continue without PDF storage - the meal plan is still saved to database
       }
+
+      if (!signedUrl) {
+        pdfDataUrl = `data:application/pdf;base64,${pdfBuffer.toString('base64')}`
+      }
     }
 
     // Send email with meal plan content and PDF attachment
@@ -523,7 +528,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       mealPlanId: mealPlanId,
       pdfUrl: signedUrl,
-      message: signedUrl ? 'Meal plan generated successfully' : 'Meal plan generated successfully (PDF storage unavailable)',
+      pdfDataUrl: pdfDataUrl,
+      message: signedUrl ? 'Meal plan generated successfully' : 'Meal plan generated successfully (PDF ready via direct download)',
     })
 
   } catch (error) {

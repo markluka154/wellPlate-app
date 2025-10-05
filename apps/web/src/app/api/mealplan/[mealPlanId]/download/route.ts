@@ -5,10 +5,12 @@ export const dynamic = 'force-dynamic'
 const loadDependencies = async () => {
   const { Client } = await import('pg')
   const supabaseModule = await import('@/lib/supabase')
+  const { generateMealPlanPDF } = await import('@/lib/pdf')
 
   return {
     Client,
     createSignedUrl: supabaseModule.createSignedUrl,
+    generateMealPlanPDF,
   }
 }
 
@@ -29,7 +31,7 @@ export async function GET(
       return NextResponse.json({ error: 'Database configuration missing' }, { status: 500 })
     }
 
-    const { Client, createSignedUrl } = await loadDependencies()
+    const { Client, createSignedUrl, generateMealPlanPDF } = await loadDependencies()
     client = new Client({
       connectionString: process.env.DATABASE_URL,
     })
@@ -66,6 +68,36 @@ export async function GET(
     }
 
     if (!downloadUrl) {
+      try {
+        const mealPlanResult = await client.query(
+          'SELECT "jsonData", "userId" FROM "MealPlan" WHERE id = $1 LIMIT 1',
+          [mealPlanId]
+        )
+
+        if (mealPlanResult.rows.length > 0) {
+          const mealPlanJson = mealPlanResult.rows[0].jsonData
+          const userId = mealPlanResult.rows[0].userId
+
+          const userResult = await client.query(
+            'SELECT email FROM "User" WHERE id = $1 LIMIT 1',
+            [userId]
+          )
+
+          const fallbackEmail = userResult.rows[0]?.email || 'user@wellplate.eu'
+          const fallbackBuffer = await generateMealPlanPDF(mealPlanJson, fallbackEmail)
+          const dataUrl = `data:application/pdf;base64,${fallbackBuffer.toString('base64')}`
+
+          return NextResponse.json({
+            downloadUrl: null,
+            dataUrl,
+            expiresAt: null,
+            refreshed: false,
+          })
+        }
+      } catch (fallbackError) {
+        console.warn('[download] Fallback PDF generation failed:', fallbackError)
+      }
+
       return NextResponse.json({ error: 'PDF download is temporarily unavailable' }, { status: 503 })
     }
 
@@ -82,6 +114,7 @@ export async function GET(
 
     return NextResponse.json({
       downloadUrl,
+      dataUrl: null,
       expiresAt: expiresAt ? expiresAt.toISOString() : null,
       refreshed,
     })

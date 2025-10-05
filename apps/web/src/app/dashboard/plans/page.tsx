@@ -136,6 +136,7 @@ export default function PlansPage() {
     link.href = url
     link.target = '_blank'
     link.rel = 'noopener'
+    link.download = 'wellplate-meal-plan.pdf'
     link.click()
   }
 
@@ -165,6 +166,8 @@ export default function PlansPage() {
 
       if (data.downloadUrl) {
         openDownloadUrl(data.downloadUrl)
+      } else if (data.dataUrl) {
+        openDownloadUrl(data.dataUrl)
       } else {
         window.alert('We could not find a download link. Please try again later.')
         console.warn('Download unavailable: missing URL in response')
@@ -817,7 +820,7 @@ export default function PlansPage() {
                       window.alert('This plan does not have a PDF yet. Try regenerating or check your email.')
                       return
                     }
-                    handleDownloadPlan(plan.id, plan.document.downloadUrl)
+                    handleDownloadPlan(plan.id, plan.document?.downloadUrl || null)
                   }}
                   className={`rounded-lg border px-3 py-2 text-sm font-medium transition focus:outline-none focus:ring-2 ${
                     userPlan === 'FREE'
