@@ -29,7 +29,7 @@ export function SidebarNav() {
                 : 'hover:bg-neutral-50 text-neutral-700'
             ].join(' ')}
           >
-            <Icon className="h-3 w-3 sm:h-4 sm:w-4" />
+            <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
             <span className="hidden xs:inline">{label}</span>
           </Link>
         )

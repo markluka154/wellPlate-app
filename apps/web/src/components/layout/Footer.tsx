@@ -11,7 +11,7 @@ export function Footer() {
             <div className="col-span-1 md:col-span-2">
               <div className="flex items-center space-x-2 mb-4">
                 <div className="h-8 w-8 rounded-full bg-brand flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">N</span>
+                  <span className="text-white font-bold text-sm">W</span>
                 </div>
                 <span className="text-xl font-bold text-white">WellPlate</span>
               </div>

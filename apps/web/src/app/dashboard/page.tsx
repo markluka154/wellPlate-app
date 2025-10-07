@@ -862,8 +862,8 @@ export default function DashboardPage() {
                 <FormField label="Age">
                   <input
                     type="number"
-                    value={age}
-                    onChange={(e) => setAge(Number(e.target.value))}
+                    value={age || ''}
+                    onChange={(e) => setAge(e.target.value ? Number(e.target.value) : 0)}
                     className="w-full rounded-xl border-2 border-gray-200 bg-white/80 backdrop-blur-sm px-4 py-3 text-sm font-medium text-gray-900 placeholder-gray-400 outline-none transition-all duration-200 focus:border-emerald-400 focus:bg-white focus:shadow-lg focus:shadow-emerald-100 hover:border-gray-300 hover:bg-white"
                   />
                 </FormField>
@@ -871,8 +871,8 @@ export default function DashboardPage() {
                 <FormField label="Weight (kg)">
                   <input
                     type="number"
-                    value={weight}
-                    onChange={(e) => setWeight(Number(e.target.value))}
+                    value={weight || ''}
+                    onChange={(e) => setWeight(e.target.value ? Number(e.target.value) : 0)}
                     className="w-full rounded-xl border-2 border-gray-200 bg-white/80 backdrop-blur-sm px-4 py-3 text-sm font-medium text-gray-900 placeholder-gray-400 outline-none transition-all duration-200 focus:border-emerald-400 focus:bg-white focus:shadow-lg focus:shadow-emerald-100 hover:border-gray-300 hover:bg-white"
                   />
                 </FormField>
@@ -880,8 +880,8 @@ export default function DashboardPage() {
                 <FormField label="Height (cm)">
                   <input
                     type="number"
-                    value={height}
-                    onChange={(e) => setHeight(Number(e.target.value))}
+                    value={height || ''}
+                    onChange={(e) => setHeight(e.target.value ? Number(e.target.value) : 0)}
                     className="w-full rounded-xl border-2 border-gray-200 bg-white/80 backdrop-blur-sm px-4 py-3 text-sm font-medium text-gray-900 placeholder-gray-400 outline-none transition-all duration-200 focus:border-emerald-400 focus:bg-white focus:shadow-lg focus:shadow-emerald-100 hover:border-gray-300 hover:bg-white"
                   />
                 </FormField>
@@ -1570,11 +1570,11 @@ export default function DashboardPage() {
 
       {/* Learning Hub Modal */}
       {showLearningModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-2xl">
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-2 sm:p-4">
+          <div className="bg-white rounded-xl sm:rounded-2xl max-w-6xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-200 p-4 sm:p-6 rounded-t-xl sm:rounded-t-2xl">
               <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-gray-900">Learning Hub</h2>
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Learning Hub</h2>
                 <button
                   onClick={() => {
                     setShowLearningModal(false)
@@ -1585,55 +1585,55 @@ export default function DashboardPage() {
                   <X className="h-5 w-5 text-gray-500" />
                 </button>
               </div>
-              <p className="text-gray-600 mt-2">Master nutrition, cooking, and healthy living</p>
+              <p className="text-sm sm:text-base text-gray-600 mt-2">Master nutrition, cooking, and healthy living</p>
               
               {!selectedArticle && (
-                <div className="flex gap-2 mt-4">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-4">
                   <button
                     onClick={() => setLearningCategory('nutrition')}
-                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    className={`px-3 py-2 rounded-lg font-medium transition-colors text-sm ${
                       learningCategory === 'nutrition' 
                         ? 'bg-blue-100 text-blue-700 border border-blue-200' 
                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     }`}
                   >
-                    📊 Nutrition Basics
+                    📊 Nutrition
                   </button>
                   <button
                     onClick={() => setLearningCategory('meal-planning')}
-                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    className={`px-3 py-2 rounded-lg font-medium transition-colors text-sm ${
                       learningCategory === 'meal-planning' 
                         ? 'bg-green-100 text-green-700 border border-green-200' 
                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     }`}
                   >
-                    🍽️ Meal Planning
+                    🍽️ Planning
                   </button>
                   <button
                     onClick={() => setLearningCategory('cooking')}
-                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    className={`px-3 py-2 rounded-lg font-medium transition-colors text-sm ${
                       learningCategory === 'cooking' 
                         ? 'bg-orange-100 text-orange-700 border border-orange-200' 
                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     }`}
                   >
-                    👨‍🍳 Cooking Skills
+                    👨‍🍳 Cooking
                   </button>
                   <button
                     onClick={() => setLearningCategory('health')}
-                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    className={`px-3 py-2 rounded-lg font-medium transition-colors text-sm ${
                       learningCategory === 'health' 
                         ? 'bg-purple-100 text-purple-700 border border-purple-200' 
                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     }`}
                   >
-                    💪 Health & Wellness
+                    💪 Wellness
                   </button>
                 </div>
               )}
             </div>
             
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               {selectedArticle ? (
                 <ArticleViewer article={selectedArticle} onBack={() => setSelectedArticle(null)} />
               ) : (

@@ -222,23 +222,23 @@ export default function TemplatesPage() {
         </div>
 
         {/* Category Filter */}
-        <div className="bg-white rounded-xl p-6 mb-8 shadow-sm">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Choose Your Goal</h2>
-          <div className="flex flex-wrap gap-3">
+        <div className="bg-white rounded-xl p-4 mb-6 shadow-sm">
+          <h2 className="text-base font-semibold text-gray-900 mb-3">Choose Your Goal</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
             {templateCategories.map((category) => {
               const Icon = category.icon
               return (
                 <button
                   key={category.id}
                   onClick={() => setSelectedCategory(category.id)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                  className={`flex flex-col items-center gap-1 px-3 py-3 rounded-lg font-medium transition-colors ${
                     selectedCategory === category.id
                       ? 'bg-blue-100 text-blue-700 border border-blue-200'
                       : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   }`}
                 >
-                  <Icon className="h-4 w-4" />
-                  {category.name}
+                  <Icon className="h-5 w-5" />
+                  <span className="text-xs text-center leading-tight">{category.name}</span>
                 </button>
               )
             })}

@@ -108,23 +108,23 @@ export default function AnalyticsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
           <Link 
             href="/dashboard"
-            className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+            className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors self-start"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to Dashboard
           </Link>
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Analytics Dashboard</h1>
+            <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">Analytics Dashboard</h1>
             <p className="text-sm text-gray-600">Your nutrition insights and progress tracking</p>
           </div>
         </div>
         
         {/* Time Range Selector */}
-        <div className="flex gap-2 bg-gray-100 rounded-lg p-1">
+        <div className="flex gap-2 bg-gray-100 rounded-lg p-1 self-start sm:self-auto">
           <button
             onClick={() => setTimeRange('7d')}
             className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${

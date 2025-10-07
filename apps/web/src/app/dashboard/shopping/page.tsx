@@ -160,7 +160,7 @@ export default function ShoppingListPage() {
   const updateQuantity = (id: string, newQuantity: string) => {
     setShoppingList(prev => 
       prev.map(item => 
-        item.id === id ? { ...item, quantity: newQuantity } : item
+        item.id === id ? { ...item, quantity: newQuantity || '1' } : item
       )
     )
   }
@@ -953,75 +953,79 @@ export default function ShoppingListPage() {
           ) : (
             <div className="divide-y divide-gray-200">
               {filteredItems.map((item) => (
-                <div key={item.id} className="p-6 hover:bg-gray-50 transition-colors">
+                <div key={item.id} className="p-4 sm:p-6 hover:bg-gray-50 transition-colors">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center flex-1">
+                    <div className="flex items-center flex-1 min-w-0">
                       <button
                         onClick={() => toggleItem(item.id)}
-                        className={`mr-4 p-1 rounded-full border-2 transition-colors ${
+                        className={`mr-3 sm:mr-4 p-1 rounded-full border-2 transition-colors flex-shrink-0 ${
                           item.checked 
                             ? 'bg-emerald-500 border-emerald-500 text-white' 
                             : 'border-gray-300 hover:border-emerald-500'
                         }`}
                       >
-                        {item.checked && <Check className="h-4 w-4" />}
+                        {item.checked && <Check className="h-3 w-3 sm:h-4 sm:w-4" />}
                       </button>
                       
-                      <div className="flex-1">
-                        <h3 className={`text-lg font-medium ${item.checked ? 'line-through text-gray-500' : 'text-gray-900'}`}>
+                      <div className="flex-1 min-w-0">
+                        <h3 className={`text-base sm:text-lg font-medium truncate ${item.checked ? 'line-through text-gray-500' : 'text-gray-900'}`}>
                           {item.name}
                         </h3>
-                        <div className="flex items-center mt-1 space-x-4 text-sm text-gray-600">
-                          <span className="flex items-center">
-                            <Package className="h-4 w-4 mr-1" />
+                        <div className="flex items-center mt-1 space-x-2 sm:space-x-4 text-xs sm:text-sm text-gray-600 overflow-x-auto">
+                          <span className="flex items-center whitespace-nowrap">
+                            <Package className="h-3 w-3 sm:h-4 sm:w-4 mr-1 flex-shrink-0" />
                             {item.category}
                           </span>
-                          <span className="flex items-center">
-                            <Store className="h-4 w-4 mr-1" />
+                          <span className="flex items-center whitespace-nowrap">
+                            <Store className="h-3 w-3 sm:h-4 sm:w-4 mr-1 flex-shrink-0" />
                             {item.store}
                           </span>
-                          <span className="flex items-center">
-                            <MapPin className="h-4 w-4 mr-1" />
+                          <span className="flex items-center whitespace-nowrap">
+                            <MapPin className="h-3 w-3 sm:h-4 sm:w-4 mr-1 flex-shrink-0" />
                             {item.aisle}
                           </span>
                         </div>
                       </div>
                     </div>
                     
-                    <div className="flex items-center space-x-4">
-                      <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-2 sm:space-x-4">
+                      <div className="flex items-center space-x-1 sm:space-x-2">
                         <button
                           onClick={() => updateQuantity(item.id, Math.max(1, parseFloat(item.quantity) - 1).toString())}
                           className="p-1 rounded-full hover:bg-gray-100 transition-colors"
                         >
-                          <Minus className="h-4 w-4 text-gray-600" />
+                          <Minus className="h-3 w-3 sm:h-4 sm:w-4 text-gray-600" />
                         </button>
                         
                         <input
                           type="text"
-                          value={item.quantity}
+                          value={item.quantity || ''}
                           onChange={(e) => updateQuantity(item.id, e.target.value)}
-                          className="w-16 px-2 py-1 text-center border border-gray-300 rounded focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                          className="w-12 sm:w-16 px-1 sm:px-2 py-1 text-center text-xs sm:text-sm border border-gray-300 rounded focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                         />
                         
                         <button
                           onClick={() => updateQuantity(item.id, (parseFloat(item.quantity) + 1).toString())}
                           className="p-1 rounded-full hover:bg-gray-100 transition-colors"
                         >
-                          <Plus className="h-4 w-4 text-gray-600" />
+                          <Plus className="h-3 w-3 sm:h-4 sm:w-4 text-gray-600" />
                         </button>
                       </div>
                       
-                      <div className="text-right">
+                      <div className="text-right hidden sm:block">
                         <p className="text-lg font-semibold text-gray-900">€{item.totalPrice.toFixed(2)}</p>
                         <p className="text-sm text-gray-600">per {item.quantity}</p>
                       </div>
                       
+                      <div className="text-right sm:hidden">
+                        <p className="text-sm font-semibold text-gray-900">€{item.totalPrice.toFixed(2)}</p>
+                      </div>
+                      
                       <button
                         onClick={() => removeItem(item.id)}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        className="p-1 sm:p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
                       </button>
                     </div>
                   </div>
