@@ -38,18 +38,63 @@ export async function GET(
 
     await client.connect()
 
+    const buildFallbackResponse = async () => {
+      try {
+        const mealPlanResult = await client.query(
+          'SELECT "jsonData", "userId" FROM "MealPlan" WHERE id = $1 LIMIT 1',
+          [mealPlanId]
+        )
+
+        if (mealPlanResult.rows.length === 0) {
+          return null
+        }
+
+        const mealPlanJson = mealPlanResult.rows[0].jsonData
+        const userId = mealPlanResult.rows[0].userId
+
+        const userResult = await client.query(
+          'SELECT email FROM "User" WHERE id = $1 LIMIT 1',
+          [userId]
+        )
+
+        const fallbackEmail = userResult.rows[0]?.email || 'user@wellplate.eu'
+        const parsedMealPlan =
+          typeof mealPlanJson === 'string' ? JSON.parse(mealPlanJson) : mealPlanJson
+        const fallbackBuffer = await generateMealPlanPDF(parsedMealPlan, fallbackEmail)
+        const dataUrl = `data:application/pdf;base64,${fallbackBuffer.toString('base64')}`
+
+        return NextResponse.json({
+          downloadUrl: null,
+          dataUrl,
+          expiresAt: null,
+          refreshed: false,
+        })
+      } catch (fallbackError) {
+        console.warn('[download] Fallback PDF generation failed:', fallbackError)
+        return null
+      }
+    }
+
     const documentResult = await client.query(
       'SELECT id, "mealPlanId", "pdfPath", "signedUrl", "expiresAt", "createdAt" FROM "Document" WHERE "mealPlanId" = $1 ORDER BY "createdAt" DESC LIMIT 1',
       [mealPlanId]
     )
 
     if (documentResult.rows.length === 0) {
+      const fallbackResponse = await buildFallbackResponse()
+      if (fallbackResponse) {
+        return fallbackResponse
+      }
       return NextResponse.json({ error: 'No PDF available for this meal plan' }, { status: 404 })
     }
 
     const document = documentResult.rows[0]
 
     if (!document.pdfPath) {
+      const fallbackResponse = await buildFallbackResponse()
+      if (fallbackResponse) {
+        return fallbackResponse
+      }
       return NextResponse.json({ error: 'PDF path is missing for this meal plan' }, { status: 500 })
     }
 
@@ -68,36 +113,10 @@ export async function GET(
     }
 
     if (!downloadUrl) {
-      try {
-        const mealPlanResult = await client.query(
-          'SELECT "jsonData", "userId" FROM "MealPlan" WHERE id = $1 LIMIT 1',
-          [mealPlanId]
-        )
-
-        if (mealPlanResult.rows.length > 0) {
-          const mealPlanJson = mealPlanResult.rows[0].jsonData
-          const userId = mealPlanResult.rows[0].userId
-
-          const userResult = await client.query(
-            'SELECT email FROM "User" WHERE id = $1 LIMIT 1',
-            [userId]
-          )
-
-          const fallbackEmail = userResult.rows[0]?.email || 'user@wellplate.eu'
-          const fallbackBuffer = await generateMealPlanPDF(mealPlanJson, fallbackEmail)
-          const dataUrl = `data:application/pdf;base64,${fallbackBuffer.toString('base64')}`
-
-          return NextResponse.json({
-            downloadUrl: null,
-            dataUrl,
-            expiresAt: null,
-            refreshed: false,
-          })
-        }
-      } catch (fallbackError) {
-        console.warn('[download] Fallback PDF generation failed:', fallbackError)
+      const fallbackResponse = await buildFallbackResponse()
+      if (fallbackResponse) {
+        return fallbackResponse
       }
-
       return NextResponse.json({ error: 'PDF download is temporarily unavailable' }, { status: 503 })
     }
 

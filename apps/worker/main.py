@@ -57,6 +57,7 @@ class MealPreference(BaseModel):
     dislikes: List[str]
     cookingEffort: str  # "quick and easy" | "gourmet" | "budget friendly"
     caloriesTarget: Optional[int] = None  # optional in UI
+    recentMeals: Optional[List[str]] = None  # injected server-side to avoid repeats
 
 class Meal(BaseModel):
     name: str
@@ -194,6 +195,21 @@ def sanitize_meal_plan(data: dict) -> dict:
                 elif not isinstance(meal["steps"], list):
                     meal["steps"] = ["Follow recipe instructions"]
 
+    # Reduce perceived repetition by ensuring meal names remain unique
+    seen_meal_names = {}
+    for day in data.get("plan", []):
+        if not isinstance(day, dict):
+            continue
+        for meal in day.get("meals", []):
+            if not isinstance(meal, dict):
+                continue
+            original_name = str(meal.get("name", "Untitled Meal")).strip() or "Untitled Meal"
+            key = original_name.lower()
+            count = seen_meal_names.get(key, 0)
+            if count > 0:
+                meal["name"] = f"{original_name} (variation {count + 1})"
+            seen_meal_names[key] = count + 1
+
     # Handle totals/macronutrients
     if "totals" not in data or not isinstance(data["totals"], dict):
         total_calories = data.get("totalCalories", 0)
@@ -329,6 +345,7 @@ At the end of each day:
    * "gain weight" → Higher calorie meals, protein-rich, muscle-building foods, larger portions
    * "maintain" → Balanced calories, moderate portions, maintenance-focused
    * "lose weight" → Lower calorie meals, lean proteins, more vegetables, smaller portions
+- If avoid_meals array is provided, treat those meal names as recently served. Do NOT repeat them; craft new dishes or significantly reworked versions with new names.
 - Respect diet type strictly: omnivore, vegan, vegetarian, keto, Mediterranean, paleo
 - Match cooking effort:
    * quick & easy → ≤25 minutes, minimal ingredients, straightforward methods
@@ -394,7 +411,8 @@ Return ONLY valid JSON, with this top-level shape:
                 "cooking_effort": preferences.cookingEffort,  # quick and easy | gourmet | budget friendly
                 "calorie_target": preferences.caloriesTarget if preferences.caloriesTarget else None,
                 "allergies": preferences.allergies or [],
-                "dislikes": preferences.dislikes or []
+                "dislikes": preferences.dislikes or [],
+                "avoid_meals": preferences.recentMeals or [],
             },
             # generation knobs
             "timeframe_days": 1,

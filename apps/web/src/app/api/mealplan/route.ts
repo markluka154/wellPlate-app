@@ -39,7 +39,7 @@ const clamp = (value: number, min: number, max: number) => Math.min(Math.max(val
 
 const adjustMealPlanForCalorieTarget = (plan: any, target?: number): RawMealPlan => {
   if (!plan || !Array.isArray(plan.plan) || !target) {
-    if (!plan.groceries) {
+    if (plan && !plan.groceries) {
       plan.groceries = []
     }
     return plan as RawMealPlan
@@ -66,6 +66,36 @@ const adjustMealPlanForCalorieTarget = (plan: any, target?: number): RawMealPlan
     })
   }
 
+  const createSupportSnack = (calories: number, index: number): RawMeal => {
+    const snackCalories = clamp(Math.round(calories), 200, 500)
+    const proteinCalories = Math.round(snackCalories * 0.3)
+    const fatCalories = Math.round(snackCalories * 0.25)
+    const carbCalories = Math.max(snackCalories - proteinCalories - fatCalories, 0)
+
+    const snackProtein = Math.max(0, Math.round(proteinCalories / 4))
+    const snackFat = Math.max(0, Math.round(fatCalories / 9))
+    const snackCarbs = Math.max(0, Math.round(carbCalories / 4))
+
+    return {
+      name: index === 1 ? 'Calorie Support Snack' : `Calorie Support Snack ${index}`,
+      kcal: snackCalories,
+      protein_g: snackProtein,
+      carbs_g: snackCarbs,
+      fat_g: snackFat,
+      ingredients: [
+        { item: 'Greek yogurt (unsweetened)', qty: '170g' },
+        { item: 'Mixed berries', qty: '1 cup' },
+        { item: 'Roasted almonds', qty: '20g' },
+      ],
+      steps: [
+        'Layer the Greek yogurt in a bowl and fold in the berries.',
+        'Top with roasted almonds for crunch and healthy fats.',
+      ],
+      substitution: 'Swap almonds for walnuts or pistachios if preferred.',
+      tip: `Added to gently lift the day toward your ${target} kcal target.`,
+    }
+  }
+
   const totals = {
     kcal: 0,
     protein_g: 0,
@@ -73,9 +103,9 @@ const adjustMealPlanForCalorieTarget = (plan: any, target?: number): RawMealPlan
     fat_g: 0,
   }
 
-  plan.plan = plan.plan.map((rawDay: any) => {
+  plan.plan = plan.plan.map((rawDay: any, dayIndex: number) => {
     const day: RawDay = {
-      day: typeof rawDay.day === 'number' ? rawDay.day : 1,
+      day: typeof rawDay.day === 'number' ? rawDay.day : dayIndex + 1,
       meals: Array.isArray(rawDay.meals) ? rawDay.meals : [],
       daily_nutrition_summary: rawDay.daily_nutrition_summary,
     }
@@ -84,38 +114,39 @@ const adjustMealPlanForCalorieTarget = (plan: any, target?: number): RawMealPlan
 
     if (Math.abs(target - dayTotal) > tolerance) {
       if (dayTotal < target) {
-        const deficit = target - dayTotal
-        const snackCalories = clamp(Math.round(deficit), 150, 450)
-        const snackProtein = Math.round((snackCalories * 0.25) / 4)
-        const snackFat = Math.round((snackCalories * 0.25) / 9)
-        const snackCarbs = Math.max(
-          snackCalories - snackProtein * 4 - snackFat * 9,
-          0
-        )
+        if (dayTotal > 0) {
+          const neededRatio = target / dayTotal
+          if (neededRatio <= 1.35) {
+            const ratio = clamp(neededRatio, 1.05, 1.35)
+            day.meals = day.meals.map((meal) => {
+              const updated: RawMeal = {
+                ...meal,
+                kcal: Math.max(150, Math.round((Number(meal.kcal) || 0) * ratio)),
+                protein_g: Math.max(0, Math.round((Number(meal.protein_g) || 0) * ratio)),
+                carbs_g: Math.max(0, Math.round((Number(meal.carbs_g) || 0) * ratio)),
+                fat_g: Math.max(0, Math.round((Number(meal.fat_g) || 0) * ratio)),
+                tip: meal.tip
+                  ? `${meal.tip} Enjoy a slightly heartier portion to match your calorie goal.`
+                  : 'Serve a slightly larger portion to align with your calorie goal.',
+              }
+              return updated
+            })
+            dayTotal = day.meals.reduce((sum, meal) => sum + (Number(meal.kcal) || 0), 0)
+          }
+        }
 
-        day.meals.push({
-          name: 'Calorie Support Snack',
-          kcal: snackCalories,
-          protein_g: snackProtein,
-          carbs_g: Math.round(snackCarbs / 4),
-          fat_g: snackFat,
-          ingredients: [
-            { item: 'Greek yogurt (unsweetened)', qty: '170g' },
-            { item: 'Mixed berries', qty: '1 cup' },
-            { item: 'Roasted almonds', qty: '20g' },
-          ],
-          steps: [
-            'Layer the Greek yogurt in a bowl and fold in the berries.',
-            'Top with roasted almonds for crunch and healthy fats.',
-          ],
-          substitution: 'Swap almonds for walnuts or pistachios if preferred.',
-          tip: `Added to gently lift the day toward your ${target} kcal target.`,
-        })
-
-        ensureSnackCategory()
-        dayTotal += snackCalories
+        let remaining = target - dayTotal
+        let snackIndex = 1
+        while (remaining > tolerance && snackIndex <= 8) {
+          ensureSnackCategory()
+          const snack = createSupportSnack(remaining, snackIndex)
+          day.meals.push(snack)
+          dayTotal += snack.kcal
+          remaining = target - dayTotal
+          snackIndex += 1
+        }
       } else {
-        const ratio = clamp(target / dayTotal, 0.75, 0.98)
+        const ratio = clamp(target / Math.max(dayTotal, 1), 0.75, 0.98)
         day.meals = day.meals.map((meal) => {
           const updated: RawMeal = {
             ...meal,
@@ -129,15 +160,15 @@ const adjustMealPlanForCalorieTarget = (plan: any, target?: number): RawMealPlan
           }
           return updated
         })
-        dayTotal = day.meals.reduce((sum, meal) => sum + (meal.kcal || 0), 0)
+        dayTotal = day.meals.reduce((sum, meal) => sum + (Number(meal.kcal) || 0), 0)
       }
     }
 
     const summary = {
-      kcal: day.meals.reduce((sum, meal) => sum + (meal.kcal || 0), 0),
-      protein_g: day.meals.reduce((sum, meal) => sum + (meal.protein_g || 0), 0),
-      carbs_g: day.meals.reduce((sum, meal) => sum + (meal.carbs_g || 0), 0),
-      fat_g: day.meals.reduce((sum, meal) => sum + (meal.fat_g || 0), 0),
+      kcal: day.meals.reduce((sum, meal) => sum + (Number(meal.kcal) || 0), 0),
+      protein_g: day.meals.reduce((sum, meal) => sum + (Number(meal.protein_g) || 0), 0),
+      carbs_g: day.meals.reduce((sum, meal) => sum + (Number(meal.carbs_g) || 0), 0),
+      fat_g: day.meals.reduce((sum, meal) => sum + (Number(meal.fat_g) || 0), 0),
     }
 
     day.daily_nutrition_summary = summary
@@ -316,6 +347,33 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Collect recent meals so the worker can avoid repeating them
+    const recentMealsResult = await client.query(
+      'SELECT "jsonData" FROM "MealPlan" WHERE "userId" = $1 ORDER BY "createdAt" DESC LIMIT 12',
+      [user.id]
+    )
+    const recentMealsSet = new Set<string>()
+    for (const row of recentMealsResult.rows) {
+      if (!row?.jsonData) continue
+      try {
+        const parsed = typeof row.jsonData === 'string' ? JSON.parse(row.jsonData) : row.jsonData
+        if (parsed?.plan && Array.isArray(parsed.plan)) {
+          for (const day of parsed.plan) {
+            if (!day?.meals || !Array.isArray(day.meals)) continue
+            for (const meal of day.meals) {
+              if (meal?.name && typeof meal.name === 'string') {
+                recentMealsSet.add(meal.name.trim())
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('[meal-history] Failed to parse historic meal plan JSON:', err)
+      }
+    }
+    const recentMeals = Array.from(recentMealsSet).slice(0, 30)
+    console.log('[meal-history] Recent meals to avoid:', recentMeals)
+
     console.log('🔍 Calling worker service...')
     // Call worker service
     const workerUrl = process.env.WORKER_URL || 'http://localhost:8420'
@@ -325,11 +383,15 @@ export async function POST(request: NextRequest) {
       // Check if this is a family plan
       const isFamilyPlan = body.isFamilyPlan === true
       const familyMembers = body.familyMembers || []
-      const requestBody = isFamilyPlan ? {
+      const workerPreferences = {
         ...preferences,
+        recentMeals,
+      }
+      const requestBody = isFamilyPlan ? {
+        ...workerPreferences,
         isFamilyPlan: true,
         familyMembers: familyMembers
-      } : preferences
+      } : workerPreferences
 
       const workerResponse = await fetch(`${workerUrl}/generate`, {
         method: 'POST',
@@ -445,8 +507,12 @@ export async function POST(request: NextRequest) {
       console.log('✅ Using mock meal plan data')
     }
     
+    // Normalize around the requested calorie target before validation
+    const clonedMealPlan = mealPlanData ? JSON.parse(JSON.stringify(mealPlanData)) : mealPlanData
+    const normalizedMealPlan = adjustMealPlanForCalorieTarget(clonedMealPlan, preferences.caloriesTarget)
+
     // Validate response from worker
-    const validatedMealPlan = mealPlanResponseSchema.parse(mealPlanData)
+    const validatedMealPlan = mealPlanResponseSchema.parse(normalizedMealPlan)
 
     // Calculate totals
     const totalCalories = validatedMealPlan.totals.kcal
