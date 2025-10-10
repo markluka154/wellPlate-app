@@ -9,6 +9,13 @@ import { useEffect } from 'react'
 
 type PlanTier = 'FREE' | 'PRO_MONTHLY' | 'PRO_ANNUAL' | 'FAMILY_MONTHLY'
 
+type FeedbackFormState = {
+  rating: number
+  liked: string
+  improvements: string
+  suggestions: string
+}
+
 const DEMO_EMAILS = new Set<string>(['markluka154@gmail.com'])
 
 const isDemoEmail = (email?: string | null): email is string => Boolean(email && DEMO_EMAILS.has(email))
@@ -94,6 +101,18 @@ export default function DashboardPage() {
   const [showLearningModal, setShowLearningModal] = useState(false)
   const [learningCategory, setLearningCategory] = useState('nutrition')
   const [selectedArticle, setSelectedArticle] = useState<any>(null)
+  const [bonusGenerations, setBonusGenerations] = useState(0)
+  const [feedbackRewardClaimed, setFeedbackRewardClaimed] = useState(false)
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false)
+  const [feedbackForm, setFeedbackForm] = useState<FeedbackFormState>({
+    rating: 5,
+    liked: '',
+    improvements: '',
+    suggestions: '',
+  })
+  const [feedbackSubmitting, setFeedbackSubmitting] = useState(false)
+  const [feedbackSuccess, setFeedbackSuccess] = useState(false)
+  const [feedbackError, setFeedbackError] = useState<string | null>(null)
   const [goalData, setGoalData] = useState({
     nutrition: {
       goalType: 'Maintain Weight',
@@ -233,6 +252,8 @@ export default function DashboardPage() {
         const planFromDb = (data.subscription?.plan || 'FREE') as PlanTier
         const resolvedPlan = applyDemoOverride(planFromDb)
         setUserPlan(resolvedPlan)
+        setBonusGenerations(data.bonus?.remainingGenerations ?? 0)
+        setFeedbackRewardClaimed(Boolean(data.bonus?.hasFeedbackReward))
         
         // Update localStorage with the correct plan from database
         try {
@@ -342,6 +363,76 @@ export default function DashboardPage() {
     } finally {
       setDownloadingPlanId(null)
     }
+  }
+
+  const resetFeedbackForm = () => {
+    setFeedbackForm({ rating: 5, liked: '', improvements: '', suggestions: '' })
+    setFeedbackError(null)
+    setFeedbackSuccess(false)
+  }
+
+  const handleSubmitFeedback = async () => {
+    if (feedbackSubmitting) return
+
+    try {
+      setFeedbackSubmitting(true)
+      setFeedbackError(null)
+
+      const userEmail = localStorage.getItem('wellplate:user')
+        ? JSON.parse(localStorage.getItem('wellplate:user') || '{}').email
+        : null
+
+      if (!userEmail) {
+        setFeedbackError('We could not confirm your account. Please sign in again.')
+        return
+      }
+
+      const response = await fetch('/api/feedback', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-email': userEmail,
+        },
+        body: JSON.stringify({
+          rating: Number(feedbackForm.rating),
+          liked: feedbackForm.liked.trim(),
+          improvements: feedbackForm.improvements.trim(),
+          suggestions: feedbackForm.suggestions.trim(),
+        }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => null)
+        setFeedbackError(data?.error || 'We could not save your feedback. Please try again.')
+        return
+      }
+
+      const result = await response.json()
+      setFeedbackSuccess(true)
+      setBonusGenerations(result?.bonusRemaining ?? bonusGenerations)
+      if (result?.bonusAdded) {
+        setFeedbackRewardClaimed(true)
+        await fetchUserMealPlans()
+        refreshPlanUsage()
+      } else if (!feedbackRewardClaimed) {
+        setFeedbackRewardClaimed(true)
+      }
+    } catch (error) {
+      console.error('Feedback submission failed:', error)
+      setFeedbackError('Something went wrong. Please try again in a moment.')
+    } finally {
+      setFeedbackSubmitting(false)
+    }
+  }
+
+  const openFeedbackDialog = () => {
+    resetFeedbackForm()
+    setShowFeedbackModal(true)
+  }
+
+  const closeFeedbackModal = () => {
+    setShowFeedbackModal(false)
+    resetFeedbackForm()
   }
 
   // Goal setting functions
@@ -750,11 +841,6 @@ export default function DashboardPage() {
       // Refresh plan usage in the layout
       refreshPlanUsage()
 
-      // Redirect to meal plans page to view and favorite meals after modal is shown
-      setTimeout(() => {
-        window.location.href = '/dashboard/plans'
-      }, 3000)
-
     } catch (error) {
       console.error('Error generating meal plan:', error)
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
@@ -827,6 +913,50 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
+      {feedbackRewardClaimed && (
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50/80 p-4 sm:p-5 text-emerald-900 shadow-sm">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-wide text-emerald-600">Thank you for the feedback!</p>
+              <p className="text-base sm:text-lg font-semibold">
+                {bonusGenerations > 0
+                  ? `${bonusGenerations} bonus meal plan${bonusGenerations === 1 ? '' : 's'} remaining`
+                  : 'All bonus meal plans used this month'}
+              </p>
+              <p className="text-sm text-emerald-700/90">We added extra generations to your account as a thank-you.</p>
+            </div>
+            {bonusGenerations > 0 && (
+              <button
+                type="button"
+                onClick={() => router.push('/dashboard/plans')}
+                className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:from-emerald-600 hover:to-teal-700 focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:ring-offset-2"
+              >
+                View Meal Plans
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {!feedbackRewardClaimed && (
+        <div id="feedback" className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-5 shadow-sm">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-base sm:text-lg font-semibold text-gray-900">Share feedback & unlock 2 more plans</p>
+              <p className="text-sm text-gray-600">Tell us what you love and what to improve&mdash;we&apos;ll instantly add two bonus generations to your monthly quota.</p>
+            </div>
+            <button
+              type="button"
+              onClick={openFeedbackDialog}
+              className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:from-emerald-600 hover:to-teal-700 focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:ring-offset-2"
+            >
+              Give Feedback
+            </button>
+          </div>
+        </div>
+      )}
+
+
       {/* Main Content Grid - Side by Side */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Meal Preferences */}
@@ -1157,7 +1287,7 @@ export default function DashboardPage() {
                       onCancelEdit={cancelEditingPlan}
                       onDownload={() => handleDownloadPlan(userMealPlans[currentPlanIndex]?.id, userMealPlans[currentPlanIndex]?.document?.downloadUrl)}
                       isDownloading={downloadingPlanId === userMealPlans[currentPlanIndex]?.id}
-                      downloadReady={Boolean(userMealPlans[currentPlanIndex]?.document)}
+                      downloadReady={Boolean(userMealPlans[currentPlanIndex]?.id)}
                     />
                     </div>
          {/* Quick Actions Section */}
@@ -1549,6 +1679,19 @@ export default function DashboardPage() {
         </div>
       )}
 
+      {showFeedbackModal && (
+        <FeedbackModal
+          form={feedbackForm}
+          setForm={setFeedbackForm}
+          onClose={closeFeedbackModal}
+          onSubmit={handleSubmitFeedback}
+          isSubmitting={feedbackSubmitting}
+          hasReward={feedbackRewardClaimed}
+          success={feedbackSuccess}
+          error={feedbackError}
+        />
+      )}
+
       {/* Upgrade Prompt Modal */}
       <UpgradePrompt
         isOpen={showUpgradePrompt}
@@ -1786,6 +1929,17 @@ export default function DashboardPage() {
               </div>
 
               <div className="space-y-3">
+                {!feedbackRewardClaimed && (
+                  <button
+                    onClick={() => {
+                      setShowMealPlanSuccess(false)
+                      openFeedbackDialog()
+                    }}
+                    className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-semibold py-4 px-6 rounded-2xl transition-all duration-200 hover:from-emerald-600 hover:to-teal-700 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                  >
+                    <span>Share Feedback & Unlock 2 More Plans</span>
+                  </button>
+                )}
                 {latestGeneratedPlan && (
                   <button
                     onClick={() => {
@@ -1824,7 +1978,7 @@ export default function DashboardPage() {
               </div>
 
               <p className="text-center text-sm text-gray-500 mt-4">
-                Redirecting automatically in a few seconds...
+                You can always revisit this plan later from the Meal Plans tab.
               </p>
             </div>
           </div>
@@ -2202,10 +2356,6 @@ function ProfessionalPlanCard({
                 showUpgrade('PDF Downloads', 'Download your meal plans as PDF files with Pro.', 'PDF downloads')
                 return
               }
-              if (!downloadReady) {
-                window.alert('Give us a moment to finish preparing your PDF, then try again.')
-                return
-              }
               onDownload()
             }}
             className={`rounded-lg border px-3 py-2 text-sm font-medium transition focus:outline-none focus:ring-2 ${
@@ -2218,9 +2368,7 @@ function ProfessionalPlanCard({
             title={
               userPlan === 'FREE'
                 ? 'PDF downloads require Pro'
-                : downloadReady
-                  ? 'Download PDF'
-                  : 'Preparing your PDF—please try again shortly'
+                : 'Download PDF (regenerates if needed)'
             }
             disabled={userPlan === 'FREE' || !downloadReady || isDownloading}
           >
@@ -2251,6 +2399,182 @@ function ProfessionalPlanCard({
 }
 
 // Goal Setting Modal Component
+type FeedbackModalProps = {
+  form: FeedbackFormState
+  setForm: React.Dispatch<React.SetStateAction<FeedbackFormState>>
+  onClose: () => void
+  onSubmit: () => void
+  isSubmitting: boolean
+  hasReward: boolean
+  success: boolean
+  error: string | null
+}
+
+function FeedbackModal({
+  form,
+  setForm,
+  onClose,
+  onSubmit,
+  isSubmitting,
+  hasReward,
+  success,
+  error,
+}: FeedbackModalProps) {
+  const ratingOptions = [1, 2, 3, 4, 5]
+
+  const updateField = (field: keyof FeedbackFormState, value: string) => {
+    setForm((prev) => ({ ...prev, [field]: value }))
+  }
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 px-4 py-6 backdrop-blur-sm">
+      <div className="w-full max-w-lg overflow-hidden rounded-3xl bg-white shadow-2xl">
+        <div className="flex items-start justify-between border-b border-emerald-100 bg-gradient-to-r from-emerald-500 to-teal-500 px-6 py-5 text-white">
+          <div>
+            <h3 className="text-lg font-semibold">Share your feedback</h3>
+            <p className="text-sm text-emerald-50/90">
+              Help us improve your meal-planning experience
+              {hasReward ? '' : ' and unlock +2 bonus plans'}.
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="rounded-full bg-white/20 p-2 text-white transition hover:bg-white/30 focus:outline-none focus:ring-2 focus:ring-white"
+            aria-label="Close feedback modal"
+          >
+            <span className="text-lg leading-none">×</span>
+          </button>
+        </div>
+
+        <div className="space-y-6 px-6 py-6">
+          {success ? (
+            <div className="space-y-6 text-center">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+                <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <div className="space-y-2">
+                <h4 className="text-xl font-semibold text-emerald-700">Thank you for sharing!</h4>
+                <p className="text-sm text-gray-600">
+                  {hasReward
+                    ? 'We appreciate the extra insights.'
+                    : 'Two bonus meal plan generations have been added to your account.'}
+                </p>
+              </div>
+              <button
+                onClick={onClose}
+                className="w-full rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 py-3 text-sm font-semibold text-white shadow-sm transition hover:from-emerald-600 hover:to-teal-600 focus:outline-none focus:ring-2 focus:ring-emerald-300"
+              >
+                Close
+              </button>
+            </div>
+          ) : (
+            <form
+              className="space-y-6"
+              onSubmit={(event) => {
+                event.preventDefault()
+                onSubmit()
+              }}
+            >
+              <div className="space-y-3">
+                <label className="text-sm font-semibold text-gray-900">Overall experience</label>
+                <div className="grid grid-cols-5 gap-2">
+                  {ratingOptions.map((value) => {
+                    const active = form.rating === value
+                    return (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => setForm((prev) => ({ ...prev, rating: value }))}
+                        className={`rounded-xl border px-2 py-2 text-sm font-semibold transition ${
+                          active
+                            ? 'border-emerald-500 bg-emerald-500 text-white shadow-md shadow-emerald-200'
+                            : 'border-gray-200 text-gray-600 hover:border-emerald-300 hover:text-emerald-700'
+                        }`}
+                      >
+                        {value}
+                      </button>
+                    )
+                  })}
+                </div>
+                <p className="text-xs text-gray-500">1 = Needs work, 5 = Love it</p>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-gray-900">What did you like most?</label>
+                <textarea
+                  value={form.liked}
+                  onChange={(event) => updateField('liked', event.target.value)}
+                  maxLength={600}
+                  rows={3}
+                  className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800 shadow-inner transition focus:border-emerald-400 focus:bg-white focus:outline-none"
+                  placeholder="Meals were on point, loved the grocery summary..."
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-gray-900">What could be better?</label>
+                <textarea
+                  value={form.improvements}
+                  onChange={(event) => updateField('improvements', event.target.value)}
+                  maxLength={600}
+                  rows={3}
+                  className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800 shadow-inner transition focus:border-emerald-400 focus:bg-white focus:outline-none"
+                  placeholder="Tell us how we can improve portions, macros, or pacing..."
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-gray-900">Any other ideas?</label>
+                <textarea
+                  value={form.suggestions}
+                  onChange={(event) => updateField('suggestions', event.target.value)}
+                  maxLength={600}
+                  rows={2}
+                  className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800 shadow-inner transition focus:border-emerald-400 focus:bg-white focus:outline-none"
+                  placeholder="Features you want to see, frustrating flows, anything else..."
+                />
+              </div>
+
+              {error && (
+                <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">{error}</div>
+              )}
+
+              {hasReward ? (
+                <p className="text-xs text-gray-500">
+                  You&apos;ve already unlocked your bonus plans, but we&apos;d still love to hear your feedback.
+                </p>
+              ) : (
+                <p className="text-xs text-emerald-600">
+                  Submit and we&apos;ll add two bonus meal plan generations to your account instantly.
+                </p>
+              )}
+
+              <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-emerald-200 sm:w-auto"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:from-emerald-600 hover:to-teal-700 focus:outline-none focus:ring-2 focus:ring-emerald-300 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                >
+                  {isSubmitting ? 'Sending...' : 'Submit feedback'}
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function GoalSettingModal({ goalData, setGoalData, onSave, onClose }: any) {
   const [activeTab, setActiveTab] = useState('nutrition')
 

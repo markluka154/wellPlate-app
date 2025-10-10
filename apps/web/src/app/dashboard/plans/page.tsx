@@ -52,6 +52,8 @@ export default function PlansPage() {
   const [userMealPlans, setUserMealPlans] = useState<any[]>([])
   const [isLoadingPlans, setIsLoadingPlans] = useState(true)
   const [userPlan, setUserPlan] = useState<PlanTier>('FREE')
+  const [bonusGenerations, setBonusGenerations] = useState(0)
+  const [feedbackRewardClaimed, setFeedbackRewardClaimed] = useState(false)
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false)
   const [showHistoryUpgradePrompt, setShowHistoryUpgradePrompt] = useState(false)
   const [planNames, setPlanNames] = useState<{[key: string]: string}>({})
@@ -78,6 +80,8 @@ export default function PlansPage() {
         const planFromDb = (data.subscription?.plan || 'FREE') as PlanTier
         const resolvedPlan = applyDemoOverride(planFromDb)
         setUserPlan(resolvedPlan)
+        setBonusGenerations(data.bonus?.remainingGenerations ?? 0)
+        setFeedbackRewardClaimed(Boolean(data.bonus?.hasFeedbackReward))
 
         try {
           const userData = localStorage.getItem('wellplate:user')
@@ -586,6 +590,44 @@ export default function PlansPage() {
         </div>
       </div>
 
+      {feedbackRewardClaimed ? (
+        <div className="rounded-2xl border border-emerald-100 bg-emerald-50/70 p-4 sm:p-5 text-emerald-900 shadow-sm">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-wide text-emerald-600">Bonus meal plans unlocked</p>
+              <p className="text-sm text-emerald-700">
+                {bonusGenerations > 0
+                  ? `${bonusGenerations} bonus generation${bonusGenerations === 1 ? '' : 's'} remaining this month.`
+                  : 'All bonus meal plans used this month.'}
+              </p>
+            </div>
+            {bonusGenerations > 0 && (
+              <Link
+                href="/dashboard"
+                className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:from-emerald-600 hover:to-teal-700 focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:ring-offset-2"
+              >
+                Generate another plan
+              </Link>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-5 shadow-sm">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-semibold text-gray-900">Need more meal plans this month?</p>
+              <p className="text-sm text-gray-600">Share quick feedback and we'll add two extra plan generations to your account instantly.</p>
+            </div>
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:from-emerald-600 hover:to-teal-700 focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:ring-offset-2"
+            >
+              Give feedback
+            </Link>
+          </div>
+        </div>
+      )}
+
       {/* Tab Navigation */}
       <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
         <button
@@ -816,23 +858,17 @@ export default function PlansPage() {
                       setShowUpgradePrompt(true)
                       return
                     }
-                    if (!plan.document) {
-                      window.alert('This plan does not have a PDF yet. Try regenerating or check your email.')
-                      return
-                    }
                     handleDownloadPlan(plan.id, plan.document?.downloadUrl || null)
                   }}
                   className={`rounded-lg border px-3 py-2 text-sm font-medium transition focus:outline-none focus:ring-2 ${
                     userPlan === 'FREE'
                       ? 'border-gray-300 text-gray-500 cursor-not-allowed'
-                      : plan.document
-                        ? downloadingPlanId === plan.id
-                          ? 'border-emerald-200 text-emerald-600 bg-emerald-50 cursor-wait'
-                          : 'border-gray-300 text-gray-700 hover:bg-gray-50 focus:ring-gray-300'
-                        : 'border-gray-300 text-gray-400 cursor-not-allowed'
+                      : downloadingPlanId === plan.id
+                        ? 'border-emerald-200 text-emerald-600 bg-emerald-50 cursor-wait'
+                        : 'border-gray-300 text-gray-700 hover:bg-gray-50 focus:ring-gray-300'
                   }`}
-                  title={userPlan === 'FREE' ? 'PDF downloads require Pro' : plan.document ? 'Download PDF' : 'PDF not available for this plan'}
-                  disabled={userPlan === 'FREE' || !plan.document || downloadingPlanId === plan.id}
+                  title={userPlan === 'FREE' ? 'PDF downloads require Pro' : 'Download PDF (regenerates if needed)'}
+                  disabled={userPlan === 'FREE' || downloadingPlanId === plan.id}
                 >
                   {downloadingPlanId === plan.id ? (
                     <Loader2 className="h-4 w-4 animate-spin" />

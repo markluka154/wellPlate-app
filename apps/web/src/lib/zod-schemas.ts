@@ -60,3 +60,12 @@ export const mealPlanResponseSchema = z.object({
 })
 
 export type MealPlanResponse = z.infer<typeof mealPlanResponseSchema>
+
+export const feedbackSchema = z.object({
+  rating: z.number().min(1).max(5),
+  liked: z.string().max(600).optional().default(''),
+  improvements: z.string().max(600).optional().default(''),
+  suggestions: z.string().max(600).optional().default(''),
+})
+
+export type FeedbackInput = z.infer<typeof feedbackSchema>

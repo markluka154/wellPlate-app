@@ -280,6 +280,27 @@ export async function POST(request: NextRequest) {
 
     await client.connect()
 
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS "GenerationBonus" (
+        "userId" TEXT PRIMARY KEY,
+        remaining INTEGER NOT NULL DEFAULT 0,
+        "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `)
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS "Feedback" (
+        id TEXT PRIMARY KEY,
+        "userId" TEXT NOT NULL,
+        rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
+        liked TEXT,
+        improvements TEXT,
+        suggestions TEXT,
+        "bonusGranted" BOOLEAN NOT NULL DEFAULT false,
+        "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `)
+
     // Find or create user
     const userResult = await client.query(
       'SELECT id, email, name FROM "User" WHERE email = $1 LIMIT 1',
@@ -331,15 +352,40 @@ export async function POST(request: NextRequest) {
     )
     const plansThisMonth = parseInt(plansThisMonthResult.rows[0].count)
 
-    if (!canGeneratePlan(currentPlan, plansThisMonth)) {
+    let bonusGenerationsRemaining = 0
+    try {
+      const bonusResult = await client.query(
+        'SELECT remaining FROM "GenerationBonus" WHERE "userId" = $1 LIMIT 1',
+        [user.id]
+      )
+      bonusGenerationsRemaining = Number(bonusResult.rows[0]?.remaining || 0)
+    } catch (bonusError) {
+      console.warn('[mealplan] Unable to load bonus generations:', bonusError)
+    }
+
+    const generationAllowed = canGeneratePlan(currentPlan, plansThisMonth, bonusGenerationsRemaining)
+    const baseFreeLimit = 3
+    const exceedsBaseLimit = currentPlan === 'FREE' && plansThisMonth >= baseFreeLimit
+    const willUseBonusGeneration =
+      currentPlan === 'FREE' &&
+      exceedsBaseLimit &&
+      bonusGenerationsRemaining > 0 &&
+      generationAllowed
+
+    if (!generationAllowed) {
+      const computedLimit =
+        currentPlan === 'FREE'
+          ? baseFreeLimit + Math.max(bonusGenerationsRemaining, 0)
+          : 'unlimited'
+
       return NextResponse.json(
         { 
           error: 'Monthly plan limit reached',
-          message: 'You have reached your monthly limit for meal plan generation.',
+          message: 'You have reached your current limit for meal plan generation. Share feedback to earn extra plans or upgrade for unlimited access.',
           details: {
             currentPlan: currentPlan,
             plansUsed: plansThisMonth,
-            plansLimit: currentPlan === 'FREE' ? 5 : 'unlimited'
+            plansLimit: computedLimit
           },
           upgradeUrl: '/pricing'
         },
@@ -590,6 +636,18 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('✅ Meal plan generation completed successfully')
+
+    if (willUseBonusGeneration) {
+      try {
+        await client.query(
+          'UPDATE "GenerationBonus" SET remaining = GREATEST(remaining - 1, 0), "updatedAt" = NOW() WHERE "userId" = $1',
+          [user.id]
+        )
+        console.log('[bonus] Consumed one bonus meal plan allowance')
+      } catch (bonusConsumeError) {
+        console.warn('[bonus] Failed to decrement bonus allowance:', bonusConsumeError)
+      }
+    }
 
     return NextResponse.json({
       mealPlanId: mealPlanId,

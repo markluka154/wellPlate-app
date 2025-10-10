@@ -17,9 +17,14 @@ export function getStripePriceId(planId: PlanType): string {
   }
 }
 
-export function canGeneratePlan(planId: PlanType, plansThisMonth: number): boolean {
+export function canGeneratePlan(
+  planId: PlanType,
+  plansThisMonth: number,
+  bonusGenerations: number = 0
+): boolean {
   if (planId === 'FREE') {
-    return plansThisMonth < 3 // Free users get 3 plans per month
+    const bonusAllowance = Math.max(bonusGenerations ?? 0, 0)
+    return plansThisMonth < 3 + bonusAllowance // Free users get 3 base plans plus any bonus allowances
   }
   return true // Pro plans have unlimited
 }

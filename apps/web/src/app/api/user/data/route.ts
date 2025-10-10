@@ -30,6 +30,27 @@ export async function GET(request: NextRequest) {
 
     await client.connect()
 
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS "Feedback" (
+        id TEXT PRIMARY KEY,
+        "userId" TEXT NOT NULL,
+        rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
+        liked TEXT,
+        improvements TEXT,
+        suggestions TEXT,
+        "bonusGranted" BOOLEAN NOT NULL DEFAULT false,
+        "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `)
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS "GenerationBonus" (
+        "userId" TEXT PRIMARY KEY,
+        remaining INTEGER NOT NULL DEFAULT 0,
+        "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `)
+
     // Find or create user
     const userResult = await client.query(
       'SELECT id, email, name FROM "User" WHERE email = $1 LIMIT 1',
@@ -144,6 +165,30 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    let bonusRemaining = 0
+    let hasFeedbackBonus = false
+    let totalFeedbackSubmissions = 0
+
+    try {
+      const bonusResult = await client.query(
+        'SELECT remaining FROM "GenerationBonus" WHERE "userId" = $1 LIMIT 1',
+        [user.id]
+      )
+      bonusRemaining = Number(bonusResult.rows[0]?.remaining || 0)
+
+      const feedbackSummary = await client.query(
+        'SELECT COUNT(*)::int AS total, BOOL_OR("bonusGranted") AS has_bonus FROM "Feedback" WHERE "userId" = $1',
+        [user.id]
+      )
+
+      if (feedbackSummary.rows.length > 0) {
+        totalFeedbackSubmissions = Number(feedbackSummary.rows[0].total || 0)
+        hasFeedbackBonus = Boolean(feedbackSummary.rows[0].has_bonus)
+      }
+    } catch (bonusError) {
+      console.warn('[user-data] Unable to load feedback bonus info:', bonusError)
+    }
+
     const enrichedMealPlans = mealPlans.map((plan: any) => ({
       ...plan,
       document: documentsByMealPlan[plan.id] || null,
@@ -152,6 +197,11 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       subscription,
       mealPlans: enrichedMealPlans,
+      bonus: {
+        remainingGenerations: bonusRemaining,
+        hasFeedbackReward: hasFeedbackBonus,
+        feedbackSubmissions: totalFeedbackSubmissions,
+      },
     })
 
   } catch (error) {
