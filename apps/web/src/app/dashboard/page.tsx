@@ -984,7 +984,7 @@ export default function DashboardPage() {
     }
     
     return Math.max(1200, baseCalories) // Minimum 1200 calories
-  }
+  };
 
   return (
     <div className="space-y-6">
