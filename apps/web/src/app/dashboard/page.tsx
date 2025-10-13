@@ -931,7 +931,7 @@ export default function DashboardPage() {
     }
   }
 
-  const getSuggestedCalories = () => {
+  function getSuggestedCalories() {
     // Base calories based on sex and weight
     let baseCalories = sex === 'Male' ? 2000 : 1800
     
@@ -984,7 +984,7 @@ export default function DashboardPage() {
     }
     
     return Math.max(1200, baseCalories) // Minimum 1200 calories
-  };
+  }
 
   return (
     <div className="space-y-6">
