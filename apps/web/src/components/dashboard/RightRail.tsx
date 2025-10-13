@@ -193,7 +193,7 @@ export function RightRail() {
           {/* Pricing */}
           <div className="mb-4 rounded-xl bg-white/80 p-3 text-center backdrop-blur-sm">
             <div className="text-2xl font-bold text-gray-900">
-              {isFamilyPage ? '€24.99' : '€14.99'}
+              {isFamilyPage ? 'EUR 24.99' : 'EUR 14.99'}
             </div>
             <div className="text-xs text-gray-600">per month</div>
             <div className={`mt-1 text-xs font-medium ${

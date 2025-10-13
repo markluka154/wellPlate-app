@@ -35,7 +35,7 @@ export function UpgradePrompt({ isOpen, onClose, title, message, feature }: Upgr
 
   const features = isFamilyFeature ? familyFeatures : proFeatures
   const planName = isFamilyFeature ? 'Family Monthly' : 'Pro'
-  const planPrice = isFamilyFeature ? '€24.99' : '€9.99'
+  const planPrice = isFamilyFeature ? 'EUR 24.99' : 'EUR 9.99'
 
   const handleUpgrade = async () => {
     try {
@@ -164,7 +164,7 @@ export function UpgradePrompt({ isOpen, onClose, title, message, feature }: Upgr
           {/* Trust indicators */}
           <div className="mt-4 text-center">
             <p className="text-xs text-gray-500">
-              ✓ 30-day money back guarantee • ✓ Cancel anytime
+              30-day money-back guarantee | Cancel anytime
             </p>
           </div>
         </div>

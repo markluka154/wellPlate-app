@@ -8,7 +8,7 @@ type Meal = {
   carbs_g: number;
   fat_g: number;
   time_min?: number;
-  labels?: string[]; // e.g., ["⏱️ Quick","💪 High protein"]
+  labels?: string[]; // e.g., ["Quick prep","High protein"]
   ingredients: Ingredient[];
   steps: string[];
   substitution?: string;
@@ -30,7 +30,7 @@ type PlanData = {
   totals?: { kcal: number; protein_g: number; carbs_g: number; fat_g: number };
   groceries?: GroceryCategory[];
   grocery_prices_style?: string; // "Budget Edition" | "Normal Edition" | "Gourmet Edition"
-  grocery_prices?: string[];     // ["Rice 1kg = €2.10", ...]
+  grocery_prices?: string[];     // ["Rice 1kg = EUR 2.10", ...]
   estimated_total_grocery_cost?: string;
   meta?: { brand?: string; userEmail?: string; date?: string };
 };
@@ -94,10 +94,22 @@ export default function MealPlanPremium({ data, onClose }: { data: any, onClose?
     };
   }
 
+  const CATEGORY_ICON: Record<string, string> = {
+    Proteins: 'PR',
+    Grains: 'GR',
+    Vegetables: 'VE',
+    Fruits: 'FR',
+    'Dairy/Alternatives': 'DA',
+    Pantry: 'PA',
+    Spices: 'SP',
+  };
+
+  const getCategoryIcon = (category: string) => CATEGORY_ICON[category] ?? 'IN';
+
   return (
     <div className="print-root container">
       {/* Running header/footer for browser print */}
-      <div className="print-header">{brand} • {userEmail} • {date}</div>
+      <div className="print-header">{brand} | {userEmail} | {date}</div>
       <div className="print-footer">
         <span className="muted">{planData?.grocery_prices_style ?? "Normal Edition"}</span>
         <span className="page-count" />
@@ -128,10 +140,10 @@ export default function MealPlanPremium({ data, onClose }: { data: any, onClose?
       {/* Cover / Summary */}
       <div className="sheet soft no-break">
         <h1 className="section-title" style={{ border: "0", margin: 0 }}>
-          {brand} • Personalized Meal Plan
+          {brand} | Personalized Meal Plan
         </h1>
         <div style={{ color: "var(--muted)", fontSize: 12 }}>
-          Generated for <strong>{userEmail}</strong> • {date}
+          Generated for <strong>{userEmail}</strong> | {date}
         </div>
         {planData?.totals && (
           <table className="table" style={{ marginTop: 8 }}>
@@ -162,7 +174,7 @@ export default function MealPlanPremium({ data, onClose }: { data: any, onClose?
                 <div className="meal-head">
                   <h3 className="meal-title">{m.name}</h3>
                   <div className="meta-inline">
-                    {m.time_min ? <span>⏱️ {m.time_min} min</span> : null}
+                    {m.time_min ? <span>Prep {m.time_min} min</span> : null}
                     <span>{m.kcal} kcal</span>
                     {(m.labels ?? []).map((x: any, j: number) => <span key={j}>{x}</span>)}
                   </div>
@@ -173,7 +185,7 @@ export default function MealPlanPremium({ data, onClose }: { data: any, onClose?
                 <div className="block-title">Ingredients</div>
                 <ul className="ing-list">
                   {m.ingredients.map((ing: any, k: number) => (
-                    <li key={k}>{ing.item} — {ig(ing.qty)}</li>
+                    <li key={k}>{ing.item} - {ig(ing.qty)}</li>
                   ))}
                 </ul>
 
@@ -217,16 +229,7 @@ export default function MealPlanPremium({ data, onClose }: { data: any, onClose?
           {planData?.groceries?.map((cat: any, i: number) => (
             <div key={i} className="grocery-category-card">
               <div className="grocery-category-header">
-                <div className="category-icon">
-                  {cat.category === 'Proteins' && '🥩'}
-                  {cat.category === 'Grains' && '🌾'}
-                  {cat.category === 'Vegetables' && '🥬'}
-                  {cat.category === 'Fruits' && '🍎'}
-                  {cat.category === 'Dairy/Alternatives' && '🥛'}
-                  {cat.category === 'Pantry' && '🥫'}
-                  {cat.category === 'Spices' && '🌶️'}
-                  {!['Proteins', 'Grains', 'Vegetables', 'Fruits', 'Dairy/Alternatives', 'Pantry', 'Spices'].includes(cat.category) && '📦'}
-                </div>
+                <div className="category-icon">{getCategoryIcon(cat.category)}</div>
                 <h3 className="category-title">{cat.category}</h3>
               </div>
               <div className="grocery-items-list">
@@ -248,7 +251,7 @@ export default function MealPlanPremium({ data, onClose }: { data: any, onClose?
         {planData?.estimated_total_grocery_cost && (
           <div className="cost-summary">
             <div className="cost-summary-content">
-              <div className="cost-icon">💰</div>
+              <div className="cost-icon">EUR</div>
               <div className="cost-details">
                 <div className="cost-label">Estimated Total</div>
                 <div className="cost-amount">{planData.estimated_total_grocery_cost}</div>

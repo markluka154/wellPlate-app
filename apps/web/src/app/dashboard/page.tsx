@@ -1,11 +1,10 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight, Crown, Edit2, Check, X, ArrowLeft, Download, Loader2 } from 'lucide-react'
 import { UpgradePrompt } from '@/components/dashboard/UpgradePrompt'
 import { ProBadge } from '@/components/dashboard/ProBadge'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useEffect } from 'react'
 
 type PlanTier = 'FREE' | 'PRO_MONTHLY' | 'PRO_ANNUAL' | 'FAMILY_MONTHLY'
 
@@ -19,6 +18,13 @@ type FeedbackFormState = {
 const DEMO_EMAILS = new Set<string>(['markluka154@gmail.com'])
 
 const isDemoEmail = (email?: string | null): email is string => Boolean(email && DEMO_EMAILS.has(email))
+
+const GENERATION_STEPS = [
+  { progress: 24, duration: 1300, message: 'Analyzing your nutrition profile' },
+  { progress: 48, duration: 1500, message: 'Curating recipes that match your tastes' },
+  { progress: 72, duration: 1400, message: 'Balancing macros and calories' },
+  { progress: 90, duration: 1200, message: 'Preparing grocery checklist' },
+] as const
 
 const readDemoOverride = (): { email: string; plan: PlanTier } | null => {
   if (typeof window === 'undefined') return null
@@ -169,6 +175,78 @@ export default function DashboardPage() {
   const [showMealPlanSuccess, setShowMealPlanSuccess] = useState(false)
   const [downloadingPlanId, setDownloadingPlanId] = useState<string | null>(null)
   const [latestGeneratedPlan, setLatestGeneratedPlan] = useState<{ id: string; pdfUrl?: string | null; pdfDataUrl?: string | null } | null>(null)
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [generationProgress, setGenerationProgress] = useState(0)
+  const [generationStatus, setGenerationStatus] = useState('')
+  const generationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const generationCompletionRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const generationStepRef = useRef(0)
+  const isGeneratingRef = useRef(false)
+
+  const clearGenerationTimers = () => {
+    if (generationTimeoutRef.current) {
+      clearTimeout(generationTimeoutRef.current)
+      generationTimeoutRef.current = null
+    }
+    if (generationCompletionRef.current) {
+      clearTimeout(generationCompletionRef.current)
+      generationCompletionRef.current = null
+    }
+  }
+
+  const scheduleNextGenerationStep = () => {
+    const step = GENERATION_STEPS[generationStepRef.current]
+    if (!step) return
+
+    generationTimeoutRef.current = window.setTimeout(() => {
+      if (!isGeneratingRef.current) return
+      setGenerationProgress(step.progress)
+      setGenerationStatus(step.message)
+      generationStepRef.current += 1
+      scheduleNextGenerationStep()
+    }, step.duration)
+  }
+
+  const beginGenerationProgress = () => {
+    clearGenerationTimers()
+    generationStepRef.current = 0
+    isGeneratingRef.current = true
+    setIsGenerating(true)
+    setGenerationProgress(8)
+    setGenerationStatus('Starting your personalized plan...')
+    scheduleNextGenerationStep()
+  }
+
+  const finishGenerationProgress = (success: boolean) => {
+    clearGenerationTimers()
+    if (!isGeneratingRef.current) {
+      setIsGenerating(false)
+      return
+    }
+
+    isGeneratingRef.current = false
+
+    if (success) {
+      setGenerationProgress(100)
+      setGenerationStatus('Plan ready!')
+    } else {
+      setGenerationProgress((current) => (current > 60 ? current : 60))
+      setGenerationStatus('We hit a snag. Please try again.')
+    }
+
+    generationCompletionRef.current = window.setTimeout(() => {
+      setIsGenerating(false)
+      setGenerationProgress(0)
+      setGenerationStatus('')
+    }, success ? 900 : 1500)
+  }
+
+  useEffect(() => {
+    return () => {
+      clearGenerationTimers()
+      isGeneratingRef.current = false
+    }
+  }, [])
 
   // Handle URL parameters for demo upgrades and success messages
   React.useEffect(() => {
@@ -756,17 +834,14 @@ export default function DashboardPage() {
   }, [userMealPlans.length])
 
   const handleGenerate = async () => {
-    console.log('generate_click', { age, weight, height, sex, goal, diet, effort, calories })
-    
-    try {
-      // Show loading state
-      const button = document.querySelector('[data-generate-button]') as HTMLButtonElement
-      if (button) {
-        button.disabled = true
-        button.textContent = 'Generating...'
-      }
+    if (isGeneratingRef.current) return
 
-      // Prepare the request data in the correct format
+    console.log('generate_click', { age, weight, height, sex, goal, diet, effort, calories })
+
+    beginGenerationProgress()
+    let hasCompletedProgress = false
+
+    try {
       const requestData = {
         preferences: {
           age,
@@ -774,7 +849,7 @@ export default function DashboardPage() {
           heightCm: height,
           sex: sex.toLowerCase(),
           goal: goal === 'Lose Weight' ? 'lose' : goal === 'Gain Muscle' ? 'gain' : 'maintain',
-          dietType: diet === 'Balanced' ? 'omnivore' : 
+          dietType: diet === 'Balanced' ? 'omnivore' :
                    diet === 'Keto / Low-Carb' ? 'keto' :
                    diet === 'Diabetes-Friendly' ? 'diabetes-friendly' :
                    diet === 'Gluten-Free' ? 'omnivore' : // Map to omnivore for now
@@ -793,14 +868,12 @@ export default function DashboardPage() {
 
       console.log('Sending request to generate meal plan:', requestData)
 
-      // Get user email from localStorage (set during login)
-      const userEmail = localStorage.getItem('wellplate:user') 
-        ? JSON.parse(localStorage.getItem('wellplate:user') || '{}').email 
+      const userEmail = localStorage.getItem('wellplate:user')
+        ? JSON.parse(localStorage.getItem('wellplate:user') || '{}').email
         : 'test@example.com' // Fallback for testing
 
       console.log('Using user email:', userEmail)
 
-      // Call the meal plan generation API
       const response = await fetch('/api/mealplan', {
         method: 'POST',
         headers: {
@@ -813,17 +886,18 @@ export default function DashboardPage() {
 
       if (!response.ok) {
         const errorData = await response.json()
-        
+
         if (response.status === 403) {
-          // Handle plan limit reached
-              showUpgrade(
-                'Plan Limit Reached!',
-                'You\'ve used all 3 free meal plans this month. Upgrade to Pro for unlimited meal plans and advanced features.',
-                'Unlimited meal plan generation'
-              )
+          showUpgrade(
+            'Plan Limit Reached!',
+            "You've used all 3 free meal plans this month. Upgrade to Pro for unlimited meal plans and advanced features.",
+            'Unlimited meal plan generation'
+          )
+          finishGenerationProgress(false)
+          hasCompletedProgress = true
           return
         }
-        
+
         throw new Error(errorData.error || 'Failed to generate meal plan')
       }
 
@@ -837,21 +911,22 @@ export default function DashboardPage() {
 
       // Refresh meal plans to show the new one
       await fetchUserMealPlans()
-      
+
       // Refresh plan usage in the layout
       refreshPlanUsage()
+
+      finishGenerationProgress(true)
+      hasCompletedProgress = true
 
     } catch (error) {
       console.error('Error generating meal plan:', error)
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
       // Show error notification instead of alert
       showUpgrade('Generation Failed', `Failed to generate meal plan: ${errorMessage}`, 'Meal Plan Generation')
-    } finally {
-      // Reset button state
-      const button = document.querySelector('[data-generate-button]') as HTMLButtonElement
-      if (button) {
-        button.disabled = false
-        button.textContent = 'Generate Plan'
+
+      if (!hasCompletedProgress) {
+        finishGenerationProgress(false)
+        hasCompletedProgress = true
       }
     }
   }
@@ -1183,19 +1258,49 @@ export default function DashboardPage() {
               {/* Generate + notice */}
               <div className="mt-8">
                 <button
+                  type="button"
                   onClick={handleGenerate}
-                  className="group relative inline-flex w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-blue-600 px-6 py-4 text-base font-bold text-white shadow-xl shadow-emerald-500/25 transition-all duration-300 hover:shadow-2xl hover:shadow-emerald-500/40 hover:scale-[1.02] focus:outline-none focus:ring-4 focus:ring-emerald-300/50 active:scale-[0.98]"
+                  className="group relative inline-flex w-full items-center justify-center gap-3 overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-blue-600 px-6 py-4 text-base font-semibold text-white shadow-xl shadow-emerald-500/25 transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl hover:shadow-emerald-500/40 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-300/50 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70"
                   data-analytics="generate_click"
                   data-generate-button
                   aria-label="Generate Meal Plan"
+                  disabled={isGenerating || limitReached}
                 >
-                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-blue-600 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
+                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-emerald-500 via-emerald-400 to-blue-500 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
                   <span className="relative flex items-center gap-3">
-                    <span className="text-xl">⚡</span>
-                    <span>Generate Premium Meal Plan</span>
-                    <span className="text-sm opacity-90">→</span>
+                    {isGenerating ? (
+                      <Loader2 className="h-5 w-5 animate-spin text-white" aria-hidden="true" />
+                    ) : (
+                      <Crown className="h-5 w-5 text-white" aria-hidden="true" />
+                    )}
+                    <span>{isGenerating ? 'Generating your plan' : 'Generate Premium Meal Plan'}</span>
+                    {!isGenerating && <span className="text-sm font-normal text-white/80">~30 seconds</span>}
                   </span>
                 </button>
+
+                {isGenerating && (
+                  <div
+                    role="status"
+                    aria-live="polite"
+                    className="mt-4 w-full max-w-sm rounded-2xl border border-emerald-100 bg-emerald-50/80 p-4 shadow-sm backdrop-blur sm:max-w-md sm:p-5"
+                  >
+                    <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-wide text-emerald-800 sm:text-xs">
+                      <span>Building your plan</span>
+                      <span>{Math.min(Math.round(generationProgress), 100)}%</span>
+                    </div>
+                    <div className="mt-2.5 h-2 w-full overflow-hidden rounded-full bg-white/70 sm:mt-3">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-blue-500 transition-all duration-500 ease-out"
+                        style={{ width: `${Math.min(generationProgress, 100)}%` }}
+                      />
+                    </div>
+                    {generationStatus && (
+                      <p className="mt-2 text-xs font-medium text-emerald-900 sm:mt-3 sm:text-sm">
+                        {generationStatus}
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 {limitReached && (
                   <div
@@ -1208,7 +1313,8 @@ export default function DashboardPage() {
                     </a>{' '}
                     for unlimited plans.
                   </div>
-                  )}
+                )}
+              </div>
                 </div>
             </div>
           </div>
@@ -1793,61 +1899,67 @@ export default function DashboardPage() {
 
       {/* Upgrade Success Modal */}
       {showUpgradeSuccess && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden">
+        <div className=\"fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 sm:p-6\">
+          <div className=\"w-full max-w-sm sm:max-w-md overflow-hidden rounded-3xl bg-white shadow-xl sm:shadow-2xl\">
             {/* Header with gradient */}
-            <div className="relative bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 p-8 text-center">
-              <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
-              <div className="relative">
-                <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
-                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            <div className=\"relative bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 px-6 py-6 text-center sm:px-8 sm:py-8\">
+              <div className=\"absolute inset-0 bg-gradient-to-br from-white/10 to-transparent\"></div>
+              <div className=\"relative\">
+                <div className=\"mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm sm:h-16 sm:w-16\">
+                  <svg className=\"h-6 w-6 text-white sm:h-8 sm:w-8\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">
+                    <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M5 13l4 4L19 7\" />
                   </svg>
                 </div>
-                <h2 className="text-2xl font-bold text-white mb-2">
+                <h2 className=\"mb-2 text-xl font-bold text-white sm:text-2xl\">
                   {upgradeSuccessData.isDemo ? 'Demo Upgrade Successful!' : 'Welcome to WellPlate Pro!'}
                 </h2>
-                <p className="text-emerald-100 text-lg">
+                <p className=\"text-base text-emerald-100 sm:text-lg\">
                   You've been upgraded to {upgradeSuccessData.plan} plan!
                 </p>
               </div>
-              </div>
+            </div>
 
             {/* Content */}
-            <div className="p-8">
-              <div className="text-center mb-6">
-                <div className="w-12 h-12 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+            <div className=\"px-6 py-6 sm:px-8 sm:py-8\">
+              <div className=\"mb-6 text-center sm:mb-8\">
+                <div className=\"mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 sm:h-12 sm:w-12\">
+                  <svg className=\"h-5 w-5 text-emerald-600 sm:h-6 sm:w-6\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">
+                    <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1\" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                <h3 className=\"mb-2 text-lg font-semibold text-gray-900 sm:text-xl\">
                   {upgradeSuccessData.isDemo ? 'Demo Experience Complete' : 'Unlimited Access Unlocked'}
                 </h3>
-                <p className="text-gray-600 leading-relaxed">
-                  {upgradeSuccessData.isDemo 
-                    ? 'This is a demo experience. In production, this would be handled by Stripe with real payment processing.'
-                    : 'You now have unlimited meal plans, priority generation, and all Pro features at your fingertips.'
-                  }
+                <p className=\"text-sm leading-relaxed text-gray-600 sm:text-base\">
+                  {upgradeSuccessData.isDemo
+                    ? 'Explore the full experience. In production, this flow connects to Stripe for real upgrades.'
+                    : 'You now have unlimited meal plans, priority generation, and all Pro features at your fingertips.'}
                 </p>
               </div>
 
               {/* Features list */}
-              <div className="space-y-3 mb-8">
+              <div className=\"mb-6 space-y-2.5 sm:space-y-3\">
                 {[
                   'Unlimited meal plans',
                   'Priority generation',
                   'Save favorites & history',
                   'PDF downloads',
-                  'Email delivery'
+                  'Email delivery',
                 ].map((feature, index) => (
-                  <div key={index} className="flex items-center gap-3">
-                    <div className="w-5 h-5 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <svg className="w-3 h-3 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  <div
+                    key={index}
+                    className=\"flex items-center gap-3 rounded-2xl border border-emerald-100/60 bg-emerald-50/60 px-3 py-2 sm:px-4 sm:py-2.5\"
+                  >
+                    <div className=\"flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600\">
+                      <svg className=\"h-3 w-3\" fill=\"currentColor\" viewBox=\"0 0 20 20\">
+                        <path
+                          fillRule=\"evenodd\"
+                          d=\"M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z\"
+                          clipRule=\"evenodd\"
+                        />
                       </svg>
                     </div>
-                    <span className="text-gray-700 font-medium">{feature}</span>
+                    <span className=\"text-sm font-medium text-gray-700 sm:text-base\">{feature}</span>
                   </div>
                 ))}
               </div>
@@ -1855,14 +1967,14 @@ export default function DashboardPage() {
               {/* Action button */}
               <button
                 onClick={() => setShowUpgradeSuccess(false)}
-                className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold py-4 px-6 rounded-2xl transition-all duration-200 transform hover:scale-[1.02] hover:shadow-lg"
+                className=\"w-full rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 px-4 py-3 text-sm font-semibold text-white transition-all duration-200 hover:scale-[1.02] hover:shadow-lg focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200 active:scale-[0.98] sm:py-4 sm:text-base\"
               >
                 Start Creating Meal Plans
               </button>
 
               {upgradeSuccessData.isDemo && (
-                <p className="text-center text-sm text-gray-500 mt-4">
-                  Demo mode • No real charges
+                <p className=\"mt-4 text-center text-xs text-gray-500 sm:text-sm\">
+                  Demo mode - No real charges
                 </p>
               )}
             </div>
@@ -1870,46 +1982,49 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Meal Plan Generation Success Modal */}
+{/* Meal Plan Generation Success Modal */}
       {showMealPlanSuccess && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 sm:p-6">
+          <div className="w-full max-w-sm overflow-hidden rounded-3xl bg-white shadow-xl sm:max-w-md sm:shadow-2xl">
             {/* Header with gradient */}
-            <div className="relative bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 p-8 text-center">
+            <div className="relative bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 px-6 py-6 text-center sm:px-8 sm:py-8">
               <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
               <div className="relative">
-                <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
-                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm sm:h-16 sm:w-16">
+                  <svg className="h-6 w-6 text-white sm:h-8 sm:w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <h2 className="text-2xl font-bold text-white mb-2">
-                  🎉 Meal Plan Generated!
+                <h2 className="mb-2 text-xl font-bold text-white sm:text-2xl">
+                  <span className="inline-flex items-center justify-center gap-2">
+                    <Check className="h-5 w-5 sm:h-6 sm:w-6" aria-hidden="true" />
+                    <span>Meal Plan Generated!</span>
+                  </span>
                 </h2>
-                <p className="text-emerald-100 text-lg">
+                <p className="text-base text-emerald-100 sm:text-lg">
                   Your personalized meal plan is ready
                 </p>
               </div>
             </div>
 
             {/* Content */}
-            <div className="p-8">
-              <div className="text-center mb-6">
-                <div className="w-12 h-12 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="px-6 py-6 sm:px-8 sm:py-8">
+              <div className="mb-6 text-center sm:mb-8">
+                <div className="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 sm:h-12 sm:w-12">
+                  <svg className="h-5 w-5 text-emerald-600 sm:h-6 sm:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                <h3 className="mb-2 text-lg font-semibold text-gray-900 sm:text-xl">
                   Check Your Email
                 </h3>
-                <p className="text-gray-600 leading-relaxed">
+                <p className="text-sm leading-relaxed text-gray-600 sm:text-base">
                   Your complete meal plan with PDF attachment has been sent to your email address. You can also view it in the meal plans section.
                 </p>
               </div>
 
               {/* Features list */}
-              <div className="space-y-3 mb-8">
+              <div className="mb-6 space-y-2.5 sm:space-y-3">
                 {[
                   'Complete meal plan with recipes',
                   'PDF attachment for offline access',
@@ -1917,13 +2032,15 @@ export default function DashboardPage() {
                   'Shopping list generated',
                   'Ready to favorite meals'
                 ].map((feature, index) => (
-                  <div key={index} className="flex items-center gap-3">
+                  <div
+                    key={index}
+                    className="flex items-center gap-3 rounded-2xl border border-emerald-100/60 bg-emerald-50/60 px-3 py-2 sm:px-4 sm:py-2.5">
                     <div className="w-5 h-5 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
                       <svg className="w-3 h-3 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
                     </div>
-                    <span className="text-gray-700 font-medium">{feature}</span>
+                    <span className="text-sm font-medium text-gray-700 sm:text-base">{feature}</span>
                   </div>
                 ))}
               </div>
@@ -1935,7 +2052,7 @@ export default function DashboardPage() {
                       setShowMealPlanSuccess(false)
                       openFeedbackDialog()
                     }}
-                    className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-semibold py-4 px-6 rounded-2xl transition-all duration-200 hover:from-emerald-600 hover:to-teal-700 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                    className="w-full flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 px-4 py-3 text-sm font-semibold text-white transition-all duration-200 hover:from-emerald-600 hover:to-teal-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200 active:scale-[0.98] sm:px-6 sm:py-4 sm:text-base"
                   >
                     <span>Share Feedback & Unlock 2 More Plans</span>
                   </button>

@@ -48,7 +48,7 @@ export function CTASection() {
           </Button>
           
           <div className="text-slate-300">
-            <span className="font-medium">✨ Free plan available</span>
+            <span className="font-medium">Free plan available</span>
           </div>
         </div>
 

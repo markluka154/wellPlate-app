@@ -5,21 +5,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { PRICING_PLANS, formatPrice } from "@wellplate/shared"
 import Link from "next/link"
 import { useState, useEffect } from "react"
+import { ShieldCheck } from "lucide-react"
 
 const GuaranteeBadge = () => {
   return (
     <div className="mt-12 text-center">
       <div className="inline-flex items-center px-6 py-3 bg-green-50 border border-green-200 rounded-full">
         <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-            <span className="text-white text-sm font-bold">✓</span>
+          <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white">
+            <ShieldCheck className="h-4 w-4" aria-hidden="true" />
           </div>
           <div className="text-left">
             <div className="text-sm font-semibold text-green-800">
               30-day money-back guarantee
             </div>
             <div className="text-xs text-green-600">
-              No hidden fees • Cancel anytime
+              No hidden fees - Cancel anytime
             </div>
           </div>
         </div>
@@ -155,9 +156,11 @@ export function PricingTables() {
                         handleUpgradeClick(plan.id)
                       }}
                     >
-                      {plan.id === 'FAMILY_MONTHLY' ? 'Go Family' : 
-                       plan.id === 'PRO_ANNUAL' ? 'Go Pro — Annual' : 
-                       'Go Pro — Monthly'}
+                      {plan.id === 'FAMILY_MONTHLY'
+                        ? 'Go Family'
+                        : plan.id === 'PRO_ANNUAL'
+                        ? 'Go Pro (Annual)'
+                        : 'Go Pro (Monthly)'}
                     </Button>
                   )}
                 </div>

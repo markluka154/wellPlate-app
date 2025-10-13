@@ -1,5 +1,16 @@
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import { ArrowRight } from "lucide-react"
+
+const PRESS_MENTIONS = [
+  { name: "Health & Fitness", label: "HF" },
+  { name: "Nutrition Today", label: "NT" },
+  { name: "Wellness Weekly", label: "WW" },
+  { name: "FitLife Pro", label: "FP" },
+  { name: "Dietitian Network", label: "DN" },
+  { name: "Healthy Living", label: "HL" },
+  { name: "Nutrition Plus", label: "NP" },
+]
 
 export function Hero() {
   return (
@@ -50,8 +61,17 @@ export function Hero() {
 
           {/* CTAs - mobile optimized */}
           <div className="mt-6 sm:mt-12 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4 px-4">
-            <Button asChild size="lg" className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-semibold px-6 sm:px-8 py-5 sm:py-6 text-base shadow-lg shadow-green-600/25 hover:shadow-xl hover:shadow-green-600/30 transition-all duration-200">
-              <Link href="/signin">Generate a Free Plan →</Link>
+            <Button
+              asChild
+              size="lg"
+              className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-semibold px-6 sm:px-8 py-5 sm:py-6 text-base shadow-lg shadow-green-600/25 hover:shadow-xl hover:shadow-green-600/30 transition-all duration-200"
+            >
+              <Link href="/signin">
+                <span className="flex items-center justify-center gap-2">
+                  Generate a Free Plan
+                  <ArrowRight className="h-5 w-5" aria-hidden="true" />
+                </span>
+              </Link>
             </Button>
             <Button asChild variant="outline" size="lg" className="w-full sm:w-auto border-2 border-gray-300 hover:border-gray-400 font-semibold px-6 sm:px-8 py-5 sm:py-6 text-base">
               <Link href="/pricing">See Pricing</Link>
@@ -60,7 +80,7 @@ export function Hero() {
 
           {/* Feature callout under CTAs */}
           <p className="mt-4 sm:mt-6 text-xs sm:text-sm text-gray-500 font-medium px-4">
-            No credit card required • 3 free meal plans included
+            No credit card required - 3 free meal plans included
           </p>
 
           {/* Social proof section - mobile optimized */}
@@ -70,20 +90,14 @@ export function Hero() {
             </p>
             
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-4 sm:gap-6 items-center max-w-5xl mx-auto opacity-60 px-4">
-              {[
-                { name: 'Health & Fitness', icon: '💪' },
-                { name: 'Nutrition Today', icon: '🥗' },
-                { name: 'Wellness Weekly', icon: '🌱' },
-                { name: 'FitLife Pro', icon: '🏃' },
-                { name: 'Dietitian Network', icon: '👩‍⚕️' },
-                { name: 'Healthy Living', icon: '🍎' },
-                { name: 'Nutrition Plus', icon: '⚡' }
-              ].map((logo, index) => (
+              {PRESS_MENTIONS.map((logo, index) => (
                 <div
                   key={index}
                   className="flex flex-col items-center justify-center transition-opacity hover:opacity-100 duration-200"
                 >
-                  <div className="text-2xl sm:text-3xl mb-1 sm:mb-2 grayscale">{logo.icon}</div>
+                  <div className="mb-1 sm:mb-2 flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full border border-gray-200 bg-white font-semibold text-gray-700">
+                    {logo.label}
+                  </div>
                   <span className="text-[10px] sm:text-xs font-medium text-gray-600 text-center leading-tight">
                     {logo.name}
                   </span>

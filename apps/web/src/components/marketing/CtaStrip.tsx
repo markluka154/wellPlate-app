@@ -43,7 +43,7 @@ const CtaStrip = () => {
         </h3>
         
         <p className="text-xl text-emerald-100 mb-8 max-w-2xl mx-auto leading-relaxed">
-          Generate your first personalized meal plan free — complete with recipes, shopping lists, and nutritional guidance.
+          Generate your first personalized meal plan free - complete with recipes, shopping lists, and nutritional guidance.
         </p>
         
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
@@ -59,7 +59,7 @@ const CtaStrip = () => {
           </Button>
           
           <div className="text-sm text-emerald-100">
-            <span className="font-medium">✨ Takes only 30 seconds</span>
+            <span className="font-medium">Takes only 30 seconds</span>
           </div>
         </div>
         
