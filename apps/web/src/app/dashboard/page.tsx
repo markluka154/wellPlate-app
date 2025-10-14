@@ -178,18 +178,18 @@ export default function DashboardPage() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [generationProgress, setGenerationProgress] = useState(0)
   const [generationStatus, setGenerationStatus] = useState('')
-  const generationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const generationCompletionRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const generationTimeoutRef = useRef<number | null>(null)
+  const generationCompletionRef = useRef<number | null>(null)
   const generationStepRef = useRef(0)
   const isGeneratingRef = useRef(false)
 
   const clearGenerationTimers = () => {
     if (generationTimeoutRef.current) {
-      clearTimeout(generationTimeoutRef.current)
+      window.clearTimeout(generationTimeoutRef.current)
       generationTimeoutRef.current = null
     }
     if (generationCompletionRef.current) {
-      clearTimeout(generationCompletionRef.current)
+      window.clearTimeout(generationCompletionRef.current)
       generationCompletionRef.current = null
     }
   }
@@ -1315,7 +1315,6 @@ export default function DashboardPage() {
                   </div>
                 )}
               </div>
-                </div>
             </div>
           </div>
         </section>
@@ -1899,38 +1898,38 @@ export default function DashboardPage() {
 
       {/* Upgrade Success Modal */}
       {showUpgradeSuccess && (
-        <div className=\"fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 sm:p-6\">
-          <div className=\"w-full max-w-sm sm:max-w-md overflow-hidden rounded-3xl bg-white shadow-xl sm:shadow-2xl\">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 sm:p-6">
+          <div className="w-full max-w-sm sm:max-w-md overflow-hidden rounded-3xl bg-white shadow-xl sm:shadow-2xl">
             {/* Header with gradient */}
-            <div className=\"relative bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 px-6 py-6 text-center sm:px-8 sm:py-8\">
-              <div className=\"absolute inset-0 bg-gradient-to-br from-white/10 to-transparent\"></div>
-              <div className=\"relative\">
-                <div className=\"mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm sm:h-16 sm:w-16\">
-                  <svg className=\"h-6 w-6 text-white sm:h-8 sm:w-8\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">
-                    <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M5 13l4 4L19 7\" />
+            <div className="relative bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 px-6 py-6 text-center sm:px-8 sm:py-8">
+              <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
+              <div className="relative">
+                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm sm:h-16 sm:w-16">
+                  <svg className="h-6 w-6 text-white sm:h-8 sm:w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <h2 className=\"mb-2 text-xl font-bold text-white sm:text-2xl\">
+                <h2 className="mb-2 text-xl font-bold text-white sm:text-2xl">
                   {upgradeSuccessData.isDemo ? 'Demo Upgrade Successful!' : 'Welcome to WellPlate Pro!'}
                 </h2>
-                <p className=\"text-base text-emerald-100 sm:text-lg\">
+                <p className="text-base text-emerald-100 sm:text-lg">
                   You've been upgraded to {upgradeSuccessData.plan} plan!
                 </p>
               </div>
             </div>
 
             {/* Content */}
-            <div className=\"px-6 py-6 sm:px-8 sm:py-8\">
-              <div className=\"mb-6 text-center sm:mb-8\">
-                <div className=\"mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 sm:h-12 sm:w-12\">
-                  <svg className=\"h-5 w-5 text-emerald-600 sm:h-6 sm:w-6\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">
-                    <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1\" />
+            <div className="px-6 py-6 sm:px-8 sm:py-8">
+              <div className="mb-6 text-center sm:mb-8">
+                <div className="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 sm:h-12 sm:w-12">
+                  <svg className="h-5 w-5 text-emerald-600 sm:h-6 sm:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                   </svg>
                 </div>
-                <h3 className=\"mb-2 text-lg font-semibold text-gray-900 sm:text-xl\">
+                <h3 className="mb-2 text-lg font-semibold text-gray-900 sm:text-xl">
                   {upgradeSuccessData.isDemo ? 'Demo Experience Complete' : 'Unlimited Access Unlocked'}
                 </h3>
-                <p className=\"text-sm leading-relaxed text-gray-600 sm:text-base\">
+                <p className="text-sm leading-relaxed text-gray-600 sm:text-base">
                   {upgradeSuccessData.isDemo
                     ? 'Explore the full experience. In production, this flow connects to Stripe for real upgrades.'
                     : 'You now have unlimited meal plans, priority generation, and all Pro features at your fingertips.'}
@@ -1938,7 +1937,7 @@ export default function DashboardPage() {
               </div>
 
               {/* Features list */}
-              <div className=\"mb-6 space-y-2.5 sm:space-y-3\">
+              <div className="mb-6 space-y-2.5 sm:space-y-3">
                 {[
                   'Unlimited meal plans',
                   'Priority generation',
@@ -1948,18 +1947,18 @@ export default function DashboardPage() {
                 ].map((feature, index) => (
                   <div
                     key={index}
-                    className=\"flex items-center gap-3 rounded-2xl border border-emerald-100/60 bg-emerald-50/60 px-3 py-2 sm:px-4 sm:py-2.5\"
+                    className="flex items-center gap-3 rounded-2xl border border-emerald-100/60 bg-emerald-50/60 px-3 py-2 sm:px-4 sm:py-2.5"
                   >
-                    <div className=\"flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600\">
-                      <svg className=\"h-3 w-3\" fill=\"currentColor\" viewBox=\"0 0 20 20\">
+                    <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+                      <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
                         <path
-                          fillRule=\"evenodd\"
-                          d=\"M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z\"
-                          clipRule=\"evenodd\"
+                          fillRule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clipRule="evenodd"
                         />
                       </svg>
                     </div>
-                    <span className=\"text-sm font-medium text-gray-700 sm:text-base\">{feature}</span>
+                    <span className="text-sm font-medium text-gray-700 sm:text-base">{feature}</span>
                   </div>
                 ))}
               </div>
@@ -1967,13 +1966,13 @@ export default function DashboardPage() {
               {/* Action button */}
               <button
                 onClick={() => setShowUpgradeSuccess(false)}
-                className=\"w-full rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 px-4 py-3 text-sm font-semibold text-white transition-all duration-200 hover:scale-[1.02] hover:shadow-lg focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200 active:scale-[0.98] sm:py-4 sm:text-base\"
+                className="w-full rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 px-4 py-3 text-sm font-semibold text-white transition-all duration-200 hover:scale-[1.02] hover:shadow-lg focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200 active:scale-[0.98] sm:py-4 sm:text-base"
               >
                 Start Creating Meal Plans
               </button>
 
               {upgradeSuccessData.isDemo && (
-                <p className=\"mt-4 text-center text-xs text-gray-500 sm:text-sm\">
+                <p className="mt-4 text-center text-xs text-gray-500 sm:text-sm">
                   Demo mode - No real charges
                 </p>
               )}
