@@ -180,8 +180,16 @@ export default function DashboardPage() {
   const [generationStatus, setGenerationStatus] = useState('')
   const generationTimeoutRef = useRef<number | null>(null)
   const generationCompletionRef = useRef<number | null>(null)
+  const idleProgressIntervalRef = useRef<number | null>(null)
   const generationStepRef = useRef(0)
   const isGeneratingRef = useRef(false)
+
+  const stopIdleProgress = () => {
+    if (idleProgressIntervalRef.current) {
+      window.clearInterval(idleProgressIntervalRef.current)
+      idleProgressIntervalRef.current = null
+    }
+  }
 
   const clearGenerationTimers = () => {
     if (generationTimeoutRef.current) {
@@ -192,6 +200,35 @@ export default function DashboardPage() {
       window.clearTimeout(generationCompletionRef.current)
       generationCompletionRef.current = null
     }
+    stopIdleProgress()
+  }
+
+  const beginIdleProgress = () => {
+    if (idleProgressIntervalRef.current) return
+
+    idleProgressIntervalRef.current = window.setInterval(() => {
+      setGenerationProgress((current) => {
+        if (!isGeneratingRef.current) {
+          stopIdleProgress()
+          return current
+        }
+
+        if (current >= 97) {
+          stopIdleProgress()
+          return current
+        }
+
+        const next = Math.min(current + 1, 97)
+
+        if (next >= 92) {
+          setGenerationStatus((status) =>
+            status === 'Plan ready!' ? status : 'Finalizing your plan...'
+          )
+        }
+
+        return next
+      })
+    }, 2000)
   }
 
   const scheduleNextGenerationStep = () => {
@@ -203,7 +240,12 @@ export default function DashboardPage() {
       setGenerationProgress(step.progress)
       setGenerationStatus(step.message)
       generationStepRef.current += 1
-      scheduleNextGenerationStep()
+      const hasMoreSteps = Boolean(GENERATION_STEPS[generationStepRef.current])
+      if (hasMoreSteps) {
+        scheduleNextGenerationStep()
+      } else {
+        beginIdleProgress()
+      }
     }, step.duration)
   }
 
@@ -1983,79 +2025,55 @@ export default function DashboardPage() {
 
 {/* Meal Plan Generation Success Modal */}
       {showMealPlanSuccess && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 sm:p-6">
-          <div className="w-full max-w-sm overflow-hidden rounded-3xl bg-white shadow-xl sm:max-w-md sm:shadow-2xl">
-            {/* Header with gradient */}
-            <div className="relative bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 px-6 py-6 text-center sm:px-8 sm:py-8">
-              <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
-              <div className="relative">
-                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm sm:h-16 sm:w-16">
-                  <svg className="h-6 w-6 text-white sm:h-8 sm:w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <h2 className="mb-2 text-xl font-bold text-white sm:text-2xl">
-                  <span className="inline-flex items-center justify-center gap-2">
-                    <Check className="h-5 w-5 sm:h-6 sm:w-6" aria-hidden="true" />
-                    <span>Meal Plan Generated!</span>
-                  </span>
-                </h2>
-                <p className="text-base text-emerald-100 sm:text-lg">
-                  Your personalized meal plan is ready
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4 md:items-start md:justify-end md:p-6">
+          <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl ring-1 ring-emerald-100/70">
+            <div className="flex items-start gap-3 p-5">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
+                <Check className="h-5 w-5" aria-hidden="true" />
+              </div>
+              <div className="flex-1 space-y-1">
+                <h2 className="text-lg font-semibold text-gray-900">Meal plan ready!</h2>
+                <p className="text-sm text-gray-600">
+                  We saved it to your dashboard and emailed you a copy—jump back in whenever you’re ready.
                 </p>
               </div>
+              <button
+                type="button"
+                onClick={() => setShowMealPlanSuccess(false)}
+                className="rounded-full p-2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200"
+              >
+                <span className="sr-only">Close</span>
+                <X className="h-4 w-4" aria-hidden="true" />
+              </button>
             </div>
 
-            {/* Content */}
-            <div className="px-6 py-6 sm:px-8 sm:py-8">
-              <div className="mb-6 text-center sm:mb-8">
-                <div className="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 sm:h-12 sm:w-12">
-                  <svg className="h-5 w-5 text-emerald-600 sm:h-6 sm:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            <div className="space-y-4 border-t border-gray-100 px-5 py-4">
+              <div className="flex items-center gap-3 rounded-xl bg-emerald-50/60 px-4 py-3 text-sm text-emerald-700">
+                <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+                  <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
+                </span>
+                <div className="leading-tight">
+                  <p className="font-medium text-emerald-800">What’s included</p>
+                  <p className="text-xs text-emerald-700/80">
+                    Recipes, nutrition targets, shopping list, and quick download access.
+                  </p>
                 </div>
-                <h3 className="mb-2 text-lg font-semibold text-gray-900 sm:text-xl">
-                  Check Your Email
-                </h3>
-                <p className="text-sm leading-relaxed text-gray-600 sm:text-base">
-                  Your complete meal plan with PDF attachment has been sent to your email address. You can also view it in the meal plans section.
-                </p>
               </div>
 
-              {/* Features list */}
-              <div className="mb-6 space-y-2.5 sm:space-y-3">
-                {[
-                  'Complete meal plan with recipes',
-                  'PDF attachment for offline access',
-                  'Nutritional information included',
-                  'Shopping list generated',
-                  'Ready to favorite meals'
-                ].map((feature, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center gap-3 rounded-2xl border border-emerald-100/60 bg-emerald-50/60 px-3 py-2 sm:px-4 sm:py-2.5">
-                    <div className="w-5 h-5 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <svg className="w-3 h-3 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                    <span className="text-sm font-medium text-gray-700 sm:text-base">{feature}</span>
-                  </div>
-                ))}
-              </div>
+              <div className="flex flex-col gap-2">
+                <button
+                  onClick={() => {
+                    setShowMealPlanSuccess(false)
+                    router.push('/dashboard/plans')
+                  }}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 px-4 py-3 text-sm font-semibold text-white transition hover:from-emerald-600 hover:to-teal-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
+                >
+                  <ChevronRight className="h-4 w-4" aria-hidden="true" />
+                  View in Dashboard
+                </button>
 
-              <div className="space-y-3">
-                {!feedbackRewardClaimed && (
-                  <button
-                    onClick={() => {
-                      setShowMealPlanSuccess(false)
-                      openFeedbackDialog()
-                    }}
-                    className="w-full flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 px-4 py-3 text-sm font-semibold text-white transition-all duration-200 hover:from-emerald-600 hover:to-teal-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200 active:scale-[0.98] sm:px-6 sm:py-4 sm:text-base"
-                  >
-                    <span>Share Feedback & Unlock 2 More Plans</span>
-                  </button>
-                )}
                 {latestGeneratedPlan && (
                   <button
                     onClick={() => {
@@ -2065,36 +2083,38 @@ export default function DashboardPage() {
                       }
                       handleDownloadPlan(latestGeneratedPlan.id, latestGeneratedPlan.pdfUrl || latestGeneratedPlan.pdfDataUrl || null)
                     }}
-                    className="w-full flex items-center justify-center gap-2 border border-emerald-200 text-emerald-700 font-semibold py-4 px-6 rounded-2xl transition-all duration-200 hover:bg-emerald-50 focus:outline-none focus:ring-2 focus:ring-emerald-200 disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-200 px-4 py-3 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200 disabled:cursor-not-allowed disabled:opacity-60"
                     disabled={userPlan === 'FREE' || downloadingPlanId === latestGeneratedPlan.id}
                   >
                     {downloadingPlanId === latestGeneratedPlan.id ? (
                       <>
-                        <Loader2 className="h-5 w-5 animate-spin" />
+                        <Loader2 className="h-4 w-4 animate-spin" />
                         <span>Preparing download…</span>
                       </>
                     ) : (
                       <>
-                        <Download className="h-5 w-5" />
-                        <span>Download PDF Now</span>
+                        <Download className="h-4 w-4" aria-hidden="true" />
+                        <span>Download PDF</span>
                       </>
                     )}
                   </button>
                 )}
 
-                <button
-                  onClick={() => {
-                    setShowMealPlanSuccess(false)
-                    window.location.href = '/dashboard/plans'
-                  }}
-                  className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold py-4 px-6 rounded-2xl transition-all duration-200 transform hover:scale-[1.02] hover:shadow-lg"
-                >
-                  View Meal Plans
-                </button>
+                {!feedbackRewardClaimed && (
+                  <button
+                    onClick={() => {
+                      setShowMealPlanSuccess(false)
+                      openFeedbackDialog()
+                    }}
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-emerald-200 px-4 py-3 text-xs font-semibold uppercase text-emerald-600 transition hover:border-emerald-300 hover:text-emerald-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200"
+                  >
+                    Share quick feedback & unlock 2 bonus plans
+                  </button>
+                )}
               </div>
 
-              <p className="text-center text-sm text-gray-500 mt-4">
-                You can always revisit this plan later from the Meal Plans tab.
+              <p className="text-center text-xs text-gray-500">
+                Tip: you can revisit every plan from the dashboard &rarr; Meal Plans tab.
               </p>
             </div>
           </div>
