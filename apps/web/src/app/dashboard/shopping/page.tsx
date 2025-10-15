@@ -23,14 +23,95 @@ import {
   Copy,
   CheckCircle2,
   AlertCircle,
-  X
+  X,
+  MessageCircle,
+  Mail,
+  Send
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useNotification } from '@/components/ui/Notification'
 
+type ShoppingListItem = {
+  id: string
+  name: string
+  category: string
+  quantity: string
+  unit?: string
+  unitPrice: number
+  totalPrice: number
+  checked: boolean
+  store: string
+  aisle: string
+  notes: string
+}
+
+const normalizeShoppingItemKey = (item: Pick<ShoppingListItem, 'name' | 'unit'>) => {
+  const name = (item?.name || '').toString().trim().toLowerCase()
+  const unit = (item?.unit || '').toString().trim().toLowerCase()
+  return `${name}|${unit}`
+}
+
+const parseQuantityValue = (quantity?: string | number | null) => {
+  if (quantity === null || quantity === undefined) return null
+  if (typeof quantity === 'number' && !Number.isNaN(quantity)) return quantity
+  const numericMatch = quantity
+    .toString()
+    .replace(',', '.')
+    .match(/[\d.]+/)
+  return numericMatch ? parseFloat(numericMatch[0]) : null
+}
+
+const mergeShoppingItems = (current: ShoppingListItem[], incoming: ShoppingListItem[]): ShoppingListItem[] => {
+  const merged = new Map<string, ShoppingListItem>()
+
+  current.forEach((item) => {
+    if (!item?.name) return
+    merged.set(normalizeShoppingItemKey(item), { ...item })
+  })
+
+  incoming.forEach((item) => {
+    if (!item?.name) return
+    const key = normalizeShoppingItemKey(item)
+    const existing = merged.get(key)
+
+    if (!existing) {
+      merged.set(key, { ...item })
+      return
+    }
+
+    const existingQty = parseQuantityValue(existing.quantity)
+    const incomingQty = parseQuantityValue(item.quantity)
+    const unitLabel = item.unit || existing.unit || ''
+
+    if (existingQty !== null && incomingQty !== null) {
+      const combinedValue = Number((existingQty + incomingQty).toFixed(2))
+      const suffix = unitLabel ? ` ${unitLabel}` : ''
+
+      merged.set(key, {
+        ...existing,
+        quantity: `${combinedValue}${suffix}`.trim(),
+        unit: unitLabel || existing.unit,
+      })
+    } else if (!existing.quantity && item.quantity) {
+      merged.set(key, {
+        ...existing,
+        quantity: item.quantity,
+        unit: unitLabel || existing.unit,
+      })
+    } else if (!existing.unit && unitLabel) {
+      merged.set(key, {
+        ...existing,
+        unit: unitLabel,
+      })
+    }
+  })
+
+  return Array.from(merged.values())
+}
+
 export default function ShoppingListPage() {
   const router = useRouter()
-  const [shoppingList, setShoppingList] = useState<any[]>([])
+  const [shoppingList, setShoppingList] = useState<ShoppingListItem[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [totalCost, setTotalCost] = useState(0)
   const [searchTerm, setSearchTerm] = useState('')
@@ -42,6 +123,7 @@ export default function ShoppingListPage() {
   const [availableMeals, setAvailableMeals] = useState<any[]>([])
   const [selectedMealIds, setSelectedMealIds] = useState<string[]>([])
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [showShareOptions, setShowShareOptions] = useState(false)
   const { showNotification, NotificationComponent } = useNotification()
 
   // Load user plan, meal plans, and shopping list from localStorage
@@ -143,6 +225,20 @@ export default function ShoppingListPage() {
       console.error('❌ Error saving shopping list:', error)
     }
   }, [shoppingList])
+
+  const shoppingListText = React.useMemo(() => {
+    if (shoppingList.length === 0) return ''
+    return shoppingList
+      .map((item) => {
+        const quantityLabel = item.quantity ? ` (${item.quantity})` : ''
+        return `${item.name}${quantityLabel}`
+      })
+      .join('\n')
+  }, [shoppingList])
+
+  const encodedShoppingListText = React.useMemo(() => {
+    return shoppingListText ? encodeURIComponent(shoppingListText) : ''
+  }, [shoppingListText])
 
   useEffect(() => {
     // Don't calculate total cost since we're showing unit prices only
@@ -441,20 +537,21 @@ export default function ShoppingListPage() {
         
         return {
           id: `ingredient-${Date.now()}-${index}`,
-          name: name,
-          category: category,
-          quantity: quantity,
-          unitPrice: unitPrice,
+          name,
+          category,
+          quantity: quantity || '1',
+          unit: unit || '',
+          unitPrice,
           totalPrice: unitPrice, // Show only unit price
           checked: false,
           store: 'Any Store',
-          aisle: aisle,
+          aisle,
           notes: ''
-        }
+        } as ShoppingListItem
       })
       
       // Add to shopping list
-      setShoppingList(prev => [...prev, ...newItems])
+      setShoppingList(prev => mergeShoppingItems(prev, newItems))
       setShowMealSelector(false)
       setSelectedMealIds([])
       
@@ -691,20 +788,21 @@ export default function ShoppingListPage() {
         
         return {
           id: `ingredient-${Date.now()}-${index}`,
-          name: name,
-          category: category,
-          quantity: quantity,
-          unitPrice: unitPrice,
+          name,
+          category,
+          quantity: quantity || '1',
+          unit: unit || '',
+          unitPrice,
           totalPrice: unitPrice, // Show only unit price
           checked: false,
           store: 'Any Store',
-          aisle: aisle,
+          aisle,
           notes: ''
-        }
+        } as ShoppingListItem
       })
       
       // Add to shopping list
-      setShoppingList(prev => [...prev, ...newItems])
+      setShoppingList(prev => mergeShoppingItems(prev, newItems))
       
       showNotification('success', 'Ingredients Added!', `Added ${newItems.length} ingredients from your recent meal plan to the shopping list.`)
       
@@ -719,10 +817,32 @@ export default function ShoppingListPage() {
     }
   }
 
-  const exportList = () => {
-    const listText = shoppingList.map(item => `${item.name} (${item.quantity})`).join('\n')
-    navigator.clipboard.writeText(listText)
-    showNotification('success', 'List Exported', 'Shopping list copied to clipboard!')
+  const exportList = async () => {
+    if (!shoppingListText) {
+      showNotification('warning', 'Nothing to export', 'Add items to your shopping list first.')
+      return
+    }
+
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(shoppingListText)
+      } else {
+        const textarea = document.createElement('textarea')
+        textarea.value = shoppingListText
+        textarea.setAttribute('readonly', '')
+        textarea.style.position = 'absolute'
+        textarea.style.left = '-9999px'
+        document.body.appendChild(textarea)
+        textarea.select()
+        document.execCommand('copy')
+        document.body.removeChild(textarea)
+      }
+
+      showNotification('success', 'List Copied', 'Shopping list copied to clipboard!')
+    } catch (error) {
+      console.error('❌ Error copying shopping list:', error)
+      showNotification('error', 'Copy Failed', 'Unable to copy your shopping list. Please try again.')
+    }
   }
 
   const deleteAllItems = () => {
@@ -736,15 +856,53 @@ export default function ShoppingListPage() {
     showNotification('success', 'List Cleared', 'All items have been removed from your shopping list.')
   }
 
-  const shareList = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: 'My Shopping List',
-        text: shoppingList.map(item => `${item.name} (${item.quantity})`).join('\n')
-      })
-    } else {
-      exportList()
+  const shareList = async () => {
+    if (shoppingList.length === 0) {
+      showNotification('warning', 'Nothing to share', 'Add items to your shopping list first.')
+      return
     }
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'My Shopping List',
+          text: shoppingListText,
+        })
+        showNotification('success', 'Share Ready', 'Your shopping list is ready to send.')
+        return
+      } catch (error: any) {
+        if (error?.name === 'AbortError') {
+          return
+        }
+        console.warn('⚠️ Web Share API failed, falling back to custom share options:', error)
+      }
+    }
+
+    setShowShareOptions(true)
+  }
+
+  const openShareWindow = (url: string) => {
+    window.open(url, '_blank', 'noopener,noreferrer')
+  }
+
+  const shareViaWhatsApp = () => {
+    if (!shoppingListText) return
+    openShareWindow(`https://api.whatsapp.com/send?text=${encodedShoppingListText}`)
+  }
+
+  const shareViaSMS = () => {
+    if (!shoppingListText) return
+    window.location.href = `sms:?&body=${encodedShoppingListText}`
+  }
+
+  const shareViaEmail = () => {
+    if (!shoppingListText) return
+    window.location.href = `mailto:?subject=${encodeURIComponent('Shopping List from WellPlate')}&body=${encodedShoppingListText}`
+  }
+
+  const copyShareText = async () => {
+    await exportList()
+    setShowShareOptions(false)
   }
 
   const filteredItems = shoppingList.filter(item => {
@@ -901,7 +1059,8 @@ export default function ShoppingListPage() {
         <div className="flex flex-wrap gap-3 mb-8">
           <button
             onClick={exportList}
-            className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            disabled={shoppingList.length === 0}
+            className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
           >
             <Download className="h-4 w-4 mr-2" />
             Export
@@ -909,7 +1068,8 @@ export default function ShoppingListPage() {
           
           <button
             onClick={shareList}
-            className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            disabled={shoppingList.length === 0}
+            className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
           >
             <Share2 className="h-4 w-4 mr-2" />
             Share
@@ -1120,6 +1280,84 @@ export default function ShoppingListPage() {
                 className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
               >
                 Copy Selected Ingredients ({selectedMealIds.length})
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Share Options Modal */}
+      {showShareOptions && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl">
+            <div className="border-b border-gray-100 px-6 py-5">
+              <h2 className="text-lg font-semibold text-gray-900">Share your shopping list</h2>
+              <p className="mt-1 text-sm text-gray-600">
+                Send your shopping list to family or friends via their favourite apps.
+              </p>
+            </div>
+
+            <div className="space-y-3 px-6 py-5">
+              <button
+                onClick={() => {
+                  shareViaWhatsApp()
+                  setShowShareOptions(false)
+                }}
+                className="flex w-full items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700 transition hover:border-emerald-300 hover:bg-emerald-100"
+              >
+                <span className="flex items-center gap-3">
+                  <Send className="h-4 w-4" />
+                  Share via WhatsApp
+                </span>
+                <Share2 className="h-4 w-4" />
+              </button>
+
+              <button
+                onClick={() => {
+                  shareViaSMS()
+                  setShowShareOptions(false)
+                }}
+                className="flex w-full items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-700 transition hover:border-gray-300 hover:bg-gray-50"
+              >
+                <span className="flex items-center gap-3">
+                  <MessageCircle className="h-4 w-4" />
+                  Send via SMS
+                </span>
+                <Share2 className="h-4 w-4" />
+              </button>
+
+              <button
+                onClick={() => {
+                  shareViaEmail()
+                  setShowShareOptions(false)
+                }}
+                className="flex w-full items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-700 transition hover:border-gray-300 hover:bg-gray-50"
+              >
+                <span className="flex items-center gap-3">
+                  <Mail className="h-4 w-4" />
+                  Email this list
+                </span>
+                <Share2 className="h-4 w-4" />
+              </button>
+
+              <button
+                onClick={copyShareText}
+                className="flex w-full items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-700 transition hover:border-gray-300 hover:bg-gray-50"
+              >
+                <span className="flex items-center gap-3">
+                  <Copy className="h-4 w-4" />
+                  Copy to clipboard
+                </span>
+                <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+              </button>
+            </div>
+
+            <div className="flex justify-end gap-3 border-t border-gray-100 px-6 py-4">
+              <button
+                onClick={() => setShowShareOptions(false)}
+                className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+              >
+                Close
               </button>
             </div>
           </div>
