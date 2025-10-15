@@ -8,12 +8,14 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
+import { useRouter } from 'next/navigation'
 
 export default function SignInPage() {
   const [email, setEmail] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [isSuccess, setIsSuccess] = useState(false)
+  const router = useRouter()
 
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -50,11 +52,32 @@ export default function SignInPage() {
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true)
+    setMessage('')
+    setIsSuccess(false)
+
     try {
-      await signIn('google', { callbackUrl: `${window.location.origin}/dashboard` })
+      const response = await signIn('google', {
+        callbackUrl: '/dashboard',
+        redirect: false,
+      })
+
+      if (response?.error) {
+        console.error('Google sign in error:', response.error)
+        setMessage('Unable to sign in with Google. Please try again.')
+        setIsSuccess(false)
+        setIsLoading(false)
+        return
+      }
+
+      if (response?.url) {
+        router.replace(response.url)
+      } else {
+        router.replace('/dashboard')
+      }
     } catch (error) {
       console.error('Google sign in error:', error)
-    } finally {
+      setMessage('Unable to sign in with Google. Please try again.')
+      setIsSuccess(false)
       setIsLoading(false)
     }
   }

@@ -4,28 +4,81 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { useState, useEffect } from 'react'
 import { Menu, X } from 'lucide-react'
+import { useSession, signOut } from 'next-auth/react'
+
+type HeaderUser = {
+  email: string
+  plan?: string
+  token?: string
+}
 
 export function Header() {
-  const [user, setUser] = useState<{ email: string; plan: string } | null>(null)
+  const { data: session, status } = useSession()
+  const [user, setUser] = useState<HeaderUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   useEffect(() => {
-    const userData = localStorage.getItem('wellplate:user')
-    if (userData) {
-      try {
-        setUser(JSON.parse(userData))
-      } catch (e) {
-        console.error('Failed to parse user data:', e)
+    try {
+      const storedUser = localStorage.getItem('wellplate:user')
+      if (storedUser) {
+        setUser(JSON.parse(storedUser))
       }
+    } catch (error) {
+      console.warn('Unable to parse stored user data:', error)
     }
-    setIsLoading(false)
   }, [])
 
-  const handleSignOut = () => {
-    localStorage.removeItem('wellplate:user')
+  useEffect(() => {
+    if (status === 'loading') return
+
+    if (status === 'authenticated' && session?.user?.email) {
+      const storedPlan =
+        (() => {
+          try {
+            const existing = localStorage.getItem('wellplate:user')
+            if (!existing) return undefined
+            return JSON.parse(existing)?.plan
+          } catch (error) {
+            console.warn('Failed to read stored user plan:', error)
+            return undefined
+          }
+        })() ?? (session.user as any)?.plan
+
+      const nextUser: HeaderUser = {
+        email: session.user.email,
+        plan: storedPlan,
+        token: 'nextauth-session',
+      }
+
+      setUser(nextUser)
+
+      try {
+        localStorage.setItem('wellplate:user', JSON.stringify(nextUser))
+      } catch (error) {
+        console.warn('Unable to persist user data to localStorage:', error)
+      }
+    } else if (status === 'unauthenticated') {
+      setUser(null)
+      try {
+        localStorage.removeItem('wellplate:user')
+      } catch (error) {
+        console.warn('Failed to clear stored user data:', error)
+      }
+    }
+
+    setIsLoading(false)
+  }, [status, session])
+
+  const handleSignOut = async () => {
+    try {
+      localStorage.removeItem('wellplate:user')
+    } catch (error) {
+      console.warn('Failed to clear stored user on sign out:', error)
+    }
+
     setUser(null)
-    window.location.href = '/'
+    await signOut({ callbackUrl: '/' })
   }
 
   return (
@@ -144,8 +197,8 @@ export function Header() {
                     {user.email}
                   </div>
                   <button
-                    onClick={() => {
-                      handleSignOut()
+                    onClick={async () => {
+                      await handleSignOut()
                       setIsMobileMenuOpen(false)
                     }}
                     className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 touch-manipulation active:bg-gray-100"
