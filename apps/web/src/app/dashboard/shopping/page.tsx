@@ -45,19 +45,96 @@ type ShoppingListItem = {
   notes: string
 }
 
+const canonicalizeName = (value?: string | null) => {
+  if (!value) return ''
+  return value
+    .toString()
+    .toLowerCase()
+    .replace(/\([^)]*\)/g, '') // remove text within parentheses
+    .replace(/[^a-z0-9\s]/g, ' ') // remove punctuation
+    .replace(/\s+/g, ' ') // collapse whitespace
+    .trim()
+}
+
+const UNIT_ALIASES: Record<string, string> = {
+  pcs: 'piece',
+  pc: 'piece',
+  piece: 'piece',
+  pieces: 'piece',
+  each: 'piece',
+  tbsp: 'tbsp',
+  tablespoon: 'tbsp',
+  tablespoons: 'tbsp',
+  tsp: 'tsp',
+  teaspoon: 'tsp',
+  teaspoons: 'tsp',
+  cup: 'cup',
+  cups: 'cup',
+  gram: 'g',
+  grams: 'g',
+  g: 'g',
+  kilogram: 'kg',
+  kilograms: 'kg',
+  kg: 'kg',
+  milliliter: 'ml',
+  milliliters: 'ml',
+  ml: 'ml',
+  liter: 'l',
+  litres: 'l',
+  liters: 'l',
+  oz: 'oz',
+  ounce: 'oz',
+  ounces: 'oz',
+  lb: 'lb',
+  lbs: 'lb',
+  pound: 'lb',
+  pounds: 'lb',
+  unit: 'unit',
+  units: 'unit'
+}
+
+const canonicalizeUnit = (value?: string | null) => {
+  if (!value) return ''
+  const normalized = value
+    .toString()
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, '')
+    .replace(/\s+/g, '')
+    .trim()
+
+  return UNIT_ALIASES[normalized] || normalized
+}
+
 const normalizeShoppingItemKey = (item: Pick<ShoppingListItem, 'name' | 'unit'>) => {
-  const name = (item?.name || '').toString().trim().toLowerCase()
-  const unit = (item?.unit || '').toString().trim().toLowerCase()
+  const name = canonicalizeName(item?.name)
+  const rawUnit = canonicalizeUnit(item?.unit)
+  const unit = rawUnit === 'piece' || rawUnit === 'unit' ? '' : rawUnit
   return `${name}|${unit}`
 }
 
 const parseQuantityValue = (quantity?: string | number | null) => {
   if (quantity === null || quantity === undefined) return null
   if (typeof quantity === 'number' && !Number.isNaN(quantity)) return quantity
-  const numericMatch = quantity
-    .toString()
-    .replace(',', '.')
-    .match(/[\d.]+/)
+  const value = quantity.toString().replace(',', '.').trim()
+
+  // Handle mixed fractions like "1 1/2"
+  const mixedMatch = value.match(/^(\d+)\s+(\d+)\/(\d+)/)
+  if (mixedMatch) {
+    const whole = parseInt(mixedMatch[1], 10)
+    const numerator = parseInt(mixedMatch[2], 10)
+    const denominator = parseInt(mixedMatch[3], 10) || 1
+    return whole + numerator / denominator
+  }
+
+  // Handle simple fractions like "3/4"
+  const fractionMatch = value.match(/^(\d+)\/(\d+)/)
+  if (fractionMatch) {
+    const numerator = parseInt(fractionMatch[1], 10)
+    const denominator = parseInt(fractionMatch[2], 10) || 1
+    return numerator / denominator
+  }
+
+  const numericMatch = value.match(/[\d.]+/)
   return numericMatch ? parseFloat(numericMatch[0]) : null
 }
 
@@ -142,15 +219,46 @@ export default function ShoppingListPage() {
 
     const loadShoppingList = () => {
       try {
-        console.log('🔍 Loading shopping list from localStorage...')
+        console.log('🛒 Loading shopping list from localStorage...')
         const savedShoppingList = localStorage.getItem('wellplate:shoppingList')
-        console.log('🔍 Raw localStorage data:', savedShoppingList)
+        console.log('🛒 Raw localStorage data:', savedShoppingList)
         
         if (savedShoppingList) {
           const parsedList = JSON.parse(savedShoppingList)
-          console.log('🔍 Parsed shopping list:', parsedList)
-          setShoppingList(parsedList)
-          console.log('✅ Loaded shopping list from localStorage:', parsedList.length, 'items')
+          console.log('🛒 Parsed shopping list:', parsedList)
+
+          const preparedItems: ShoppingListItem[] = Array.isArray(parsedList)
+            ? parsedList.map((item: any, index: number) => ({
+                id:
+                  typeof item?.id === 'string' && item.id.trim().length > 0
+                    ? item.id
+                    : `stored-${Date.now()}-${index}`,
+                name: item?.name?.toString().trim() || 'Unnamed Ingredient',
+                category: item?.category || 'Other',
+                quantity: item?.quantity?.toString().trim() || '1',
+                unit: item?.unit?.toString().trim() || '',
+                unitPrice:
+                  typeof item?.unitPrice === 'number'
+                    ? item.unitPrice
+                    : item?.unitPrice
+                    ? Number(item.unitPrice) || 0
+                    : 0,
+                totalPrice:
+                  typeof item?.totalPrice === 'number'
+                    ? item.totalPrice
+                    : item?.totalPrice
+                    ? Number(item.totalPrice) || 0
+                    : 0,
+                checked: Boolean(item?.checked),
+                store: item?.store || 'Any Store',
+                aisle: item?.aisle || 'General',
+                notes: item?.notes || '',
+              }))
+            : []
+
+          const normalizedList = mergeShoppingItems([], preparedItems)
+          setShoppingList(normalizedList)
+          console.log('✅ Loaded shopping list from localStorage:', normalizedList.length, 'items')
         } else {
           console.log('❌ No saved shopping list found in localStorage')
         }
@@ -537,10 +645,10 @@ export default function ShoppingListPage() {
         
         return {
           id: `ingredient-${Date.now()}-${index}`,
-          name,
+          name: name?.toString().trim() || 'Unnamed Ingredient',
           category,
-          quantity: quantity || '1',
-          unit: unit || '',
+          quantity: (quantity || '1').toString().trim(),
+          unit: (unit || '').toString().trim(),
           unitPrice,
           totalPrice: unitPrice, // Show only unit price
           checked: false,
@@ -788,10 +896,10 @@ export default function ShoppingListPage() {
         
         return {
           id: `ingredient-${Date.now()}-${index}`,
-          name,
+          name: name?.toString().trim() || 'Unnamed Ingredient',
           category,
-          quantity: quantity || '1',
-          unit: unit || '',
+          quantity: (quantity || '1').toString().trim(),
+          unit: (unit || '').toString().trim(),
           unitPrice,
           totalPrice: unitPrice, // Show only unit price
           checked: false,
