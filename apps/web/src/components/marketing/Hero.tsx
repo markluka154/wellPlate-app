@@ -89,18 +89,19 @@ export function Hero() {
               Trusted by health professionals worldwide
             </p>
             
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-4 sm:gap-6 items-center max-w-5xl mx-auto opacity-60 px-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-7 gap-3 sm:gap-5 items-stretch max-w-5xl mx-auto px-4">
               {PRESS_MENTIONS.map((logo, index) => (
                 <div
                   key={index}
-                  className="flex flex-col items-center justify-center transition-opacity hover:opacity-100 duration-200"
+                  className="group flex flex-col items-center justify-center rounded-xl border border-gray-200/70 bg-white/70 px-4 py-3 shadow-sm shadow-gray-100 transition-all duration-200 hover:border-emerald-200 hover:bg-white"
                 >
-                  <div className="mb-1 sm:mb-2 flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full border border-gray-200 bg-white font-semibold text-gray-700">
+                  <span className="text-xs sm:text-sm font-semibold uppercase tracking-[0.35em] text-gray-500 transition-colors duration-200 group-hover:text-emerald-500">
                     {logo.label}
-                  </div>
-                  <span className="text-[10px] sm:text-xs font-medium text-gray-600 text-center leading-tight">
+                  </span>
+                  <span className="mt-2 text-[11px] sm:text-xs font-medium text-gray-700 text-center leading-tight">
                     {logo.name}
                   </span>
+                  <span className="mt-3 h-px w-8 bg-gradient-to-r from-transparent via-emerald-200 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
                 </div>
               ))}
             </div>
