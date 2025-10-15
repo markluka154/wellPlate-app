@@ -249,67 +249,69 @@ export default function ShoppingListPage() {
         showNotification('warning', 'No Meal Plans Found', 'Please generate some meal plans first to copy ingredients from.')
         return
       }
-      
-      // Find the most recent meal plan
-      const recentMealPlan = data.mealPlans[0]
-      console.log('🔍 Recent meal plan:', recentMealPlan)
-      
-      if (!recentMealPlan || !recentMealPlan.jsonData) {
-        showNotification('warning', 'No Meal Plans Found', 'The recent meal plan has no data to copy ingredients from.')
-        return
-      }
-      
-      const jsonData = recentMealPlan.jsonData
-      console.log('🔍 JSON data:', jsonData)
-      
-      // Extract ingredients from selected meals
-      const allIngredients: any[] = []
-      
-      // Deep search for ingredients in the meal plan structure
-      const searchForIngredients = (obj: any, path: string = '') => {
-        if (typeof obj !== 'object' || obj === null) return
-        
-        for (const [key, value] of Object.entries(obj)) {
-          const currentPath = path ? `${path}.${key}` : key
-          
-          if (Array.isArray(value)) {
-            // Check if this array contains ingredient-like objects
-            if (value.length > 0 && typeof value[0] === 'object' && value[0] !== null) {
-              const firstItem = value[0]
-              if (firstItem.name || firstItem.item) {
-                console.log(`🔍 Found potential ingredients at: ${currentPath}`, value)
-                
-                // If this is a meals array, extract ingredients from each meal
-                if (key === 'meals' || (firstItem.name && firstItem.quantity)) {
-                  value.forEach((meal: any) => {
-                    if (meal.ingredients && Array.isArray(meal.ingredients)) {
-                      meal.ingredients.forEach((ingredient: any) => {
-                        if (ingredient && (ingredient.name || ingredient.item)) {
-                          allIngredients.push({
-                            name: ingredient.name || ingredient.item || 'Unknown',
-                            quantity: ingredient.quantity || ingredient.qty || '1',
-                            unit: ingredient.unit || 'piece'
-                          })
-                        }
-                      })
-                    }
-                  })
-                }
+
+      const planMap = new Map<string, any>(
+        data.mealPlans.map((plan: any) => [plan.id, plan])
+      )
+
+      const selectedMeals = selectedMealIds.map((id) => {
+        const parts = id.split('-')
+        const mealIndex = Number(parts.pop())
+        const dayIndex = Number(parts.pop())
+        const planId = parts.join('-')
+        return { planId, dayIndex, mealIndex }
+      })
+
+      const extractIngredientsFromMeal = (meal: any) => {
+        const ingredients: { name: string; quantity: string; unit?: string }[] = []
+
+        const visit = (node: any) => {
+          if (!node || typeof node !== 'object') return
+          if (Array.isArray(node)) {
+            node.forEach(visit)
+            return
+          }
+
+          if (Array.isArray(node.ingredients)) {
+            node.ingredients.forEach((ingredient: any) => {
+              if (ingredient && (ingredient.name || ingredient.item)) {
+                ingredients.push({
+                  name: ingredient.name || ingredient.item || 'Unknown',
+                  quantity: ingredient.quantity || ingredient.qty || '1',
+                  unit: ingredient.unit || ingredient.units || 'piece',
+                })
               }
-            }
+            })
           }
-          
-          // Recursively search nested objects
-          if (typeof value === 'object' && value !== null) {
-            searchForIngredients(value, currentPath)
-          }
+
+          Object.values(node).forEach(visit)
+        }
+
+        visit(meal)
+        return ingredients
+      }
+
+      const allIngredients: any[] = []
+      let mealsWithIngredients = 0
+
+      for (const { planId, dayIndex, mealIndex } of selectedMeals) {
+        const plan = planMap.get(planId)
+        const planData = plan?.jsonData?.plan
+        if (!plan || !Array.isArray(planData)) continue
+
+        const day = planData[dayIndex]
+        const meal = day?.meals?.[mealIndex]
+        if (!meal) continue
+
+        const mealIngredients = extractIngredientsFromMeal(meal)
+        if (mealIngredients.length > 0) {
+          allIngredients.push(...mealIngredients)
+          mealsWithIngredients += 1
         }
       }
-      
-      searchForIngredients(jsonData)
-      
+
       if (allIngredients.length === 0) {
-        showNotification('warning', 'No Ingredients Found', 'The meal plan has no ingredients to copy. The meal plan structure might be different than expected.')
+        showNotification('warning', 'No Ingredients Found', 'Could not find ingredients for the selected meals.')
         return
       }
       
@@ -456,7 +458,7 @@ export default function ShoppingListPage() {
       setShowMealSelector(false)
       setSelectedMealIds([])
       
-      showNotification('success', 'Ingredients Added!', `Added ${newItems.length} ingredients from ${selectedMealIds.length} selected meals to the shopping list.`)
+      showNotification('success', 'Ingredients Added!', `Added ${newItems.length} ingredients from ${mealsWithIngredients} selected meal${mealsWithIngredients === 1 ? '' : 's'} to the shopping list.`)
       
     } catch (error) {
       console.error('❌ Error generating from selected meals:', error)

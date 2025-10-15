@@ -2558,41 +2558,63 @@ function FeedbackModal({
 }: FeedbackModalProps) {
   const ratingOptions = [1, 2, 3, 4, 5]
 
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof document === 'undefined') return
+
+    const { body, documentElement } = document
+    const previousBodyOverflow = body.style.overflow
+    const previousHtmlOverflow = documentElement.style.overflow
+    const previousPaddingRight = body.style.paddingRight
+    const scrollbarCompensation = window.innerWidth - body.clientWidth
+
+    body.style.overflow = 'hidden'
+    documentElement.style.overflow = 'hidden'
+    if (scrollbarCompensation > 0) {
+      body.style.paddingRight = `${scrollbarCompensation}px`
+    }
+
+    return () => {
+      body.style.overflow = previousBodyOverflow
+      body.style.paddingRight = previousPaddingRight
+      documentElement.style.overflow = previousHtmlOverflow
+    }
+  }, [])
+
   const updateField = (field: keyof FeedbackFormState, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }))
   }
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 px-4 py-6 backdrop-blur-sm">
-      <div className="w-full max-w-lg overflow-hidden rounded-3xl bg-white shadow-2xl">
-        <div className="flex items-start justify-between border-b border-emerald-100 bg-gradient-to-r from-emerald-500 to-teal-500 px-6 py-5 text-white">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 px-4 py-6 backdrop-blur-sm overscroll-y-none sm:px-6 sm:py-8">
+      <div className="flex w-full max-h-[90vh] max-w-md flex-col overflow-hidden rounded-2xl bg-white shadow-2xl sm:max-w-lg sm:rounded-3xl">
+        <div className="flex shrink-0 items-start justify-between border-b border-emerald-100 bg-gradient-to-r from-emerald-500 to-teal-500 px-5 py-4 text-white sm:px-6 sm:py-5">
           <div>
-            <h3 className="text-lg font-semibold">Share your feedback</h3>
-            <p className="text-sm text-emerald-50/90">
+            <h3 className="text-base font-semibold sm:text-lg">Share your feedback</h3>
+            <p className="text-xs text-emerald-50/90 sm:text-sm">
               Help us improve your meal-planning experience
               {hasReward ? '' : ' and unlock +2 bonus plans'}.
             </p>
           </div>
           <button
             onClick={onClose}
-            className="rounded-full bg-white/20 p-2 text-white transition hover:bg-white/30 focus:outline-none focus:ring-2 focus:ring-white"
+            className="rounded-full bg-white/20 p-1.5 text-white transition hover:bg-white/30 focus:outline-none focus:ring-2 focus:ring-white sm:p-2"
             aria-label="Close feedback modal"
           >
-            <span className="text-lg leading-none">×</span>
+            <span className="text-base leading-none sm:text-lg">×</span>
           </button>
         </div>
 
-        <div className="space-y-6 px-6 py-6">
+        <div className="flex-1 space-y-6 overflow-y-auto px-5 py-5 sm:px-6 sm:py-6">
           {success ? (
             <div className="space-y-6 text-center">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
-                <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 sm:h-16 sm:w-16">
+                <svg className="h-6 w-6 sm:h-8 sm:w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
               <div className="space-y-2">
-                <h4 className="text-xl font-semibold text-emerald-700">Thank you for sharing!</h4>
-                <p className="text-sm text-gray-600">
+                <h4 className="text-lg font-semibold text-emerald-700 sm:text-xl">Thank you for sharing!</h4>
+                <p className="text-sm text-gray-600 sm:text-base">
                   {hasReward
                     ? 'We appreciate the extra insights.'
                     : 'Two bonus meal plan generations have been added to your account.'}
@@ -2623,7 +2645,7 @@ function FeedbackModal({
                         key={value}
                         type="button"
                         onClick={() => setForm((prev) => ({ ...prev, rating: value }))}
-                        className={`rounded-xl border px-2 py-2 text-sm font-semibold transition ${
+                        className={`rounded-xl border px-2 py-2 text-xs font-semibold transition ${
                           active
                             ? 'border-emerald-500 bg-emerald-500 text-white shadow-md shadow-emerald-200'
                             : 'border-gray-200 text-gray-600 hover:border-emerald-300 hover:text-emerald-700'
@@ -2644,7 +2666,7 @@ function FeedbackModal({
                   onChange={(event) => updateField('liked', event.target.value)}
                   maxLength={600}
                   rows={3}
-                  className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800 shadow-inner transition focus:border-emerald-400 focus:bg-white focus:outline-none"
+                  className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-3 py-3 text-sm text-gray-800 shadow-inner transition focus:border-emerald-400 focus:bg-white focus:outline-none sm:px-4"
                   placeholder="Meals were on point, loved the grocery summary..."
                 />
               </div>
@@ -2656,7 +2678,7 @@ function FeedbackModal({
                   onChange={(event) => updateField('improvements', event.target.value)}
                   maxLength={600}
                   rows={3}
-                  className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800 shadow-inner transition focus:border-emerald-400 focus:bg-white focus:outline-none"
+                  className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-3 py-3 text-sm text-gray-800 shadow-inner transition focus:border-emerald-400 focus:bg-white focus:outline-none sm:px-4"
                   placeholder="Tell us how we can improve portions, macros, or pacing..."
                 />
               </div>
@@ -2668,7 +2690,7 @@ function FeedbackModal({
                   onChange={(event) => updateField('suggestions', event.target.value)}
                   maxLength={600}
                   rows={2}
-                  className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800 shadow-inner transition focus:border-emerald-400 focus:bg-white focus:outline-none"
+                  className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-3 py-3 text-sm text-gray-800 shadow-inner transition focus:border-emerald-400 focus:bg-white focus:outline-none sm:px-4"
                   placeholder="Features you want to see, frustrating flows, anything else..."
                 />
               </div>

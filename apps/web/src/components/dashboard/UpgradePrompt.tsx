@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect } from 'react'
 import { X, Crown, Zap, Star, Shield, Download } from 'lucide-react'
 
 interface UpgradePromptProps {
@@ -12,6 +12,28 @@ interface UpgradePromptProps {
 }
 
 export function UpgradePrompt({ isOpen, onClose, title, message, feature }: UpgradePromptProps) {
+  useEffect(() => {
+    if (!isOpen || typeof window === 'undefined' || typeof document === 'undefined') return
+
+    const { body, documentElement } = document
+    const previousBodyOverflow = body.style.overflow
+    const previousHtmlOverflow = documentElement.style.overflow
+    const previousPaddingRight = body.style.paddingRight
+    const scrollbarCompensation = window.innerWidth - body.clientWidth
+
+    body.style.overflow = 'hidden'
+    documentElement.style.overflow = 'hidden'
+    if (scrollbarCompensation > 0) {
+      body.style.paddingRight = `${scrollbarCompensation}px`
+    }
+
+    return () => {
+      body.style.overflow = previousBodyOverflow
+      body.style.paddingRight = previousPaddingRight
+      documentElement.style.overflow = previousHtmlOverflow
+    }
+  }, [isOpen])
+
   if (!isOpen) return null
 
   // Determine if this is a family feature based on the title or feature
@@ -35,7 +57,7 @@ export function UpgradePrompt({ isOpen, onClose, title, message, feature }: Upgr
 
   const features = isFamilyFeature ? familyFeatures : proFeatures
   const planName = isFamilyFeature ? 'Family Monthly' : 'Pro'
-  const planPrice = isFamilyFeature ? 'EUR 24.99' : 'EUR 9.99'
+  const planPrice = isFamilyFeature ? 'EUR 24.99' : 'EUR 14.99'
 
   const handleUpgrade = async () => {
     try {
@@ -94,49 +116,50 @@ export function UpgradePrompt({ isOpen, onClose, title, message, feature }: Upgr
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="relative bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-6 backdrop-blur-sm overscroll-y-none sm:px-6 sm:py-8">
+      <div className="relative flex w-full max-h-[90vh] max-w-sm flex-col overflow-hidden rounded-2xl bg-white shadow-2xl sm:max-w-md sm:rounded-3xl">
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-10 p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
+          className="absolute right-4 top-4 z-10 rounded-full bg-gray-100 p-2 transition-colors hover:bg-gray-200 sm:p-2.5"
+          aria-label="Close upgrade prompt"
         >
           <X className="h-5 w-5 text-gray-600" />
         </button>
 
         {/* Header */}
-        <div className="relative bg-gradient-to-br from-emerald-500 to-blue-600 p-8 text-white">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-              <Crown className="h-6 w-6" />
+        <div className="relative bg-gradient-to-br from-emerald-500 to-blue-600 px-6 py-6 text-white sm:px-8 sm:py-8">
+          <div className="mb-4 flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 sm:h-12 sm:w-12">
+              <Crown className="h-5 w-5 sm:h-6 sm:w-6" />
             </div>
             <div>
-              <h3 className="text-xl font-bold">{title}</h3>
-              <p className="text-emerald-100 text-sm">Upgrade to {planName}</p>
+              <h3 className="text-lg font-bold sm:text-xl">{title}</h3>
+              <p className="text-sm text-emerald-100">Upgrade to {planName}</p>
             </div>
           </div>
-          <p className="text-emerald-100">{message}</p>
+          <p className="text-sm text-emerald-100 sm:text-base">{message}</p>
         </div>
 
         {/* Content */}
-        <div className="p-6">
+        <div className="flex-1 overflow-y-auto px-5 py-5 sm:px-6 sm:py-6">
           {feature && (
-            <div className="mb-6 p-4 bg-emerald-50 rounded-xl border border-emerald-200">
-              <div className="flex items-center gap-2 text-emerald-700 font-medium mb-2">
+            <div className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 p-4 sm:mb-6 sm:p-5">
+              <div className="mb-2 flex items-center gap-2 font-medium text-emerald-700">
                 <Zap className="h-4 w-4" />
                 <span>{planName} Feature</span>
               </div>
-              <p className="text-emerald-600 text-sm">{feature}</p>
+              <p className="text-sm text-emerald-600">{feature}</p>
             </div>
           )}
 
           {/* Features list */}
-          <div className="mb-6">
-            <h4 className="font-semibold text-gray-900 mb-3">{planName} includes:</h4>
+          <div className="mb-5 sm:mb-6">
+            <h4 className="mb-3 text-base font-semibold text-gray-900">{planName} includes:</h4>
             <div className="space-y-2">
               {features.map(({ icon: Icon, text }, index) => (
                 <div key={index} className="flex items-center gap-3">
-                  <div className="w-6 h-6 bg-emerald-100 rounded-full flex items-center justify-center">
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100">
                     <Icon className="h-3 w-3 text-emerald-600" />
                   </div>
                   <span className="text-sm text-gray-700">{text}</span>
@@ -149,13 +172,13 @@ export function UpgradePrompt({ isOpen, onClose, title, message, feature }: Upgr
           <div className="space-y-3">
             <button
               onClick={handleUpgrade}
-              className="w-full bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-700 hover:to-blue-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 hover:scale-105"
+              className="w-full rounded-2xl bg-gradient-to-r from-emerald-600 to-blue-600 py-3 px-5 text-sm font-semibold text-white transition hover:from-emerald-700 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-emerald-300 sm:text-base"
             >
               Upgrade to {planName} - {planPrice}/month
             </button>
             <button
               onClick={onClose}
-              className="w-full text-gray-600 hover:text-gray-800 font-medium py-2 transition-colors"
+              className="w-full rounded-2xl border border-gray-200 py-2 text-sm font-medium text-gray-600 transition hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-200 sm:text-base"
             >
               Maybe later
             </button>
