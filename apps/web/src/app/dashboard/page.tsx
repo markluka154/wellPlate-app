@@ -1225,43 +1225,71 @@ export default function DashboardPage() {
                   />
                 </FormField>
 
-                <FormField label="Meals Per Day">
-                  <select
-                    value={mealsPerDay}
-                    onChange={(e) => setMealsPerDay(Number(e.target.value))}
-                    className="w-full rounded-xl border-2 border-gray-200 bg-white/80 backdrop-blur-sm px-4 py-3 text-sm font-medium text-gray-900 placeholder-gray-400 outline-none transition-all duration-200 focus:border-emerald-400 focus:bg-white focus:shadow-lg focus:shadow-emerald-100 hover:border-gray-300 hover:bg-white"
-                  >
-                    <option value={3}>3 meals</option>
-                    <option value={4}>4 meals</option>
-                    <option value={5}>5 meals</option>
-                    <option value={6}>6 meals</option>
-                  </select>
-                </FormField>
+                <ProBadge 
+                  showBadge={userPlan === 'FREE'}
+                  onClick={() => userPlan === 'FREE' && showUpgrade('Advanced Meal Planning', 'Unlock custom meal frequency and protein shake options with Pro.', 'Advanced meal preferences')}
+                >
+                  <FormField label="Meals Per Day">
+                    <select
+                      value={mealsPerDay}
+                      onChange={(e) => {
+                        if (userPlan === 'FREE') {
+                          showUpgrade('Advanced Meal Planning', 'Unlock custom meal frequency and protein shake options with Pro.', 'Advanced meal preferences')
+                          return
+                        }
+                        setMealsPerDay(Number(e.target.value))
+                      }}
+                      className="w-full rounded-xl border-2 border-gray-200 bg-white/80 backdrop-blur-sm px-4 py-3 text-sm font-medium text-gray-900 placeholder-gray-400 outline-none transition-all duration-200 focus:border-emerald-400 focus:bg-white focus:shadow-lg focus:shadow-emerald-100 hover:border-gray-300 hover:bg-white"
+                    >
+                      <option value={3}>3 meals</option>
+                      <option value={4}>4 meals</option>
+                      <option value={5}>5 meals</option>
+                      <option value={6}>6 meals</option>
+                    </select>
+                  </FormField>
+                </ProBadge>
 
-                <FormField label="Include Protein Shakes">
-                  <div className="flex items-center space-x-3">
-                    <label className="flex items-center cursor-pointer">
-                      <input
-                        type="radio"
-                        name="proteinShakes"
-                        checked={!includeProteinShakes}
-                        onChange={() => setIncludeProteinShakes(false)}
-                        className="w-4 h-4 text-emerald-600 border-gray-300 focus:ring-emerald-500"
-                      />
-                      <span className="ml-2 text-sm text-gray-700">No protein shakes</span>
-                    </label>
-                    <label className="flex items-center cursor-pointer">
-                      <input
-                        type="radio"
-                        name="proteinShakes"
-                        checked={includeProteinShakes}
-                        onChange={() => setIncludeProteinShakes(true)}
-                        className="w-4 h-4 text-emerald-600 border-gray-300 focus:ring-emerald-500"
-                      />
-                      <span className="ml-2 text-sm text-gray-700">Include protein shakes</span>
-                    </label>
-                  </div>
-                </FormField>
+                <ProBadge 
+                  showBadge={userPlan === 'FREE'}
+                  onClick={() => userPlan === 'FREE' && showUpgrade('Advanced Meal Planning', 'Unlock custom meal frequency and protein shake options with Pro.', 'Advanced meal preferences')}
+                >
+                  <FormField label="Include Protein Shakes">
+                    <div className="flex items-center space-x-3">
+                      <label className="flex items-center cursor-pointer">
+                        <input
+                          type="radio"
+                          name="proteinShakes"
+                          checked={!includeProteinShakes}
+                          onChange={() => {
+                            if (userPlan === 'FREE') {
+                              showUpgrade('Advanced Meal Planning', 'Unlock custom meal frequency and protein shake options with Pro.', 'Advanced meal preferences')
+                              return
+                            }
+                            setIncludeProteinShakes(false)
+                          }}
+                          className="w-4 h-4 text-emerald-600 border-gray-300 focus:ring-emerald-500"
+                        />
+                        <span className="ml-2 text-sm text-gray-700">No protein shakes</span>
+                      </label>
+                      <label className="flex items-center cursor-pointer">
+                        <input
+                          type="radio"
+                          name="proteinShakes"
+                          checked={includeProteinShakes}
+                          onChange={() => {
+                            if (userPlan === 'FREE') {
+                              showUpgrade('Advanced Meal Planning', 'Unlock custom meal frequency and protein shake options with Pro.', 'Advanced meal preferences')
+                              return
+                            }
+                            setIncludeProteinShakes(true)
+                          }}
+                          className="w-4 h-4 text-emerald-600 border-gray-300 focus:ring-emerald-500"
+                        />
+                        <span className="ml-2 text-sm text-gray-700">Include protein shakes</span>
+                      </label>
+                    </div>
+                  </FormField>
+                </ProBadge>
 
                 <ProBadge 
                   showBadge={userPlan === 'FREE'}
