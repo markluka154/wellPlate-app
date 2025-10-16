@@ -149,7 +149,7 @@ export const authOptions: NextAuthOptions = {
       : []),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
       if (user) {
         token.id = user.id
       }
@@ -175,6 +175,12 @@ export const authOptions: NextAuthOptions = {
         })
       }
       return true
+    },
+    async redirect({ url, baseUrl }) {
+      // Ensure redirects always go to the dashboard for authenticated users
+      if (url.startsWith('/')) return `${baseUrl}${url}`
+      if (new URL(url).origin === baseUrl) return url
+      return `${baseUrl}/dashboard`
     },
   },
   pages: {

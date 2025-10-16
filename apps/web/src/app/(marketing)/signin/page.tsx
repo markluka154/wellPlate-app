@@ -25,22 +25,18 @@ export default function SignInPage() {
     setIsSuccess(false)
     
     try {
-      const response = await fetch('/api/auth/signin/email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
+      const result = await signIn('email', {
+        email,
+        redirect: false,
+        callbackUrl: '/dashboard',
       })
       
-      const data = await response.json()
-      
-      if (response.ok && data.success) {
+      if (result?.error) {
+        setMessage('Failed to send magic link. Please try again.')
+        setIsSuccess(false)
+      } else {
         setMessage('Check your email for a magic link to sign in!')
         setIsSuccess(true)
-      } else {
-        setMessage(data.error || 'Failed to send magic link. Please try again.')
-        setIsSuccess(false)
       }
     } catch (error) {
       console.error('Sign in error:', error)
@@ -93,9 +89,9 @@ export default function SignInPage() {
           <div className="py-12">
             <Card>
               <CardHeader className="text-center">
-                <CardTitle className="text-2xl">Create your account</CardTitle>
+                <CardTitle className="text-2xl">Sign in to WellPlate</CardTitle>
                 <CardDescription>
-                  Create a free account to generate your first meal plan
+                  Sign in to access your meal plans and dashboard
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -187,13 +183,13 @@ export default function SignInPage() {
 
             <div className="mt-8 text-center">
               <p className="text-sm text-gray-600">
-                Already have an account?{' '}
-                <button
-                  onClick={() => signIn()}
+                Don't have an account?{' '}
+                <a
+                  href="/pricing"
                   className="text-brand hover:underline font-medium"
                 >
-                  Sign in
-                </button>
+                  Get started
+                </a>
               </p>
             </div>
           </div>
