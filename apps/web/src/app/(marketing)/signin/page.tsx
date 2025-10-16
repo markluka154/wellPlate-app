@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { signIn } from 'next-auth/react'
+import { useEffect, useState } from 'react'
+import { signIn, useSession } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -11,6 +11,7 @@ import { Footer } from '@/components/layout/Footer'
 import { useRouter } from 'next/navigation'
 
 export default function SignInPage() {
+  const { data: session, status } = useSession()
   const [email, setEmail] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState('')
@@ -70,7 +71,11 @@ export default function SignInPage() {
       }
 
       if (response?.url) {
-        router.replace(response.url)
+        if (response.url.startsWith('http')) {
+          window.location.href = response.url
+        } else {
+          router.replace(response.url)
+        }
       } else {
         router.replace('/dashboard')
       }
@@ -81,6 +86,23 @@ export default function SignInPage() {
       setIsLoading(false)
     }
   }
+
+  useEffect(() => {
+    if (status !== 'authenticated' || !session?.user?.email) return
+
+    const nextUser = {
+      email: session.user.email,
+      token: 'nextauth-session',
+    }
+
+    try {
+      localStorage.setItem('wellplate:user', JSON.stringify(nextUser))
+    } catch (error) {
+      console.warn('Failed to persist user session:', error)
+    }
+
+    router.replace('/dashboard')
+  }, [status, session, router])
 
   return (
     <div className="min-h-screen bg-white">
