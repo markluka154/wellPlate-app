@@ -117,6 +117,13 @@ export function Header() {
               <div className="h-9 w-20 bg-gray-200 rounded animate-pulse"></div>
             ) : user ? (
               <div className="flex items-center space-x-4">
+                <Button
+                  size="sm"
+                  className="bg-brand hover:bg-brand/90"
+                  asChild
+                >
+                  <Link href="/dashboard">Dashboard</Link>
+                </Button>
                 <span className="text-sm text-gray-600 truncate max-w-[150px]">
                   {user.email}
                 </span>
@@ -193,6 +200,13 @@ export function Header() {
               </Link>
               {user ? (
                 <>
+                  <Link
+                    href="/dashboard"
+                    className="block px-3 py-2 rounded-md text-base font-medium text-white bg-brand hover:bg-brand/90 touch-manipulation active:bg-brand"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    Dashboard
+                  </Link>
                   <div className="px-3 py-2 text-sm text-gray-600 truncate">
                     {user.email}
                   </div>
