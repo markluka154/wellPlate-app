@@ -96,6 +96,8 @@ export async function POST(request: NextRequest) {
         "dislikes" TEXT[],
         "cookingEffort" TEXT NOT NULL,
         "caloriesTarget" INTEGER,
+        "mealsPerDay" INTEGER NOT NULL DEFAULT 3,
+        "includeProteinShakes" BOOLEAN NOT NULL DEFAULT false,
         "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
         "updatedAt" TIMESTAMP(3) NOT NULL,
         CONSTRAINT "MealPreference_pkey" PRIMARY KEY ("id")

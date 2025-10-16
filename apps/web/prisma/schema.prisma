@@ -88,6 +88,8 @@ model MealPreference {
   dislikes       String[] @default([])
   cookingEffort  String   // quick, budget, gourmet
   caloriesTarget Int?
+  mealsPerDay    Int      @default(3) // number of meals per day
+  includeProteinShakes Boolean @default(false) // include protein shakes or not
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
