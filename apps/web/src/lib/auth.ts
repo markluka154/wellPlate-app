@@ -149,9 +149,15 @@ export const authOptions: NextAuthOptions = {
       : []),
   ],
   callbacks: {
-    async session({ session, user }) {
-      if (session.user) {
-        (session.user as any).id = user.id
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id
+      }
+      return token
+    },
+    async session({ session, token }) {
+      if (session.user && token?.id) {
+        (session.user as any).id = token.id as string
       }
       return session
     },
@@ -175,7 +181,7 @@ export const authOptions: NextAuthOptions = {
     signIn: '/signin',
   },
   session: {
-    strategy: 'database',
+    strategy: 'jwt',
     maxAge: 30 * 24 * 60 * 60, // 30 days
     updateAge: 24 * 60 * 60, // Update session every 24 hours
   },

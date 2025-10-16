@@ -57,28 +57,9 @@ export default function SignInPage() {
     setIsSuccess(false)
 
     try {
-      const response = await signIn('google', {
+      await signIn('google', {
         callbackUrl: '/dashboard',
-        redirect: false,
       })
-
-      if (response?.error) {
-        console.error('Google sign in error:', response.error)
-        setMessage('Unable to sign in with Google. Please try again.')
-        setIsSuccess(false)
-        setIsLoading(false)
-        return
-      }
-
-      if (response?.url) {
-        if (response.url.startsWith('http')) {
-          window.location.href = response.url
-        } else {
-          router.replace(response.url)
-        }
-      } else {
-        router.replace('/dashboard')
-      }
     } catch (error) {
       console.error('Google sign in error:', error)
       setMessage('Unable to sign in with Google. Please try again.')
