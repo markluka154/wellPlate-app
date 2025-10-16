@@ -19,17 +19,23 @@ export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   useEffect(() => {
+    // First, check localStorage for existing session (magic link or previous session)
     try {
       const storedUser = localStorage.getItem('wellplate:user')
       if (storedUser) {
-        setUser(JSON.parse(storedUser))
+        const userData = JSON.parse(storedUser)
+        if (userData && userData.email) {
+          console.log('🔐 Header: Found existing session in localStorage:', userData.email)
+          setUser(userData)
+          setIsLoading(false)
+          return
+        }
       }
     } catch (error) {
       console.warn('Unable to parse stored user data:', error)
     }
-  }, [])
 
-  useEffect(() => {
+    // If no localStorage session, check NextAuth
     if (status === 'loading') return
 
     if (status === 'authenticated' && session?.user?.email) {
