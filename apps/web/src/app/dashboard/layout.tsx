@@ -80,9 +80,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       // Save to localStorage for backward compatibility with existing components
       localStorage.setItem('wellplate:user', JSON.stringify(nextUser))
     } else if (status === 'unauthenticated') {
-      // Check for plan upgrades from URL parameters
+      // Check for URL parameters (fallback for magic link flow)
       const urlParams = new URLSearchParams(window.location.search)
-      
+      const auth = urlParams.get('auth')
+      const email = urlParams.get('email')
+      const token = urlParams.get('token')
+
+      // Check for plan upgrades
       if (urlParams.get('demo_upgrade') === 'true') {
         const plan = (urlParams.get('plan') || 'PRO_MONTHLY') as PlanTier
         setUserPlan(plan)
@@ -109,9 +113,33 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         localStorage.removeItem('wellplate:demoUpgrade')
       }
 
-      // No valid session found, redirect to signin
-      setIsLoading(false)
-      router.push('/signin')
+      if (auth === 'success' && email && token) {
+        const nextUser = { email: decodeURIComponent(email), token: token }
+        setUser(nextUser)
+        setIsAuthenticated(true)
+        setIsLoading(false)
+        
+        // Save to localStorage for persistence
+        localStorage.setItem('wellplate:user', JSON.stringify(nextUser))
+        
+        // Clean up URL
+        window.history.replaceState({}, '', '/dashboard')
+      } else {
+        // Check localStorage as fallback
+        const lsUser = typeof window !== 'undefined'
+          ? JSON.parse(localStorage.getItem('wellplate:user') || 'null')
+          : null
+
+        if (lsUser) {
+          setUser(lsUser)
+          setIsAuthenticated(true)
+          setIsLoading(false)
+        } else {
+          // No valid session found, redirect to signin
+          setIsLoading(false)
+          router.push('/signin')
+        }
+      }
     }
   }, [status, session, router])
 

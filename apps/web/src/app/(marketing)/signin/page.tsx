@@ -25,24 +25,22 @@ export default function SignInPage() {
     setIsSuccess(false)
     
     try {
-      const result = await signIn('email', {
-        email,
-        redirect: false,
-        callbackUrl: '/dashboard',
+      const response = await fetch('/api/auth/signin/email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
       })
       
-      console.log('Sign in result:', result)
+      const data = await response.json()
       
-      if (result?.error) {
-        console.error('Sign in error:', result.error)
-        setMessage(`Failed to send magic link: ${result.error}. Please try again.`)
-        setIsSuccess(false)
-      } else if (result?.ok) {
+      if (response.ok && data.success) {
         setMessage('Check your email for a magic link to sign in!')
         setIsSuccess(true)
       } else {
-        setMessage('Magic link sent! Check your email.')
-        setIsSuccess(true)
+        setMessage(data.error || 'Failed to send magic link. Please try again.')
+        setIsSuccess(false)
       }
     } catch (error) {
       console.error('Sign in error:', error)
