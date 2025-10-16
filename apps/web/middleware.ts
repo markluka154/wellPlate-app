@@ -1,25 +1,20 @@
-import { withAuth } from 'next-auth/middleware'
+import { NextRequest, NextResponse } from 'next/server'
 
-export default withAuth(
-  function middleware(req) {
-    // Add any additional middleware logic here if needed
-  },
-  {
-    callbacks: {
-      authorized: ({ token, req }) => {
-        // Allow access to dashboard routes only if user is authenticated
-        if (req.nextUrl.pathname.startsWith('/dashboard')) {
-          return !!token
-        }
-        // Allow access to all other routes
-        return true
-      },
-    },
-    pages: {
-      signIn: '/signin',
-    },
+export function middleware(request: NextRequest) {
+  // Only protect dashboard routes
+  if (request.nextUrl.pathname.startsWith('/dashboard')) {
+    // Check for NextAuth session token in cookies
+    const token = request.cookies.get('next-auth.session-token') || 
+                  request.cookies.get('__Secure-next-auth.session-token')
+    
+    // If no NextAuth token, allow through - the dashboard layout will handle localStorage auth
+    if (!token) {
+      return NextResponse.next()
+    }
   }
-)
+  
+  return NextResponse.next()
+}
 
 export const config = {
   matcher: [

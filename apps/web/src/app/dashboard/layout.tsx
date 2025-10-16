@@ -65,6 +65,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const authProcessed = useRef(false)
 
   useEffect(() => {
+    // First, check localStorage for existing session (magic link or previous session)
+    const lsUser = typeof window !== 'undefined'
+      ? JSON.parse(localStorage.getItem('wellplate:user') || 'null')
+      : null
+
+    if (lsUser && lsUser.email) {
+      console.log('🔐 Found existing session in localStorage:', lsUser.email)
+      setUser(lsUser)
+      setIsAuthenticated(true)
+      setIsLoading(false)
+      return
+    }
+
+    // If no localStorage session, check NextAuth
     if (status === 'loading') return
 
     if (status === 'authenticated' && session?.user?.email) {
@@ -80,7 +94,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       // Save to localStorage for backward compatibility with existing components
       localStorage.setItem('wellplate:user', JSON.stringify(nextUser))
     } else if (status === 'unauthenticated') {
-      // Check for URL parameters (fallback for magic link flow)
+      // Check for URL parameters (magic link callback)
       const urlParams = new URLSearchParams(window.location.search)
       const auth = urlParams.get('auth')
       const email = urlParams.get('email')
@@ -114,6 +128,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       }
 
       if (auth === 'success' && email && token) {
+        console.log('🔐 Processing magic link callback')
         const nextUser = { email: decodeURIComponent(email), token: token }
         setUser(nextUser)
         setIsAuthenticated(true)
@@ -125,20 +140,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         // Clean up URL
         window.history.replaceState({}, '', '/dashboard')
       } else {
-        // Check localStorage as fallback
-        const lsUser = typeof window !== 'undefined'
-          ? JSON.parse(localStorage.getItem('wellplate:user') || 'null')
-          : null
-
-        if (lsUser) {
-          setUser(lsUser)
-          setIsAuthenticated(true)
-          setIsLoading(false)
-        } else {
-          // No valid session found, redirect to signin
-          setIsLoading(false)
-          router.push('/signin')
-        }
+        // No valid session found anywhere, redirect to signin
+        console.log('❌ No valid session found, redirecting to signin')
+        setIsLoading(false)
+        router.push('/signin')
       }
     }
   }, [status, session, router])
