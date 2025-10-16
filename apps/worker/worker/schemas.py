@@ -64,6 +64,8 @@ class MealPreference(BaseModel):
     dislikes: List[str] = Field(default_factory=list)
     cookingEffort: CookingEffort
     caloriesTarget: Optional[int] = Field(None, ge=800, le=5000)
+    mealsPerDay: int = Field(default=3, ge=3, le=6)
+    includeProteinShakes: bool = Field(default=False)
 
 class MealPlanRequest(BaseModel):
     preferences: MealPreference

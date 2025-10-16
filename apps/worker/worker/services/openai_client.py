@@ -58,6 +58,26 @@ class OpenAIClient:
         if not calorie_target:
             calorie_target = self._calculate_calorie_target(preferences)
         
+        # Determine meal structure based on preferences
+        meals_per_day = preferences.mealsPerDay
+        meal_names = ["breakfast", "lunch", "dinner"]
+        if meals_per_day == 4:
+            meal_names = ["breakfast", "lunch", "dinner", "snack"]
+        elif meals_per_day == 5:
+            meal_names = ["breakfast", "lunch", "dinner", "afternoon snack", "evening snack"]
+        elif meals_per_day == 6:
+            meal_names = ["breakfast", "morning snack", "lunch", "afternoon snack", "dinner", "evening snack"]
+        
+        # Protein shake instructions
+        protein_instructions = ""
+        if preferences.includeProteinShakes:
+            protein_instructions = f"""
+- Include protein powder in {meals_per_day // 2} meals per day (mix into smoothies, yogurt, oatmeal, or create protein-rich recipes)
+- Use 1 scoop (25-30g) of protein powder per meal when included
+- Examples: protein smoothie, protein yogurt bowl, protein oatmeal, protein pancakes, protein energy balls
+- Ensure protein powder is appropriate for {preferences.dietType} diet (whey, plant-based, etc.)
+"""
+
         prompt = f"""
 Create a detailed 7-day meal plan for a {preferences.age}-year-old {preferences.sex} who weighs {preferences.weightKg}kg and is {preferences.heightCm}cm tall.
 
@@ -66,11 +86,13 @@ Goals and Preferences:
 - Diet type: {preferences.dietType}
 - Cooking effort: {preferences.cookingEffort}
 - Target calories: {calorie_target} per day
+- Meals per day: {meals_per_day} ({', '.join(meal_names)})
+- Include protein shakes: {'Yes' if preferences.includeProteinShakes else 'No'}
 - Allergies: {', '.join(preferences.allergies) if preferences.allergies else 'None'}
 - Dislikes: {', '.join(preferences.dislikes) if preferences.dislikes else 'None'}
 
 Requirements:
-1. Create exactly 7 days of meals (3 meals per day: breakfast, lunch, dinner)
+1. Create exactly 7 days of meals ({meals_per_day} meals per day: {', '.join(meal_names)})
 2. Each meal must include detailed nutritional information (calories, protein, carbs, fat)
 3. Provide complete ingredient lists with quantities
 4. Include step-by-step cooking instructions
@@ -78,7 +100,7 @@ Requirements:
 6. Avoid all allergens: {', '.join(preferences.allergies) if preferences.allergies else 'None'}
 7. Stay within ±10% of the calorie target
 8. Make meals practical for {preferences.cookingEffort} cooking
-9. Include a comprehensive grocery list organized by category
+9. Include a comprehensive grocery list organized by category{protein_instructions}
 
 Return the response as a JSON object with this exact structure:
 {{
@@ -146,10 +168,11 @@ Ensure all nutritional values are realistic and the total daily calories are clo
         if len(data["plan"]) != 7:
             raise ValueError("Must have exactly 7 days")
         
-        # Validate each day has 3 meals
+        # Validate each day has the correct number of meals
+        expected_meals = preferences.mealsPerDay
         for day in data["plan"]:
-            if len(day["meals"]) != 3:
-                raise ValueError("Each day must have exactly 3 meals")
+            if len(day["meals"]) != expected_meals:
+                raise ValueError(f"Each day must have exactly {expected_meals} meals")
         
         # Validate nutritional values are reasonable
         totals = data["totals"]
