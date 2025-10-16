@@ -53,6 +53,7 @@ export const authOptions: NextAuthOptions = {
           if (!resend) {
             console.warn('⚠️ Resend API key not configured. Email sending disabled.')
             console.log('📧 Magic link URL for manual use:', magicLinkUrl)
+            // Don't throw error, just log for development
             return
           }
           
@@ -128,6 +129,7 @@ export const authOptions: NextAuthOptions = {
           if (error) {
             console.error('❌ Resend error:', error)
             console.log('📧 Magic link URL for manual use:', magicLinkUrl)
+            // Don't throw error, just log for development
             return
           }
 
@@ -135,6 +137,7 @@ export const authOptions: NextAuthOptions = {
         } catch (error) {
           console.error('❌ Email sending error:', error)
           console.log('📧 Magic link URL for manual use:', url)
+          // Don't throw error, just log for development
         }
       },
     }),

@@ -31,11 +31,17 @@ export default function SignInPage() {
         callbackUrl: '/dashboard',
       })
       
+      console.log('Sign in result:', result)
+      
       if (result?.error) {
-        setMessage('Failed to send magic link. Please try again.')
+        console.error('Sign in error:', result.error)
+        setMessage(`Failed to send magic link: ${result.error}. Please try again.`)
         setIsSuccess(false)
-      } else {
+      } else if (result?.ok) {
         setMessage('Check your email for a magic link to sign in!')
+        setIsSuccess(true)
+      } else {
+        setMessage('Magic link sent! Check your email.')
         setIsSuccess(true)
       }
     } catch (error) {
