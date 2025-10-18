@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
         // Track Facebook Pixel event for successful subscription
         if (subscription.status === 'active') {
           const planType = subscription.items.data[0].price.nickname === 'Pro Monthly' ? 'PRO_MONTHLY' : 'PRO_ANNUAL'
-          const price = subscription.items.data[0].price.unit_amount / 100 // Convert from cents
+          const price = (subscription.items.data[0].price.unit_amount || 0) / 100 // Convert from cents, default to 0 if null
           
           console.log(`📊 Facebook Pixel: Tracking subscription - ${planType} - €${price}`)
           
