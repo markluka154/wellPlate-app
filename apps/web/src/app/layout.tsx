@@ -10,6 +10,9 @@ export const metadata: Metadata = {
   description: 'Personalized meal plans done in 30 seconds. Get 7-day plans with calories, macros, recipes & grocery lists.',
   keywords: 'meal planning, nutrition, AI, diet, recipes, macros, calories',
   authors: [{ name: 'WellPlate Team' }],
+  verification: {
+    facebook: 'pixzyumgk89ayza44rqqecrectca1k',
+  },
   openGraph: {
     title: 'WellPlate - AI Meal Plan Builder',
     description: 'Personalized meal plans done in 30 seconds. Get 7-day plans with calories, macros, recipes & grocery lists.',
