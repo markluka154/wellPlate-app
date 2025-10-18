@@ -56,6 +56,7 @@ export default function MetaPixel() {
           width="1"
           style={{ display: 'none' }}
           src={`https://www.facebook.com/tr?id=${process.env.NEXT_PUBLIC_META_PIXEL_ID || "788765987308138"}&ev=PageView&noscript=1`}
+          alt=""
         />
       </noscript>
     </>

@@ -12,13 +12,28 @@ export async function sendMetaEvent(eventName: string, email?: string, value?: n
     event_name: eventName,
     event_time: Math.floor(Date.now() / 1000),
     user_data: { em: hashedEmail ? [hashedEmail] : [] },
-    custom_data: { currency: 'EUR', value: value || 0.0 },
+    custom_data: { 
+      currency: 'EUR', 
+      value: value || 0.0,
+      content_name: eventName === 'Lead' ? 'Meal Plan Generated' : 
+                   eventName === 'CompleteRegistration' ? 'Pro Subscription' : 
+                   eventName === 'Purchase' ? 'Pro Subscription Purchase' : eventName
+    },
     test_event_code: "TEST64751", // Meta Events Manager test code
   }
 
-  await fetch('/api/meta-capi', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  })
+  console.log('📊 Meta CAPI: Sending event:', eventName, payload)
+  
+  try {
+    const response = await fetch('/api/meta-capi', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    
+    const result = await response.json()
+    console.log('✅ Meta CAPI: Event sent successfully:', result)
+  } catch (error) {
+    console.error('❌ Meta CAPI: Event failed:', error)
+  }
 }
