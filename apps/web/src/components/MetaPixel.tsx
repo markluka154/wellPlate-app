@@ -1,7 +1,7 @@
 'use client'
 
 import Script from 'next/script'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 
 declare global {
   interface Window {
@@ -10,7 +10,13 @@ declare global {
 }
 
 export function MetaPixel() {
+  const hasInitialized = useRef(false)
+
   useEffect(() => {
+    // Prevent duplicate initialization
+    if (hasInitialized.current) return
+    hasInitialized.current = true
+
     // Safe TypeScript guard and dev visibility
     if (typeof window !== 'undefined' && window.fbq) {
       console.log('Meta Pixel initialized')
@@ -23,6 +29,14 @@ export function MetaPixel() {
       <Script
         id="meta-pixel"
         strategy="afterInteractive"
+        onLoad={() => {
+          // Ensure pixel only fires once per page load
+          if (typeof window !== 'undefined' && window.fbq && !hasInitialized.current) {
+            window.fbq('init', '788765987308138')
+            window.fbq('track', 'PageView')
+            hasInitialized.current = true
+          }
+        }}
         dangerouslySetInnerHTML={{
           __html: `
             !function(f,b,e,v,n,t,s)
@@ -33,8 +47,6 @@ export function MetaPixel() {
             t.src=v;s=b.getElementsByTagName(e)[0];
             s.parentNode.insertBefore(t,s)}(window, document,'script',
             'https://connect.facebook.net/en_US/fbevents.js');
-            fbq('init', '788765987308138');
-            fbq('track', 'PageView');
           `,
         }}
       />
