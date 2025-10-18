@@ -89,7 +89,7 @@ export function Hero() {
               Trusted by health professionals worldwide
             </p>
             
-            <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-4 px-4">
+            <div className="hidden sm:flex flex-wrap items-center justify-center gap-x-6 gap-y-4 px-4">
               {PRESS_MENTIONS.map((logo) => (
                 <div
                   key={logo.name}

@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, Crown, Edit2, Check, X, ArrowLeft, Download,
 import { UpgradePrompt } from '@/components/dashboard/UpgradePrompt'
 import { ProBadge } from '@/components/dashboard/ProBadge'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { trackSubscription, trackMealPlanGenerated } from '@/lib/facebook-pixel'
 
 type PlanTier = 'FREE' | 'PRO_MONTHLY' | 'PRO_ANNUAL' | 'FAMILY_MONTHLY'
 
@@ -346,6 +347,9 @@ export default function DashboardPage() {
           isDemo: false
         })
         setShowUpgradeSuccess(true)
+        
+        // Track Facebook Pixel subscription event
+        trackSubscription('PRO_MONTHLY', 14.99, 'EUR')
       }, 1000)
       
       // Clean up URL
@@ -954,6 +958,9 @@ export default function DashboardPage() {
 
       // Show success modal
       setShowMealPlanSuccess(true)
+
+      // Track Facebook Pixel meal plan generation event
+      trackMealPlanGenerated()
 
       // Refresh meal plans to show the new one
       await fetchUserMealPlans()

@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
         )
 
         // Update user's subscription
-        await prisma.subscription.upsert({
+        const updatedSubscription = await prisma.subscription.upsert({
           where: { userId },
           update: {
             stripeCustomerId: session.customer as string,
@@ -75,6 +75,17 @@ export async function POST(request: NextRequest) {
             status: subscription.status === 'active' ? 'active' : 'canceled',
           },
         })
+
+        // Track Facebook Pixel event for successful subscription
+        if (subscription.status === 'active') {
+          const planType = subscription.items.data[0].price.nickname === 'Pro Monthly' ? 'PRO_MONTHLY' : 'PRO_ANNUAL'
+          const price = subscription.items.data[0].price.unit_amount / 100 // Convert from cents
+          
+          console.log(`📊 Facebook Pixel: Tracking subscription - ${planType} - €${price}`)
+          
+          // Note: Facebook Pixel tracking will happen on the frontend when user visits success page
+          // The webhook just logs the event for debugging
+        }
 
         break
       }
