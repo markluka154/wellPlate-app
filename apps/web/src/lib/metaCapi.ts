@@ -8,10 +8,22 @@ export async function sendMetaEvent(eventName: string, email?: string, value?: n
 
   const hashedEmail = email ? await hashEmail(email) : undefined
 
+  // Add more user data for better matching
+  const userData: any = {}
+  if (hashedEmail) {
+    userData.em = [hashedEmail]
+  }
+  
+  // Add client IP and user agent for better matching
+  if (typeof window !== 'undefined') {
+    userData.client_ip_address = '127.0.0.1' // Will be replaced by server
+    userData.client_user_agent = navigator.userAgent
+  }
+
   const payload: any = {
     event_name: eventName,
     event_time: Math.floor(Date.now() / 1000),
-    user_data: { em: hashedEmail ? [hashedEmail] : [] },
+    user_data: userData,
     custom_data: { 
       currency: 'EUR', 
       value: value || 0.0,

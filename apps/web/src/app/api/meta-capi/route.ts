@@ -10,6 +10,15 @@ export async function POST(req: NextRequest) {
     // Extract test_event_code from payload if present
     const { test_event_code, ...eventData } = body
     
+    // Add real client IP and user agent for better matching
+    const clientIP = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || '127.0.0.1'
+    const userAgent = req.headers.get('user-agent') || ''
+    
+    if (eventData.user_data) {
+      eventData.user_data.client_ip_address = clientIP
+      eventData.user_data.client_user_agent = userAgent
+    }
+    
     // Build the URL with test_event_code as query parameter if present
     let url = `https://graph.facebook.com/v18.0/${PIXEL_ID}/events?access_token=${ACCESS_TOKEN}`
     if (test_event_code) {
