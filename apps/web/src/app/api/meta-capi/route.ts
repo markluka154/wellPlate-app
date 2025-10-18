@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const PIXEL_ID = process.env.META_PIXEL_ID!
+const PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID || '788765987308138'
 const ACCESS_TOKEN = process.env.META_CAPI_TOKEN!
 
 export async function POST(req: NextRequest) {
@@ -23,6 +23,11 @@ export async function POST(req: NextRequest) {
     })
 
     const data = await res.json()
+    
+    if (!res.ok) {
+      console.error('Meta CAPI Error Response:', data)
+    }
+    
     return NextResponse.json(data, { status: res.status })
   } catch (error) {
     console.error('Meta CAPI Error:', error)
