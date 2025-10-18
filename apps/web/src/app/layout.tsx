@@ -34,7 +34,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
+      <body className={inter.className}>
         {/* Meta Pixel Code */}
         <Script
           id="facebook-pixel"
@@ -64,8 +64,6 @@ export default function RootLayout({
           />
         </noscript>
         {/* End Meta Pixel Code */}
-      </head>
-      <body className={inter.className}>
         <Providers>
           {children}
         </Providers>
