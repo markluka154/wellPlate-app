@@ -13,6 +13,7 @@ export async function sendMetaEvent(eventName: string, email?: string, value?: n
     event_time: Math.floor(Date.now() / 1000),
     user_data: { em: hashedEmail ? [hashedEmail] : [] },
     custom_data: { currency: 'EUR', value: value || 0.0 },
+    test_event_code: "TEST64751", // Meta Events Manager test code
   }
 
   await fetch('/api/meta-capi', {
