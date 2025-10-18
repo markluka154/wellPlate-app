@@ -10,8 +10,8 @@ declare global {
 
 export function FacebookPixel() {
   useEffect(() => {
-    // Meta Pixel Code - Official Facebook implementation
-    !(function(f: any, b: any, e: any, v: any, n: any, t: any, s: any) {
+    // Meta Pixel Code - Official Facebook implementation (TypeScript compatible)
+    (function(f: any, b: any, e: any, v: any, n: any, t: any, s: any) {
       if (f.fbq) return
       n = f.fbq = function() {
         n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments)
