@@ -10,7 +10,7 @@ declare global {
 
 export function FacebookPixel() {
   useEffect(() => {
-    // Facebook Pixel Code
+    // Meta Pixel Code - Official Facebook implementation
     !(function(f: any, b: any, e: any, v: any, n: any, t: any, s: any) {
       if (f.fbq) return
       n = f.fbq = function() {
@@ -33,5 +33,18 @@ export function FacebookPixel() {
     window.fbq('track', 'PageView')
   }, [])
 
-  return null
+  return (
+    <>
+      {/* Noscript fallback for Facebook Pixel */}
+      <noscript>
+        <img 
+          height="1" 
+          width="1" 
+          style={{ display: 'none' }}
+          src="https://www.facebook.com/tr?id=788765987308138&ev=PageView&noscript=1"
+          alt=""
+        />
+      </noscript>
+    </>
+  )
 }
