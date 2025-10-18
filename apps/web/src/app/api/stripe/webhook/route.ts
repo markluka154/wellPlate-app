@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { sendMetaEvent } from '@/lib/metaCapi'
 
 // Dynamic imports to prevent build-time issues
 const loadDependencies = async () => {
@@ -83,8 +84,13 @@ export async function POST(request: NextRequest) {
           
           console.log(`📊 Facebook Pixel: Tracking subscription - ${planType} - €${price}`)
           
-          // Note: Facebook Pixel tracking will happen on the frontend when user visits success page
-          // The webhook just logs the event for debugging
+          // Send Meta CAPI Purchase event
+          try {
+            await sendMetaEvent('Purchase', session.customer_email || undefined, price)
+            console.log('✅ Meta CAPI Purchase event sent')
+          } catch (error) {
+            console.error('❌ Meta CAPI Purchase event failed:', error)
+          }
         }
 
         break

@@ -6,6 +6,7 @@ import { UpgradePrompt } from '@/components/dashboard/UpgradePrompt'
 import { ProBadge } from '@/components/dashboard/ProBadge'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { trackSubscription, trackMealPlanGenerated } from '@/lib/facebook-pixel'
+import { sendMetaEvent } from '@/lib/metaCapi'
 
 type PlanTier = 'FREE' | 'PRO_MONTHLY' | 'PRO_ANNUAL' | 'FAMILY_MONTHLY'
 
@@ -350,6 +351,20 @@ export default function DashboardPage() {
         
         // Track Facebook Pixel subscription event
         trackSubscription('PRO_MONTHLY', 14.99, 'EUR')
+        
+        // Send Meta CAPI CompleteRegistration event
+        try {
+          const userEmail = localStorage.getItem('wellplate:user') 
+            ? JSON.parse(localStorage.getItem('wellplate:user') || '{}').email 
+            : undefined
+          sendMetaEvent('CompleteRegistration', userEmail).then(() => {
+            console.log('✅ Meta CAPI CompleteRegistration event sent')
+          }).catch((error) => {
+            console.error('❌ Meta CAPI CompleteRegistration event failed:', error)
+          })
+        } catch (error) {
+          console.error('❌ Meta CAPI CompleteRegistration event failed:', error)
+        }
       }, 1000)
       
       // Clean up URL
@@ -961,6 +976,20 @@ export default function DashboardPage() {
 
       // Track Facebook Pixel meal plan generation event
       trackMealPlanGenerated()
+
+      // Send Meta CAPI Lead event for meal plan generation
+      try {
+        const userEmail = localStorage.getItem('wellplate:user') 
+          ? JSON.parse(localStorage.getItem('wellplate:user') || '{}').email 
+          : undefined
+        sendMetaEvent('Lead', userEmail).then(() => {
+          console.log('✅ Meta CAPI Lead event sent for meal plan generation')
+        }).catch((error) => {
+          console.error('❌ Meta CAPI Lead event failed:', error)
+        })
+      } catch (error) {
+        console.error('❌ Meta CAPI Lead event failed:', error)
+      }
 
       // Refresh meal plans to show the new one
       await fetchUserMealPlans()
