@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { sendMetaEvent } from '@/lib/metaCapi'
 
 // Dynamic imports to prevent build-time issues
 const loadDependencies = async () => {
@@ -78,20 +77,14 @@ export async function POST(request: NextRequest) {
         })
 
         // Track Facebook Pixel event for successful subscription
-        if (subscription.status === 'active') {
-          const planType = subscription.items.data[0].price.nickname === 'Pro Monthly' ? 'PRO_MONTHLY' : 'PRO_ANNUAL'
-          const price = (subscription.items.data[0].price.unit_amount || 0) / 100 // Convert from cents, default to 0 if null
-          
-          console.log(`📊 Facebook Pixel: Tracking subscription - ${planType} - €${price}`)
-          
-          // Send Meta CAPI Purchase event
-          try {
-            await sendMetaEvent('Purchase', session.customer_email || undefined, price)
-            console.log('✅ Meta CAPI Purchase event sent')
-          } catch (error) {
-            console.error('❌ Meta CAPI Purchase event failed:', error)
-          }
-        }
+                if (subscription.status === 'active') {
+                  const planType = subscription.items.data[0].price.nickname === 'Pro Monthly' ? 'PRO_MONTHLY' : 'PRO_ANNUAL'
+                  const price = (subscription.items.data[0].price.unit_amount || 0) / 100 // Convert from cents, default to 0 if null
+                  
+                  console.log(`📊 Subscription completed - ${planType} - €${price}`)
+                  
+                  // TODO: Add Meta Pixel tracking here
+                }
 
         break
       }
