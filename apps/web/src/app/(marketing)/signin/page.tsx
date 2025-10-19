@@ -1,5 +1,6 @@
 'use client'
 
+// Sign in page for WellPlate
 import { useEffect, useState } from 'react'
 import { signIn, useSession } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
