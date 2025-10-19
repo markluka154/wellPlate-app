@@ -72,7 +72,12 @@ export function Footer() {
                   </Link>
                 </li>
                 <li>
-                  <a href="mailto:support@wellplate.com" className="text-gray-400 hover:text-white">
+                  <a href="mailto:privacy@wellplate.eu" className="text-gray-400 hover:text-white">
+                    Data Protection
+                  </a>
+                </li>
+                <li>
+                  <a href="mailto:support@wellplate.eu" className="text-gray-400 hover:text-white">
                     Support
                   </a>
                 </li>

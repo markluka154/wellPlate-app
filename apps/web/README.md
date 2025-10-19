@@ -1,6 +1,6 @@
-# NutriAI Web App
+# WellPlate Web App
 
-The main Next.js web application for NutriAI - AI Meal Plan Builder.
+The main Next.js web application for WellPlate - AI Meal Plan Builder.
 
 ## 🚀 Quick Start
 
@@ -74,8 +74,8 @@ NEXTAUTH_URL=http://localhost:4321
 PORT=4321
 
 # Database
-DATABASE_URL=postgresql://postgres:password@localhost:5432/nutriai
-DIRECT_URL=postgresql://postgres:password@localhost:5432/nutriai
+DATABASE_URL=postgresql://postgres:password@localhost:5432/wellplate
+DIRECT_URL=postgresql://postgres:password@localhost:5432/wellplate
 
 # Supabase
 SUPABASE_URL=https://your-project.supabase.co
@@ -218,7 +218,7 @@ Prisma with Supabase Postgres:
 ## 📄 PDF Generation
 
 PDFKit for meal plan PDFs:
-- **Branded headers** with NutriAI logo
+- **Branded headers** with WellPlate logo
 - **Day-by-day meal cards** with nutrition info
 - **Ingredient lists** with quantities
 - **Cooking instructions** step-by-step

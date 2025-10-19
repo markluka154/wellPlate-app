@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import '../styles/globals.css'
 import { Providers } from './providers'
+import { CookieConsentBanner } from '@/components/layout/CookieConsentBanner'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -64,6 +65,11 @@ export default function RootLayout({
       <body className={inter.className}>
         <Providers>
           {children}
+          <CookieConsentBanner onAccept={(preferences) => {
+            console.log('Cookie preferences accepted:', preferences)
+            // Here you would typically set up analytics, marketing tools, etc.
+            // based on the user's preferences
+          }} />
         </Providers>
       </body>
     </html>
