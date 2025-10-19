@@ -71,14 +71,20 @@ const ProductDemo = () => {
 
             <div className="flex flex-col sm:flex-row gap-4">
               <Button 
-                onClick={() => handleCtaClick('demo_try_free')}
+                onClick={() => {
+                  handleCtaClick('demo_try_free')
+                  window.location.href = '/signin'
+                }}
                 className="bg-green-600 hover:bg-green-700"
               >
                 Try it free
               </Button>
               <Button 
                 variant="outline"
-                onClick={() => handleCtaClick('demo_sample_pdf')}
+                onClick={() => {
+                  handleCtaClick('demo_sample_pdf')
+                  window.open('/sample-meal-plan.pdf', '_blank')
+                }}
               >
                 See sample PDF
               </Button>
