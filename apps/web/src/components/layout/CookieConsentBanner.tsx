@@ -6,17 +6,13 @@ import { Card } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { X, Cookie, Settings } from 'lucide-react'
 
-interface CookieConsentProps {
-  onAccept: (preferences: CookiePreferences) => void
-}
-
 interface CookiePreferences {
   essential: boolean
   analytics: boolean
   marketing: boolean
 }
 
-export function CookieConsentBanner({ onAccept }: CookieConsentProps) {
+export function CookieConsentBanner() {
   const [isVisible, setIsVisible] = useState(false)
   const [showDetails, setShowDetails] = useState(false)
   const [preferences, setPreferences] = useState<CookiePreferences>({
@@ -40,14 +36,14 @@ export function CookieConsentBanner({ onAccept }: CookieConsentProps) {
       marketing: true
     }
     setPreferences(allAccepted)
-    onAccept(allAccepted)
     localStorage.setItem('wellplate:cookie-consent', JSON.stringify(allAccepted))
+    console.log('Cookie preferences accepted:', allAccepted)
     setIsVisible(false)
   }
 
   const handleAcceptSelected = () => {
-    onAccept(preferences)
     localStorage.setItem('wellplate:cookie-consent', JSON.stringify(preferences))
+    console.log('Cookie preferences accepted:', preferences)
     setIsVisible(false)
   }
 
@@ -58,8 +54,8 @@ export function CookieConsentBanner({ onAccept }: CookieConsentProps) {
       marketing: false
     }
     setPreferences(onlyEssential)
-    onAccept(onlyEssential)
     localStorage.setItem('wellplate:cookie-consent', JSON.stringify(onlyEssential))
+    console.log('Cookie preferences accepted:', onlyEssential)
     setIsVisible(false)
   }
 

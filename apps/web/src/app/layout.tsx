@@ -65,11 +65,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <Providers>
           {children}
-          <CookieConsentBanner onAccept={(preferences) => {
-            console.log('Cookie preferences accepted:', preferences)
-            // Here you would typically set up analytics, marketing tools, etc.
-            // based on the user's preferences
-          }} />
+          <CookieConsentBanner />
         </Providers>
       </body>
     </html>
