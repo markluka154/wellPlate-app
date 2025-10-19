@@ -238,12 +238,12 @@ export default function TermsOfServicePage() {
               
               <h3 className="text-xl font-medium text-gray-900 mb-3">13.1 Governing Law</h3>
               <p className="text-gray-700 mb-4">
-                These Terms are governed by the laws of [Your Jurisdiction].
+                These Terms are governed by the laws of Slovenia.
               </p>
 
               <h3 className="text-xl font-medium text-gray-900 mb-3">13.2 Dispute Process</h3>
               <ul className="list-disc pl-6 text-gray-700">
-                <li>First, contact us at <a href="mailto:legal@wellplate.eu" className="text-blue-600 hover:underline">legal@wellplate.eu</a> to resolve disputes</li>
+                <li>First, contact us at <a href="mailto:privacy@wellplate.eu" className="text-blue-600 hover:underline">privacy@wellplate.eu</a> to resolve disputes</li>
                 <li>If unresolved, disputes will be resolved through binding arbitration</li>
                 <li>Class action waivers apply</li>
               </ul>
@@ -271,13 +271,13 @@ export default function TermsOfServicePage() {
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">15. Contact Information</h2>
               <div className="bg-gray-50 p-4 rounded-lg">
                 <p className="text-gray-700 mb-2">
-                  <strong>Legal Inquiries:</strong> <a href="mailto:legal@wellplate.eu" className="text-blue-600 hover:underline">legal@wellplate.eu</a>
+                  <strong>Legal Inquiries:</strong> <a href="mailto:privacy@wellplate.eu" className="text-blue-600 hover:underline">privacy@wellplate.eu</a>
                 </p>
                 <p className="text-gray-700 mb-2">
                   <strong>General Support:</strong> <a href="mailto:hello@wellplate.eu" className="text-blue-600 hover:underline">hello@wellplate.eu</a>
                 </p>
                 <p className="text-gray-700">
-                  <strong>Address:</strong> [Your Business Address]
+                  <strong>Address:</strong> Čopova ulica 5, Jesenice, Slovenia
                 </p>
               </div>
             </section>

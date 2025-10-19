@@ -214,7 +214,7 @@ export default function PrivacyPolicyPage() {
                   <strong>General Inquiries:</strong> <a href="mailto:hello@wellplate.eu" className="text-blue-600 hover:underline">hello@wellplate.eu</a>
                 </p>
                 <p className="text-gray-700">
-                  <strong>Address:</strong> [Your Business Address]
+                  <strong>Address:</strong> Čopova ulica 5, Jesenice, Slovenia
                 </p>
               </div>
             </section>

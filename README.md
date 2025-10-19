@@ -1,4 +1,4 @@
-# NutriAI - AI Meal Plan Builder
+# WellPlate - AI Meal Plan Builder
 
 A complete, production-ready SaaS platform for AI-powered meal planning. Generate personalized 7-day meal plans with detailed nutritional information, recipes, and grocery lists.
 
@@ -18,7 +18,7 @@ A complete, production-ready SaaS platform for AI-powered meal planning. Generat
 
 ### Monorepo Structure
 ```
-nutriai/
+wellplate/
 ├── apps/
 │   ├── web/                 # Next.js web application
 │   └── worker/              # Python FastAPI worker service
@@ -51,7 +51,7 @@ nutriai/
 ### 1. Clone and Install
 ```bash
 git clone <repository-url>
-cd nutriai
+cd wellplate
 pnpm install
 ```
 
@@ -84,7 +84,7 @@ This will start:
 
 ### 5. Test the Application
 1. Visit http://localhost:4321
-2. Sign up with test@nutriai.com (from seed data)
+2. Sign up with test@wellplate.com (from seed data)
 3. Generate your first meal plan!
 
 ## 📋 Environment Variables
@@ -92,7 +92,7 @@ This will start:
 ### Root (.env)
 ```bash
 # Shared configuration
-NEXT_PUBLIC_APP_NAME=NutriAI
+NEXT_PUBLIC_APP_NAME=WellPlate
 ```
 
 ### Web App (apps/web/.env.local)
@@ -103,8 +103,8 @@ NEXTAUTH_URL=http://localhost:4321
 PORT=4321
 
 # Database
-DATABASE_URL=postgresql://postgres:password@localhost:5432/nutriai
-DIRECT_URL=postgresql://postgres:password@localhost:5432/nutriai
+DATABASE_URL=postgresql://postgres:password@localhost:5432/wellplate
+DIRECT_URL=postgresql://postgres:password@localhost:5432/wellplate
 
 # Supabase
 SUPABASE_URL=https://your-project.supabase.co
@@ -278,7 +278,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 - **Documentation**: Check this README and inline code comments
 - **Issues**: Create GitHub issues for bugs or feature requests
-- **Email**: support@nutriai.com
+- **Email**: support@wellplate.com
 
 ## 🎯 Roadmap
 
@@ -292,4 +292,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ---
 
-Built with ❤️ by the NutriAI team
+Built with ❤️ by the WellPlate team
