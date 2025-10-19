@@ -91,8 +91,7 @@ export async function GET(request: NextRequest) {
       authentication: {
         accounts: user.accounts.map(acc => ({
           provider: acc.provider,
-          type: acc.type,
-          createdAt: acc.createdAt
+          type: acc.type
         })),
         sessions: user.sessions.map(session => ({
           id: session.id,
