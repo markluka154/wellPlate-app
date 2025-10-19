@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button'
 
 const ProductDemo = () => {
   const [activeTab, setActiveTab] = useState('meal-plan')
-  const [showVideo, setShowVideo] = useState(false)
 
   const tabs = [
     { id: 'meal-plan', label: 'Meal Plan' },
@@ -167,43 +166,9 @@ const ProductDemo = () => {
                 )}
               </div>
             </div>
-
-            {/* Demo Video Button */}
-            <div className="mt-6 text-center">
-              <Button
-                variant="outline"
-                onClick={() => setShowVideo(true)}
-                className="text-sm"
-              >
-                ▶ Play 30s demo
-              </Button>
-            </div>
           </div>
         </div>
       </div>
-
-      {/* Video Modal */}
-      {showVideo && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">WellPlate Demo</h3>
-              <button
-                onClick={() => setShowVideo(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                ✕
-              </button>
-            </div>
-            <div className="bg-black rounded-lg aspect-video flex items-center justify-center">
-              <div className="text-white text-center">
-                <div className="text-4xl mb-2">▶</div>
-                <div className="text-sm">WellPlate Demo Video</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </section>
   )
 }
