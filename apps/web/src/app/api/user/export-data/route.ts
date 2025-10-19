@@ -95,8 +95,7 @@ export async function GET(request: NextRequest) {
         })),
         sessions: user.sessions.map(session => ({
           id: session.id,
-          expires: session.expires,
-          createdAt: session.createdAt
+          expires: session.expires
         }))
       },
       gdprInfo: {
