@@ -76,9 +76,29 @@ export function CTASection() {
         </div>
         
         <div className="mt-12 pt-8 border-t border-slate-700">
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-slate-400 mb-6">
             Trusted by nutritionists and health coaches worldwide
           </p>
+          
+          {/* Trust badges */}
+          <div className="flex flex-wrap justify-center items-center gap-6">
+            <div className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-slate-800/50 backdrop-blur-sm border border-slate-700">
+              <span className="text-lg">🔒</span>
+              <span className="text-sm font-medium text-slate-300">GDPR Compliant</span>
+            </div>
+            <div className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-slate-800/50 backdrop-blur-sm border border-slate-700">
+              <span className="text-lg">💳</span>
+              <span className="text-sm font-medium text-slate-300">Stripe Secure</span>
+            </div>
+            <div className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-slate-800/50 backdrop-blur-sm border border-slate-700">
+              <span className="text-lg">🛡️</span>
+              <span className="text-sm font-medium text-slate-300">SSL/TLS Secure</span>
+            </div>
+            <div className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-slate-800/50 backdrop-blur-sm border border-slate-700">
+              <span className="text-lg">📄</span>
+              <span className="text-sm font-medium text-slate-300">PDF Delivery</span>
+            </div>
+          </div>
         </div>
       </div>
     </section>

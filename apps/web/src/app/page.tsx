@@ -12,7 +12,6 @@ import Comparison from '@/components/marketing/Comparison'
 import { Testimonials } from '@/components/marketing/Testimonials'
 import CtaStrip from '@/components/marketing/CtaStrip'
 import Newsletter from '@/components/marketing/Newsletter'
-import ComplianceRow from '@/components/marketing/ComplianceRow'
 import LocaleSwitcher from '@/components/marketing/LocaleSwitcher'
 
 export default function HomePage() {
@@ -48,7 +47,6 @@ export default function HomePage() {
       </main>
       
       {/* Enhanced Footer */}
-      <ComplianceRow />
       <Footer />
     </div>
   )
