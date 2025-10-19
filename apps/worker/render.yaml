@@ -1,5 +1,5 @@
 services:
-  nutriai-worker:
+  wellplate-worker:
     build: .
     ports:
       - "8420:8420"

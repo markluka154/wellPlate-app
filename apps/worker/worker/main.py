@@ -4,7 +4,7 @@ from worker.routers import health, generate
 from worker.config import settings
 
 app = FastAPI(
-    title="NutriAI Worker Service",
+    title="WellPlate Worker Service",
     description="AI-powered meal plan generation service",
     version="1.0.0",
 )
@@ -24,7 +24,7 @@ app.include_router(generate.router, prefix="/generate", tags=["generate"])
 
 @app.get("/")
 async def root():
-    return {"message": "NutriAI Worker Service", "version": "1.0.0"}
+    return {"message": "WellPlate Worker Service", "version": "1.0.0"}
 
 if __name__ == "__main__":
     import uvicorn

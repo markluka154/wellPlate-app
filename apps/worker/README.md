@@ -1,4 +1,4 @@
-# NutriAI Worker Service
+# WellPlate Worker Service
 
 Python FastAPI service for AI-powered meal plan generation using OpenAI GPT-4.
 
