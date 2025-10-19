@@ -2,16 +2,6 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { ArrowRight } from "lucide-react"
 
-const PRESS_MENTIONS = [
-  { name: "Health & Fitness", label: "HF" },
-  { name: "Nutrition Today", label: "NT" },
-  { name: "Wellness Weekly", label: "WW" },
-  { name: "FitLife Pro", label: "FP" },
-  { name: "Dietitian Network", label: "DN" },
-  { name: "Healthy Living", label: "HL" },
-  { name: "Nutrition Plus", label: "NP" },
-]
-
 export function Hero() {
   return (
     <section className="relative overflow-hidden bg-gradient-to-b from-white via-gray-50/50 to-white">
@@ -82,29 +72,6 @@ export function Hero() {
           <p className="mt-4 sm:mt-6 text-xs sm:text-sm text-gray-500 font-medium px-4">
             No credit card required - 3 free meal plans included
           </p>
-
-          {/* Social proof section - mobile optimized */}
-          <div className="mt-10 sm:mt-20">
-            <p className="text-xs sm:text-sm text-gray-500 font-semibold tracking-wider uppercase mb-4 sm:mb-8 px-4">
-              Trusted by health professionals worldwide
-            </p>
-            
-            <div className="hidden sm:flex flex-wrap items-center justify-center gap-x-6 gap-y-4 px-4">
-              {PRESS_MENTIONS.map((logo) => (
-                <div
-                  key={logo.name}
-                  className="flex items-center gap-3 rounded-full border border-gray-200/70 bg-white/80 px-4 py-2 shadow-sm shadow-gray-100 backdrop-blur-sm transition-transform duration-200 hover:-translate-y-1"
-                >
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 text-xs font-semibold tracking-[0.25em]">
-                    {logo.label}
-                  </span>
-                  <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
-                    {logo.name}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
 
         </div>
       </div>
