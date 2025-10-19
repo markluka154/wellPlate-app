@@ -263,7 +263,7 @@ export function GDPRCompliancePanel({ userEmail, onDataExport, onAccountDeletion
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-600">Data Protection Officer</span>
             <Button variant="link" className="p-0 h-auto">
-              <a href="mailto:privacy@wellplate.eu" className="text-blue-600 hover:underline">
+              <a href="mailto:getwellplate@gmail.com" className="text-blue-600 hover:underline">
                 Contact DPO
               </a>
             </Button>
@@ -295,7 +295,7 @@ export function GDPRCompliancePanel({ userEmail, onDataExport, onAccountDeletion
           </div>
         </div>
         <p className="text-sm text-blue-700 mt-3">
-          Contact us at <a href="mailto:privacy@wellplate.eu" className="underline">privacy@wellplate.eu</a> to exercise any of these rights.
+          Contact us at <a href="mailto:getwellplate@gmail.com" className="underline">getwellplate@gmail.com</a> to exercise any of these rights.
         </p>
       </Card>
     </div>

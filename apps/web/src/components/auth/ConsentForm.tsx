@@ -205,7 +205,7 @@ export function ConsentForm({ onConsentChange, onSubmit, isLoading = false }: Co
             <li>Withdraw consent at any time</li>
           </ul>
           <p className="mt-3">
-            Contact us at <a href="mailto:privacy@wellplate.eu" className="underline">privacy@wellplate.eu</a> to exercise these rights.
+            Contact us at <a href="mailto:getwellplate@gmail.com" className="underline">getwellplate@gmail.com</a> to exercise these rights.
           </p>
         </div>
       </Card>

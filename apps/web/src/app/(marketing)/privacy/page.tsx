@@ -139,7 +139,7 @@ export default function PrivacyPolicyPage() {
 
               <h3 className="text-xl font-medium text-gray-900 mb-3">6.3 How to Exercise Rights</h3>
               <p className="text-gray-700">
-                Contact us at <a href="mailto:privacy@wellplate.eu" className="text-blue-600 hover:underline">privacy@wellplate.eu</a> to exercise any of these rights. We will respond within 30 days.
+                Contact us at <a href="mailto:getwellplate@gmail.com" className="text-blue-600 hover:underline">getwellplate@gmail.com</a> to exercise any of these rights. We will respond within 30 days.
               </p>
             </section>
 
@@ -208,10 +208,10 @@ export default function PrivacyPolicyPage() {
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">12. Contact Information</h2>
               <div className="bg-gray-50 p-4 rounded-lg">
                 <p className="text-gray-700 mb-2">
-                  <strong>Data Protection Officer:</strong> <a href="mailto:privacy@wellplate.eu" className="text-blue-600 hover:underline">privacy@wellplate.eu</a>
+                  <strong>Data Protection Officer:</strong> <a href="mailto:getwellplate@gmail.com" className="text-blue-600 hover:underline">getwellplate@gmail.com</a>
                 </p>
                 <p className="text-gray-700 mb-2">
-                  <strong>General Inquiries:</strong> <a href="mailto:hello@wellplate.eu" className="text-blue-600 hover:underline">hello@wellplate.eu</a>
+                  <strong>General Inquiries:</strong> <a href="mailto:getwellplate@gmail.com" className="text-blue-600 hover:underline">getwellplate@gmail.com</a>
                 </p>
                 <p className="text-gray-700">
                   <strong>Address:</strong> Čopova ulica 5, Jesenice, Slovenia

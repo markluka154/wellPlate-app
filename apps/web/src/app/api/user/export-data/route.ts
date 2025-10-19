@@ -100,7 +100,7 @@ export async function GET(request: NextRequest) {
       },
       gdprInfo: {
         dataController: 'WellPlate',
-        contactEmail: 'privacy@wellplate.eu',
+        contactEmail: 'getwellplate@gmail.com',
         legalBasis: 'Consent and Contract Performance',
         retentionPeriod: 'Account active + 2 years for meal plans',
         dataCategories: [
