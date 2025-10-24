@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { prisma } from '@/lib/supabase'
+import { prisma, safePrismaQuery } from '@/lib/supabase'
 import { createChatCompletion, extractInsights } from '@/lib/ai/openai'
 import { CoachContext } from '@/types/coach'
 import type { Session } from 'next-auth'
@@ -90,13 +90,13 @@ export async function POST(request: NextRequest) {
 async function loadUserContext(userId: string): Promise<CoachContext> {
   try {
     // Load user profile
-    const userProfile = await prisma.userProfile.findUnique({
+    const userProfile = await safePrismaQuery(prisma => prisma.userProfile.findUnique({
       where: { userId },
-    })
+    }))
 
     if (!userProfile) {
       // Create default profile if none exists
-      const newProfile = await prisma.userProfile.create({
+      const newProfile = await safePrismaQuery(prisma => prisma.userProfile.create({
         data: {
           userId,
           goal: 'maintain',
@@ -105,7 +105,7 @@ async function loadUserContext(userId: string): Promise<CoachContext> {
           stressLevel: 3,
           stepsPerDay: 8000,
         },
-      })
+      }))
       
       return {
         userProfile: newProfile,
@@ -115,18 +115,18 @@ async function loadUserContext(userId: string): Promise<CoachContext> {
     }
 
     // Load recent memories (last 10)
-    const recentMemories = await prisma.coachMemory.findMany({
+    const recentMemories = await safePrismaQuery(prisma => prisma.coachMemory.findMany({
       where: { userId },
       orderBy: { timestamp: 'desc' },
       take: 10,
-    })
+    }))
 
     // Load recent progress (last 7 entries)
-    const recentProgress = await prisma.progressLog.findMany({
+    const recentProgress = await safePrismaQuery(prisma => prisma.progressLog.findMany({
       where: { userId },
       orderBy: { date: 'desc' },
       take: 7,
-    })
+    }))
 
     return {
       userProfile,

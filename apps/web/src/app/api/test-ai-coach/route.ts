@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { prisma } from '@/lib/supabase'
+import { prisma, safePrismaQuery } from '@/lib/supabase'
 import type { Session } from 'next-auth'
 
 export async function GET(request: NextRequest) {
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     
     // Test 3: Check if User table exists
     try {
-      const userCount = await prisma.user.count()
+      const userCount = await safePrismaQuery(prisma => prisma.user.count())
       console.log('User table access: OK, count:', userCount)
     } catch (error) {
       console.log('User table error:', error)
@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
     
     // Test 4: Check if UserProfile table exists
     try {
-      const profileCount = await prisma.userProfile.count()
+      const profileCount = await safePrismaQuery(prisma => prisma.userProfile.count())
       console.log('UserProfile table access: OK, count:', profileCount)
     } catch (error) {
       console.log('UserProfile table error:', error)
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
     
     // Test 5: Try to create a test user profile
     try {
-      const testProfile = await prisma.userProfile.upsert({
+      const testProfile = await safePrismaQuery(prisma => prisma.userProfile.upsert({
         where: { userId: session.user.id },
         update: {},
         create: {
@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
           stressLevel: 3,
           stepsPerDay: 8000,
         },
-      })
+      }))
       console.log('UserProfile creation: OK', testProfile.id)
     } catch (error) {
       console.log('UserProfile creation error:', error)

@@ -50,6 +50,25 @@ export const prisma = globalForPrisma.prisma ?? new PrismaClient({
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
 
+// Helper function to safely execute Prisma queries
+export async function safePrismaQuery<T>(
+  queryFn: (prisma: PrismaClient) => Promise<T>
+): Promise<T> {
+  try {
+    return await queryFn(prisma)
+  } catch (error: any) {
+    // If it's a prepared statement error, disconnect and reconnect
+    if (error.message?.includes('prepared statement') || error.code === '42P05') {
+      console.log('Prepared statement conflict detected, reconnecting...')
+      await prisma.$disconnect()
+      await prisma.$connect()
+      // Retry the query once
+      return await queryFn(prisma)
+    }
+    throw error
+  }
+}
+
 export async function uploadPDF(buffer: Buffer, path: string): Promise<string> {
   if (!supabase) {
     throw new Error('Supabase client not configured. Please set up environment variables.')
