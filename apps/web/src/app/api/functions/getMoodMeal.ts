@@ -13,22 +13,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // For now, return mock response since Prisma client isn't generated
-    // TODO: Uncomment when DATABASE_URL is available and prisma generate is run
-    console.log('Demo mode - mood meal suggestions')
-    
-    const moodMeal = await getMoodMealLogic({
-      mood,
-      userProfile: { dietType: 'omnivore' },
-    })
-    
-    return NextResponse.json({
-      success: true,
-      meal: moodMeal,
-      message: `Based on your ${mood} mood, here are some meal suggestions that can help support your emotional well-being while maintaining your nutritional goals.`,
-    })
-    
-    /* TODO: Uncomment when database is available
     // Get user profile for dietary preferences
     const userProfile = await prisma.userProfile.findUnique({
       where: { userId },
@@ -52,7 +36,6 @@ export async function POST(request: NextRequest) {
       meal: moodMeal,
       message: `Based on your ${mood} mood, here are some meal suggestions that can help support your emotional well-being while maintaining your nutritional goals.`,
     })
-    */
 
   } catch (error) {
     console.error('Error getting mood meal:', error)

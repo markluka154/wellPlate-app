@@ -13,23 +13,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // For now, return mock response since Prisma client isn't generated
-    // TODO: Uncomment when DATABASE_URL is available and prisma generate is run
-    console.log('Demo mode - meal plan update')
-    
-    return NextResponse.json({
-      success: true,
-      message: `I've updated your ${section} based on your request for "${requirement}". The changes maintain your nutritional goals while incorporating your preferences.`,
-      plan: {
-        section,
-        requirement,
-        changes: `Updated ${section} with ${requirement}`,
-        totalCalories: 2000,
-        totalMacros: { protein: 150, carbs: 200, fat: 80 },
-      },
-    })
-    
-    /* TODO: Uncomment when database is available
     // Get user's latest meal plan
     const latestMealPlan = await prisma.mealPlan.findFirst({
       where: { userId },
@@ -78,7 +61,6 @@ export async function POST(request: NextRequest) {
       plan: updatedPlan,
       message: `I've updated your ${section} based on your request for "${requirement}". The changes maintain your nutritional goals while incorporating your preferences.`,
     })
-    */
 
   } catch (error) {
     console.error('Error updating meal plan:', error)

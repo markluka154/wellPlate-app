@@ -14,20 +14,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Get user profile for additional context
-    // For now, skip database call since Prisma client isn't generated
-    // TODO: Uncomment when DATABASE_URL is available and prisma generate is run
-    console.log('Demo mode - using mock user profile')
-    const userProfile = {
-      goal: 'maintain',
-      dietType: 'omnivore',
-      activityLevel: 3,
-    }
-    
-    /* TODO: Uncomment when database is available
     const userProfile = await prisma.userProfile.findUnique({
       where: { userId },
     })
-    */
 
     if (!userProfile) {
       return NextResponse.json(

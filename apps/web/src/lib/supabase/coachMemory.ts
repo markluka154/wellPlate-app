@@ -7,20 +7,6 @@ export async function saveInsight(
   content: string,
   metadata?: Record<string, any>
 ): Promise<CoachMemory> {
-  // For now, return mock data since Prisma client isn't generated
-  // TODO: Uncomment when DATABASE_URL is available and prisma generate is run
-  console.log('Demo mode - insight not saved')
-  
-  return {
-    id: 'demo',
-    userId,
-    insightType: type,
-    content,
-    metadata: metadata || null,
-    timestamp: new Date(),
-  }
-  
-  /* TODO: Uncomment when database is available
   return await prisma.coachMemory.create({
     data: {
       userId,
@@ -29,37 +15,22 @@ export async function saveInsight(
       metadata,
     },
   })
-  */
 }
 
 export async function getRecentMemories(userId: string, limit: number = 10): Promise<CoachMemory[]> {
-  // For now, return empty array since Prisma client isn't generated
-  // TODO: Uncomment when DATABASE_URL is available and prisma generate is run
-  console.log('Demo mode - no memories available')
-  return []
-  
-  /* TODO: Uncomment when database is available
   return await prisma.coachMemory.findMany({
     where: { userId },
     orderBy: { timestamp: 'desc' },
     take: limit,
   })
-  */
 }
 
 export async function getRecentProgress(userId: string, limit: number = 7): Promise<ProgressLog[]> {
-  // For now, return empty array since Prisma client isn't generated
-  // TODO: Uncomment when DATABASE_URL is available and prisma generate is run
-  console.log('Demo mode - no progress available')
-  return []
-  
-  /* TODO: Uncomment when database is available
   return await prisma.progressLog.findMany({
     where: { userId },
     orderBy: { date: 'desc' },
     take: limit,
   })
-  */
 }
 
 export async function createOrUpdateUserProfile(
@@ -76,27 +47,6 @@ export async function createOrUpdateUserProfile(
     stepsPerDay?: number
   }
 ) {
-  // For now, return mock data since Prisma client isn't generated
-  // TODO: Uncomment when DATABASE_URL is available and prisma generate is run
-  console.log('Demo mode - profile not saved')
-  
-  return {
-    id: 'demo',
-    userId,
-    name: data.name || null,
-    goal: data.goal || 'maintain',
-    weightKg: data.weightKg || null,
-    heightCm: data.heightCm || null,
-    dietType: data.dietType || null,
-    activityLevel: data.activityLevel || 3,
-    sleepHours: data.sleepHours || null,
-    stressLevel: data.stressLevel || null,
-    stepsPerDay: data.stepsPerDay || null,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  }
-  
-  /* TODO: Uncomment when database is available
   return await prisma.userProfile.upsert({
     where: { userId },
     update: data,
@@ -110,7 +60,6 @@ export async function createOrUpdateUserProfile(
       ...data,
     },
   })
-  */
 }
 
 export async function logProgress(
@@ -125,32 +74,12 @@ export async function logProgress(
     steps?: number
   }
 ): Promise<ProgressLog> {
-  // For now, return mock data since Prisma client isn't generated
-  // TODO: Uncomment when DATABASE_URL is available and prisma generate is run
-  console.log('Demo mode - progress not logged')
-  
-  return {
-    id: 'demo',
-    userId,
-    weight: data.weight || null,
-    calories: data.calories || null,
-    notes: data.notes || null,
-    mood: data.mood || null,
-    sleepHours: data.sleepHours || null,
-    stressLevel: data.stressLevel || null,
-    steps: data.steps || null,
-    date: new Date(),
-    createdAt: new Date(),
-  }
-  
-  /* TODO: Uncomment when database is available
   return await prisma.progressLog.create({
     data: {
       userId,
       ...data,
     },
   })
-  */
 }
 
 // Mood-to-meal mapping utility
