@@ -146,7 +146,11 @@ export default function ChatPage() {
             id: msg.id,
             role: msg.role as 'user' | 'assistant', // Type assertion
             content: msg.content,
-            timestamp: msg.timestamp?.toLocaleTimeString()
+            timestamp: msg.timestamp instanceof Date 
+              ? msg.timestamp.toLocaleTimeString()
+              : msg.timestamp 
+              ? new Date(msg.timestamp).toLocaleTimeString()
+              : 'Just now'
           }))}
         isTyping={isTyping}
       />
