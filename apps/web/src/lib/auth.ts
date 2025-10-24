@@ -2,7 +2,30 @@ import { PrismaAdapter } from '@next-auth/prisma-adapter'
 import { NextAuthOptions } from 'next-auth'
 import EmailProvider from 'next-auth/providers/email'
 import GoogleProvider from 'next-auth/providers/google'
-import { prisma } from './supabase'
+import { PrismaClient } from '@prisma/client'
+
+// Create a dedicated Prisma client for NextAuth to avoid prepared statement conflicts
+const globalForPrisma = globalThis as unknown as {
+  prismaAuth: PrismaClient | undefined
+}
+
+// Create a function to get a fresh Prisma client for NextAuth
+function getPrismaAuthClient() {
+  return new PrismaClient({
+    log: process.env.NODE_ENV === 'development' ? ['error'] : ['error'],
+    datasources: {
+      db: {
+        url: process.env.DATABASE_URL,
+      },
+    },
+  })
+}
+
+const prismaAuth = globalForPrisma.prismaAuth ?? getPrismaAuthClient()
+
+if (process.env.NODE_ENV !== 'production') {
+  globalForPrisma.prismaAuth = prismaAuth
+}
 
 // Dynamic import for Resend to avoid build-time issues
 let resendInstance: any = null
@@ -30,7 +53,7 @@ async function getResend() {
 
 export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET || 'fallback-secret-for-development',
-  adapter: PrismaAdapter(prisma),
+  adapter: PrismaAdapter(prismaAuth),
   providers: [
     EmailProvider({
       from: 'WellPlate <getwellplate@gmail.com>',
@@ -167,15 +190,22 @@ export const authOptions: NextAuthOptions = {
     async signIn({ user, account, profile }) {
       // Ensure user has a subscription record
       if (user.id) {
-        await prisma.subscription.upsert({
-          where: { userId: user.id },
-          update: {},
-          create: {
-            userId: user.id,
-            plan: 'FREE',
-            status: 'active',
-          },
-        })
+        try {
+          const freshClient = getPrismaAuthClient()
+          await freshClient.subscription.upsert({
+            where: { userId: user.id },
+            update: {},
+            create: {
+              userId: user.id,
+              plan: 'FREE',
+              status: 'active',
+            },
+          })
+          await freshClient.$disconnect()
+        } catch (error) {
+          console.error('Error creating subscription record:', error)
+          // Don't fail sign-in if subscription creation fails
+        }
       }
       return true
     },
