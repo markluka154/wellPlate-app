@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { prisma, safePrismaQuery, rawQuery } from '@/lib/supabase'
+import { prisma, safePrismaQuery, rawQuery, directQuery } from '@/lib/supabase'
 import type { Session } from 'next-auth'
 
 export async function GET(request: NextRequest) {
@@ -25,9 +25,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Database connection failed', step: 'db_connect', details: error instanceof Error ? error.message : String(error) }, { status: 500 })
     }
     
-    // Test 3: Check if User table exists using raw SQL
+    // Test 3: Check if User table exists using direct PostgreSQL connection
     try {
-      const userResult = await rawQuery('SELECT COUNT(*) as count FROM "User"')
+      const userResult = await directQuery('SELECT COUNT(*) as count FROM "User"')
       const userCount = userResult[0]?.count || 0
       console.log('User table access: OK, count:', userCount)
     } catch (error) {
@@ -35,9 +35,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'User table access failed', step: 'user_table', details: error instanceof Error ? error.message : String(error) }, { status: 500 })
     }
     
-    // Test 4: Check if UserProfile table exists using raw SQL
+    // Test 4: Check if UserProfile table exists using direct PostgreSQL connection
     try {
-      const profileResult = await rawQuery('SELECT COUNT(*) as count FROM "UserProfile"')
+      const profileResult = await directQuery('SELECT COUNT(*) as count FROM "UserProfile"')
       const profileCount = profileResult[0]?.count || 0
       console.log('UserProfile table access: OK, count:', profileCount)
     } catch (error) {
@@ -45,16 +45,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'UserProfile table access failed', step: 'profile_table', details: error instanceof Error ? error.message : String(error) }, { status: 500 })
     }
     
-    // Test 5: Try to create a test user profile using raw SQL
+    // Test 5: Try to create a test user profile using direct PostgreSQL connection
     try {
       // First check if profile exists
-      const existingProfile = await rawQuery('SELECT id FROM "UserProfile" WHERE "userId" = $1', [session.user.id])
+      const existingProfile = await directQuery('SELECT id FROM "UserProfile" WHERE "userId" = $1', [session.user.id])
       
       if (existingProfile.length > 0) {
         console.log('UserProfile already exists:', existingProfile[0].id)
       } else {
-        // Create new profile using raw SQL
-        const insertResult = await rawQuery(`
+        // Create new profile using direct PostgreSQL connection
+        const insertResult = await directQuery(`
           INSERT INTO "UserProfile" ("id", "userId", "goal", "activityLevel", "sleepHours", "stressLevel", "stepsPerDay", "createdAt", "updatedAt")
           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
           RETURNING id

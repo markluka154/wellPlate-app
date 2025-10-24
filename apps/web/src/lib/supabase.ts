@@ -66,6 +66,25 @@ export async function rawQuery<T = any>(sql: string, params: any[] = []): Promis
   }
 }
 
+// Direct PostgreSQL connection to completely bypass Prisma
+export async function directQuery<T = any>(sql: string, params: any[] = []): Promise<T[]> {
+  const { Client } = await import('pg')
+  const client = new Client({
+    connectionString: process.env.DATABASE_URL,
+    // Disable prepared statements at the connection level
+    statement_timeout: 30000,
+    query_timeout: 30000,
+  })
+  
+  try {
+    await client.connect()
+    const result = await client.query(sql, params)
+    return result.rows as T[]
+  } finally {
+    await client.end()
+  }
+}
+
 // Helper function to safely execute Prisma queries
 export async function safePrismaQuery<T>(
   queryFn: (prisma: PrismaClient) => Promise<T>
