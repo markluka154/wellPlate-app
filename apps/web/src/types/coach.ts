@@ -19,7 +19,7 @@ export interface UserProfile {
 export interface CoachMemory {
   id: string
   userId: string
-  insightType: 'goal_progress' | 'mood_pattern' | 'preference' | 'lifestyle_change' | 'achievement'
+  insightType: string
   content: string
   metadata: Record<string, any> | null
   timestamp: Date
