@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { prisma, executeQuery } from '@/lib/supabase'
+import { directQuery } from '@/lib/supabase'
 import type { Session } from 'next-auth'
 
 // Force dynamic rendering
