@@ -88,69 +88,132 @@ export async function POST(request: NextRequest) {
 }
 
 async function loadUserContext(userId: string): Promise<CoachContext> {
-  // Load user profile
-  const userProfile = await prisma.userProfile.findUnique({
-    where: { userId },
-  })
+  // For now, return demo data since Prisma client isn't generated
+  // TODO: Uncomment when DATABASE_URL is available and prisma generate is run
+  console.log('Using demo mode - database not available')
+  
+  return {
+    userProfile: {
+      id: 'demo',
+      userId,
+      name: 'Demo User',
+      goal: 'maintain',
+      weightKg: 70,
+      heightCm: 170,
+      dietType: 'omnivore',
+      activityLevel: 3,
+      sleepHours: 7,
+      stressLevel: 3,
+      stepsPerDay: 8000,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+    recentMemories: [],
+    recentProgress: [],
+  }
+  
+  /* TODO: Uncomment when database is available
+  try {
+    // Load user profile
+    const userProfile = await prisma.userProfile.findUnique({
+      where: { userId },
+    })
 
-  if (!userProfile) {
-    // Create default profile if none exists
-    const newProfile = await prisma.userProfile.create({
-      data: {
+    if (!userProfile) {
+      // Create default profile if none exists
+      const newProfile = await prisma.userProfile.create({
+        data: {
+          userId,
+          goal: 'maintain',
+          activityLevel: 3,
+          sleepHours: 7,
+          stressLevel: 3,
+          stepsPerDay: 8000,
+        },
+      })
+      
+      return {
+        userProfile: newProfile,
+        recentMemories: [],
+        recentProgress: [],
+      }
+    }
+
+    // Load recent memories (last 10)
+    const recentMemories = await prisma.coachMemory.findMany({
+      where: { userId },
+      orderBy: { timestamp: 'desc' },
+      take: 10,
+    })
+
+    // Load recent progress (last 7 entries)
+    const recentProgress = await prisma.progressLog.findMany({
+      where: { userId },
+      orderBy: { date: 'desc' },
+      take: 7,
+    })
+
+    return {
+      userProfile,
+      recentMemories,
+      recentProgress,
+    }
+  } catch (error) {
+    console.error('Database error, using demo mode:', error)
+    
+    // Return demo data when database is not available
+    return {
+      userProfile: {
+        id: 'demo',
         userId,
+        name: 'Demo User',
         goal: 'maintain',
+        weightKg: 70,
+        heightCm: 170,
+        dietType: 'omnivore',
         activityLevel: 3,
         sleepHours: 7,
         stressLevel: 3,
         stepsPerDay: 8000,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
-    })
-    
-    return {
-      userProfile: newProfile,
       recentMemories: [],
       recentProgress: [],
     }
   }
-
-  // Load recent memories (last 10)
-  const recentMemories = await prisma.coachMemory.findMany({
-    where: { userId },
-    orderBy: { timestamp: 'desc' },
-    take: 10,
-  })
-
-  // Load recent progress (last 7 entries)
-  const recentProgress = await prisma.progressLog.findMany({
-    where: { userId },
-    orderBy: { date: 'desc' },
-    take: 7,
-  })
-
-  return {
-    userProfile,
-    recentMemories,
-    recentProgress,
-  }
+  */
 }
 
 async function getRecentChatMessages(userId: string) {
-  // Get the most recent chat session
-  const recentSession = await prisma.chatSession.findFirst({
-    where: { userId },
-    orderBy: { updatedAt: 'desc' },
-  })
+  // For now, return empty array since Prisma client isn't generated
+  // TODO: Uncomment when DATABASE_URL is available and prisma generate is run
+  console.log('Using demo mode - no chat history available')
+  return []
+  
+  /* TODO: Uncomment when database is available
+  try {
+    // Get the most recent chat session
+    const recentSession = await prisma.chatSession.findFirst({
+      where: { userId },
+      orderBy: { updatedAt: 'desc' },
+    })
 
-  if (!recentSession) {
+    if (!recentSession) {
+      return []
+    }
+
+    // Return last 10 messages for context
+    const messages = recentSession.messages as any[]
+    return messages.slice(-10).map(msg => ({
+      role: msg.role,
+      content: msg.content,
+    }))
+  } catch (error) {
+    console.error('Error loading chat messages:', error)
     return []
   }
-
-  // Return last 10 messages for context
-  const messages = recentSession.messages as any[]
-  return messages.slice(-10).map(msg => ({
-    role: msg.role,
-    content: msg.content,
-  }))
+  */
 }
 
 async function executeFunction(functionName: string, args: any, userId: string) {
@@ -198,45 +261,91 @@ async function executeFunction(functionName: string, args: any, userId: string) 
     },
     
     logProgress: async (args, userId) => {
-      const progressLog = await prisma.progressLog.create({
-        data: {
-          userId,
-          weight: args.weight,
-          mood: args.mood,
-          notes: args.notes,
-          sleepHours: args.sleepHours,
-          stressLevel: args.stressLevel,
-          steps: args.steps,
-        },
-      })
-      
+      // For now, return demo response since Prisma client isn't generated
+      // TODO: Uncomment when DATABASE_URL is available and prisma generate is run
+      console.log('Demo mode - progress logged')
       return {
         success: true,
-        log: progressLog,
-        message: 'Progress logged successfully!',
+        message: 'Progress logged in demo mode (database unavailable)',
       }
+      
+      /* TODO: Uncomment when database is available
+      try {
+        const progressLog = await prisma.progressLog.create({
+          data: {
+            userId,
+            weight: args.weight,
+            mood: args.mood,
+            notes: args.notes,
+            sleepHours: args.sleepHours,
+            stressLevel: args.stressLevel,
+            steps: args.steps,
+          },
+        })
+        
+        return {
+          success: true,
+          log: progressLog,
+          message: 'Progress logged successfully!',
+        }
+      } catch (error) {
+        console.error('Error logging progress:', error)
+        return {
+          success: false,
+          message: 'Progress logged in demo mode (database unavailable)',
+        }
+      }
+      */
     },
     
     adjustPlanForLifestyle: async (args, userId) => {
-      // Update user profile with new lifestyle data
-      await prisma.userProfile.update({
-        where: { userId },
-        data: {
-          sleepHours: args.sleepHours,
-          stressLevel: args.stressLevel,
-          stepsPerDay: args.stepsPerDay,
-        },
-      })
-      
+      // For now, return demo response since Prisma client isn't generated
+      // TODO: Uncomment when DATABASE_URL is available and prisma generate is run
+      console.log('Demo mode - plan adjusted')
       return {
         success: true,
-        message: 'Your meal plan has been adjusted based on your lifestyle changes.',
+        message: 'Your meal plan has been adjusted based on your lifestyle changes (demo mode).',
         adjustments: {
           sleepHours: args.sleepHours,
           stressLevel: args.stressLevel,
           stepsPerDay: args.stepsPerDay,
         },
       }
+      
+      /* TODO: Uncomment when database is available
+      try {
+        // Update user profile with new lifestyle data
+        await prisma.userProfile.update({
+          where: { userId },
+          data: {
+            sleepHours: args.sleepHours,
+            stressLevel: args.stressLevel,
+            stepsPerDay: args.stepsPerDay,
+          },
+        })
+        
+        return {
+          success: true,
+          message: 'Your meal plan has been adjusted based on your lifestyle changes.',
+          adjustments: {
+            sleepHours: args.sleepHours,
+            stressLevel: args.stressLevel,
+            stepsPerDay: args.stepsPerDay,
+          },
+        }
+      } catch (error) {
+        console.error('Error adjusting plan:', error)
+        return {
+          success: true,
+          message: 'Your meal plan has been adjusted based on your lifestyle changes (demo mode).',
+          adjustments: {
+            sleepHours: args.sleepHours,
+            stressLevel: args.stressLevel,
+            stepsPerDay: args.stepsPerDay,
+          },
+        }
+      }
+      */
     },
   }
 
@@ -249,66 +358,88 @@ async function executeFunction(functionName: string, args: any, userId: string) 
 }
 
 async function saveInsights(userId: string, insights: Array<{ type: string; content: string; metadata?: any }>) {
-  const insightPromises = insights.map(insight =>
-    prisma.coachMemory.create({
-      data: {
-        userId,
-        insightType: insight.type as any,
-        content: insight.content,
-        metadata: insight.metadata,
-      },
-    })
-  )
+  // For now, skip saving since Prisma client isn't generated
+  // TODO: Uncomment when DATABASE_URL is available and prisma generate is run
+  console.log('Demo mode - insights not saved')
+  
+  /* TODO: Uncomment when database is available
+  try {
+    const insightPromises = insights.map(insight =>
+      prisma.coachMemory.create({
+        data: {
+          userId,
+          insightType: insight.type as any,
+          content: insight.content,
+          metadata: insight.metadata,
+        },
+      })
+    )
 
-  await Promise.all(insightPromises)
+    await Promise.all(insightPromises)
+  } catch (error) {
+    console.error('Error saving insights:', error)
+    // Continue execution even if insights can't be saved
+  }
+  */
 }
 
 async function saveChatMessage(userId: string, userMessage: string, assistantMessage: string, type?: string, data?: any) {
-  // Get or create current chat session
-  let session = await prisma.chatSession.findFirst({
-    where: { userId },
-    orderBy: { updatedAt: 'desc' },
-  })
+  // For now, skip saving since Prisma client isn't generated
+  // TODO: Uncomment when DATABASE_URL is available and prisma generate is run
+  console.log('Demo mode - chat message not saved')
+  
+  /* TODO: Uncomment when database is available
+  try {
+    // Get or create current chat session
+    let session = await prisma.chatSession.findFirst({
+      where: { userId },
+      orderBy: { updatedAt: 'desc' },
+    })
 
-  if (!session) {
-    session = await prisma.chatSession.create({
+    if (!session) {
+      session = await prisma.chatSession.create({
+        data: {
+          userId,
+          title: 'Chat with Lina',
+          messages: [],
+        },
+      })
+    }
+
+    // Add new messages
+    const newMessages = [
+      {
+        id: crypto.randomUUID(),
+        role: 'user',
+        content: userMessage,
+        timestamp: new Date(),
+        type: 'text',
+      },
+      {
+        id: crypto.randomUUID(),
+        role: 'assistant',
+        content: assistantMessage,
+        timestamp: new Date(),
+        type: type || 'text',
+        data,
+      },
+    ]
+
+    const updatedMessages = [...(session.messages as any[]), ...newMessages]
+
+    // Update session
+    await prisma.chatSession.update({
+      where: { id: session.id },
       data: {
-        userId,
-        title: 'Chat with Lina',
-        messages: [],
+        messages: updatedMessages,
+        updatedAt: new Date(),
       },
     })
+  } catch (error) {
+    console.error('Error saving chat message:', error)
+    // Continue execution even if chat can't be saved
   }
-
-  // Add new messages
-  const newMessages = [
-    {
-      id: crypto.randomUUID(),
-      role: 'user',
-      content: userMessage,
-      timestamp: new Date(),
-      type: 'text',
-    },
-    {
-      id: crypto.randomUUID(),
-      role: 'assistant',
-      content: assistantMessage,
-      timestamp: new Date(),
-      type: type || 'text',
-      data,
-    },
-  ]
-
-  const updatedMessages = [...(session.messages as any[]), ...newMessages]
-
-  // Update session
-  await prisma.chatSession.update({
-    where: { id: session.id },
-    data: {
-      messages: updatedMessages,
-      updatedAt: new Date(),
-    },
-  })
+  */
 }
 
 // Initialize chat endpoint

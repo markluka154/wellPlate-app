@@ -84,8 +84,8 @@ export const useChatStore = create<ChatStore>()(
           set({ isLoading: true, error: undefined })
           
           // Load user profile, memories, and progress
-          const response = await fetch('/api/chat/initialize', {
-            method: 'POST',
+          const response = await fetch('/api/chat', {
+            method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ userId }),
           })
