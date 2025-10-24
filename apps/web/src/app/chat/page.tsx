@@ -37,45 +37,44 @@ export default function ChatPage() {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Card className="p-8 text-center">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-emerald-500" />
-          <p className="text-gray-600">Loading your AI coach...</p>
-        </Card>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-6 h-6 animate-spin mx-auto mb-3 text-gray-600" />
+          <p className="text-sm text-gray-500">Loading...</p>
+        </div>
       </div>
     )
   }
 
   if (!session?.user?.id) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Card className="p-8 text-center max-w-md">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Welcome to Lina</h1>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center max-w-md px-6">
+          <h1 className="text-xl font-semibold text-gray-900 mb-2">AI Nutrition Coach</h1>
           <p className="text-gray-600 mb-6">
-            Your AI nutrition coach is ready to help you reach your health goals.
-            Please sign in to start your personalized journey.
+            Get personalized nutrition advice and meal suggestions from our AI coach.
           </p>
           <Button 
             onClick={() => router.push('/signin')}
-            className="bg-emerald-500 hover:bg-emerald-600 text-white"
+            className="bg-gray-900 hover:bg-gray-800 text-white"
           >
             Sign In to Continue
           </Button>
-        </Card>
+        </div>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Card className="p-8 text-center max-w-md">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Something went wrong</h1>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center max-w-md px-6">
+          <h1 className="text-xl font-semibold text-gray-900 mb-2">Something went wrong</h1>
           <p className="text-gray-600 mb-6">{error}</p>
           <div className="space-x-3">
             <Button 
               onClick={() => initializeChat(session.user.id)}
-              className="bg-emerald-500 hover:bg-emerald-600 text-white"
+              className="bg-gray-900 hover:bg-gray-800 text-white"
             >
               Try Again
             </Button>
@@ -87,13 +86,13 @@ export default function ChatPage() {
               Back to Dashboard
             </Button>
           </div>
-        </Card>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       {/* Mobile Header */}
       <div className="lg:hidden bg-white border-b border-gray-200 px-4 py-3">
         <div className="flex items-center justify-between">
@@ -106,7 +105,7 @@ export default function ChatPage() {
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
           </Button>
-          <h1 className="text-lg font-semibold text-gray-900">AI Coach</h1>
+          <h1 className="text-lg font-medium text-gray-900">AI Coach</h1>
           <div className="w-8" /> {/* Spacer for centering */}
         </div>
       </div>
@@ -115,22 +114,22 @@ export default function ChatPage() {
       <div className="hidden lg:block fixed left-0 top-0 w-64 h-full bg-white border-r border-gray-200">
         <div className="p-6">
           <div className="flex items-center space-x-3 mb-8">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 text-white flex items-center justify-center">
-              <span className="text-lg font-bold">L</span>
+            <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">
+              <span className="text-sm font-medium text-gray-600">AI</span>
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-900">Lina</h1>
-              <p className="text-sm text-gray-600">AI Nutrition Coach</p>
+              <h1 className="text-lg font-medium text-gray-900">AI Coach</h1>
+              <p className="text-sm text-gray-500">Nutrition Assistant</p>
             </div>
           </div>
 
           {userProfile && (
-            <Card className="p-4 mb-6">
-              <h3 className="font-semibold text-gray-900 mb-2">Your Profile</h3>
+            <div className="bg-gray-50 rounded-lg p-4 mb-6">
+              <h3 className="font-medium text-gray-900 mb-2">Your Profile</h3>
               <div className="space-y-2 text-sm text-gray-600">
                 <div className="flex justify-between">
                   <span>Goal:</span>
-                  <span className="capitalize font-medium">{userProfile.goal}</span>
+                  <span className="font-medium capitalize">{userProfile.goal}</span>
                 </div>
                 {userProfile.weightKg && (
                   <div className="flex justify-between">
@@ -145,11 +144,11 @@ export default function ChatPage() {
                 {userProfile.dietType && (
                   <div className="flex justify-between">
                     <span>Diet:</span>
-                    <span className="capitalize font-medium">{userProfile.dietType}</span>
+                    <span className="font-medium capitalize">{userProfile.dietType}</span>
                   </div>
                 )}
               </div>
-            </Card>
+            </div>
           )}
 
           <div className="space-y-2">

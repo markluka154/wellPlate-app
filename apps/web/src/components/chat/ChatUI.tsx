@@ -81,20 +81,20 @@ export function ChatUI({ className = '' }: ChatUIProps) {
       >
         <div className={`flex items-start space-x-3 max-w-[80%] ${isUser ? 'flex-row-reverse space-x-reverse' : ''}`}>
           {/* Avatar */}
-          <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+          <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${
             isUser 
-              ? 'bg-emerald-500 text-white' 
-              : 'bg-gradient-to-br from-emerald-400 to-emerald-600 text-white'
+              ? 'bg-gray-900 text-white' 
+              : 'bg-gray-100 text-gray-600'
           }`}>
-            {isUser ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
+            {isUser ? <User className="w-3 h-3" /> : <Bot className="w-3 h-3" />}
           </div>
 
           {/* Message Content */}
           <div className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}>
-            <Card className={`px-4 py-3 ${
+            <div className={`px-4 py-3 rounded-lg max-w-[80%] ${
               isUser 
-                ? 'bg-emerald-500 text-white' 
-                : 'bg-white border border-gray-200 text-gray-900'
+                ? 'bg-gray-900 text-white' 
+                : 'bg-gray-100 text-gray-900'
             }`}>
               <div className="prose prose-sm max-w-none">
                 {message.type === 'progress_chart' && message.data ? (
@@ -103,7 +103,7 @@ export function ChatUI({ className = '' }: ChatUIProps) {
                   <p className="whitespace-pre-wrap m-0">{message.content}</p>
                 )}
               </div>
-            </Card>
+            </div>
             
             {/* Timestamp */}
             <span className="text-xs text-gray-500 mt-1">
@@ -125,44 +125,44 @@ export function ChatUI({ className = '' }: ChatUIProps) {
       className="flex justify-start mb-4"
     >
       <div className="flex items-start space-x-3 max-w-[80%]">
-        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 text-white flex items-center justify-center">
-          <Bot className="w-4 h-4" />
+        <div className="flex-shrink-0 w-6 h-6 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center">
+          <Bot className="w-3 h-3" />
         </div>
-        <Card className="px-4 py-3 bg-white border border-gray-200">
+        <div className="px-4 py-3 bg-gray-100 rounded-lg">
           <div className="flex space-x-1">
             <motion.div
-              className="w-2 h-2 bg-emerald-500 rounded-full"
+              className="w-2 h-2 bg-gray-400 rounded-full"
               animate={{ scale: [1, 1.2, 1] }}
               transition={{ duration: 0.6, repeat: Infinity, delay: 0 }}
             />
             <motion.div
-              className="w-2 h-2 bg-emerald-500 rounded-full"
+              className="w-2 h-2 bg-gray-400 rounded-full"
               animate={{ scale: [1, 1.2, 1] }}
               transition={{ duration: 0.6, repeat: Infinity, delay: 0.2 }}
             />
             <motion.div
-              className="w-2 h-2 bg-emerald-500 rounded-full"
+              className="w-2 h-2 bg-gray-400 rounded-full"
               animate={{ scale: [1, 1.2, 1] }}
               transition={{ duration: 0.6, repeat: Infinity, delay: 0.4 }}
             />
           </div>
-        </Card>
+        </div>
       </div>
     </motion.div>
   )
 
   return (
-    <div className={`flex flex-col h-full bg-gray-50 ${className}`}>
+    <div className={`flex flex-col h-full bg-white ${className}`}>
       {/* Header */}
       <div className="flex-shrink-0 bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 text-white flex items-center justify-center">
-              <Bot className="w-5 h-5" />
+            <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">
+              <Bot className="w-4 h-4 text-gray-600" />
             </div>
             <div>
-              <h1 className="text-lg font-semibold text-gray-900">Lina</h1>
-              <p className="text-sm text-gray-600">Your AI Nutrition Coach</p>
+              <h1 className="text-base font-medium text-gray-900">AI Coach</h1>
+              <p className="text-sm text-gray-500">Nutrition Assistant</p>
             </div>
           </div>
           
@@ -171,7 +171,7 @@ export function ChatUI({ className = '' }: ChatUIProps) {
               variant="ghost"
               size="sm"
               onClick={() => setShowMoodPicker(!showMoodPicker)}
-              className="text-gray-600 hover:text-gray-900"
+              className="text-gray-500 hover:text-gray-700"
             >
               <Smile className="w-4 h-4" />
             </Button>
@@ -179,7 +179,7 @@ export function ChatUI({ className = '' }: ChatUIProps) {
               variant="ghost"
               size="sm"
               onClick={clearChat}
-              className="text-gray-600 hover:text-gray-900"
+              className="text-gray-500 hover:text-gray-700"
             >
               <MoreHorizontal className="w-4 h-4" />
             </Button>
@@ -259,15 +259,15 @@ export function ChatUI({ className = '' }: ChatUIProps) {
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Ask Lina anything about nutrition, meal plans, or your health goals..."
-              className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"
+              placeholder="Ask about nutrition, meal plans, or your health goals..."
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent resize-none"
               disabled={isLoading}
             />
           </div>
           <Button
             onClick={handleSendMessage}
             disabled={!inputValue.trim() || isLoading}
-            className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl px-6 py-3 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-gray-900 hover:bg-gray-800 text-white rounded-lg px-4 py-3 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Send className="w-4 h-4" />
           </Button>
