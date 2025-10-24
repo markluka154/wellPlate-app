@@ -28,14 +28,27 @@ export default function ChatPage() {
   } = useChatStore()
 
   useEffect(() => {
+    console.log('🔍 Chat page session debug:', {
+      status,
+      hasSession: !!session,
+      hasUser: !!session?.user,
+      hasUserId: !!session?.user?.id,
+      userId: session?.user?.id,
+      userEmail: session?.user?.email,
+      isInitialized,
+      isLoading
+    })
+
     if (status === 'loading') return
     
     if (!session?.user?.id) {
+      console.log('❌ No session or user ID, redirecting to signin')
       router.push('/signin')
       return
     }
 
     if (!isInitialized && !isLoading) {
+      console.log('✅ Initializing chat for user:', session.user.id)
       initializeChat(session.user.id)
     }
   }, [session, status, isInitialized, isLoading, initializeChat, router])
@@ -54,6 +67,14 @@ export default function ChatPage() {
         <div className="text-center">
           <Loader2 className="w-6 h-6 animate-spin mx-auto mb-3 text-gray-600" />
           <p className="text-sm text-gray-500">Loading...</p>
+          {/* Debug info */}
+          <div className="mt-4 p-4 bg-gray-100 rounded text-xs text-left max-w-md">
+            <p><strong>Debug Info:</strong></p>
+            <p>Status: {status}</p>
+            <p>Has Session: {session ? 'Yes' : 'No'}</p>
+            <p>User ID: {session?.user?.id || 'None'}</p>
+            <p>User Email: {session?.user?.email || 'None'}</p>
+          </div>
         </div>
       </div>
     )
@@ -73,6 +94,16 @@ export default function ChatPage() {
           >
             Sign In to Continue
           </Button>
+          
+          {/* Debug info */}
+          <div className="mt-6 p-4 bg-gray-100 rounded text-xs text-left">
+            <p><strong>Debug Info:</strong></p>
+            <p>Status: {status}</p>
+            <p>Has Session: {session ? 'Yes' : 'No'}</p>
+            <p>User ID: {session?.user?.id || 'None'}</p>
+            <p>User Email: {session?.user?.email || 'None'}</p>
+            <p>Session Object: {JSON.stringify(session, null, 2)}</p>
+          </div>
         </div>
       </div>
     )
