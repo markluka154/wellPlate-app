@@ -21,7 +21,7 @@ export interface CoachMemory {
   userId: string
   insightType: string
   content: string
-  metadata: Record<string, any> | null
+  metadata: any
   timestamp: Date
 }
 
