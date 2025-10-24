@@ -82,7 +82,7 @@ export const authOptions: NextAuthOptions = {
           
           const { data, error } = await resend.emails.send({
             from: 'WellPlate <getwellplate@gmail.com>',
-            to: [email],
+            to: email, // Remove array brackets - Resend expects string, not array
             subject: 'Your sign-in link for WellPlate',
             html: `
               <!DOCTYPE html>
@@ -176,18 +176,46 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async jwt({ token, user, account }) {
+      console.log('🔍 NextAuth JWT callback:', {
+        hasToken: !!token,
+        hasUser: !!user,
+        hasAccount: !!account,
+        userId: user?.id,
+        tokenId: token?.id
+      })
+      
       if (user) {
         token.id = user.id
+        console.log('✅ JWT token updated with user ID:', user.id)
       }
       return token
     },
     async session({ session, token }) {
+      console.log('🔍 NextAuth session callback:', {
+        hasSession: !!session,
+        hasUser: !!session?.user,
+        hasToken: !!token,
+        tokenId: token?.id,
+        userEmail: session?.user?.email
+      })
+      
       if (session.user && token?.id) {
         (session.user as any).id = token.id as string
+        console.log('✅ Session updated with user ID:', token.id)
+      } else {
+        console.log('❌ Session callback missing user ID:', { session, token })
       }
       return session
     },
     async signIn({ user, account, profile }) {
+      console.log('🔍 NextAuth signIn callback:', {
+        hasUser: !!user,
+        userId: user?.id,
+        userEmail: user?.email,
+        hasAccount: !!account,
+        hasProfile: !!profile
+      })
+      
       // Ensure user has a subscription record
       if (user.id) {
         try {
@@ -202,8 +230,9 @@ export const authOptions: NextAuthOptions = {
             },
           })
           await freshClient.$disconnect()
+          console.log('✅ Subscription record created for user:', user.id)
         } catch (error) {
-          console.error('Error creating subscription record:', error)
+          console.error('❌ Error creating subscription record:', error)
           // Don't fail sign-in if subscription creation fails
         }
       }
