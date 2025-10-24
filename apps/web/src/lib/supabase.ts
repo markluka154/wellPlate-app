@@ -39,14 +39,32 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
 }
 
-export const prisma = globalForPrisma.prisma ?? new PrismaClient({
-  datasources: {
-    db: {
-      url: process.env.DATABASE_URL,
+// Create a function that returns a fresh Prisma client
+export function getPrismaClient(): PrismaClient {
+  // In production/serverless, create a new client for each request to avoid prepared statement conflicts
+  if (process.env.NODE_ENV === 'production') {
+    return new PrismaClient({
+      datasources: {
+        db: {
+          url: process.env.DATABASE_URL,
+        },
+      },
+      log: ['error'],
+    })
+  }
+  
+  // In development, use singleton
+  return globalForPrisma.prisma ?? new PrismaClient({
+    datasources: {
+      db: {
+        url: process.env.DATABASE_URL,
+      },
     },
-  },
-  log: ['error'],
-})
+    log: ['error'],
+  })
+}
+
+export const prisma = getPrismaClient()
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
 
@@ -54,16 +72,45 @@ if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
 export async function safePrismaQuery<T>(
   queryFn: (prisma: PrismaClient) => Promise<T>
 ): Promise<T> {
+  const client = getPrismaClient()
+  
   try {
-    return await queryFn(prisma)
+    return await queryFn(client)
   } catch (error: any) {
-    // If it's a prepared statement error, disconnect and reconnect
-    if (error.message?.includes('prepared statement') || error.code === '42P05') {
-      console.log('Prepared statement conflict detected, reconnecting...')
-      await prisma.$disconnect()
-      await prisma.$connect()
-      // Retry the query once
-      return await queryFn(prisma)
+    console.log('Prisma query error:', error)
+    
+    // Check for prepared statement error in multiple ways
+    const errorMessage = error.message || error.toString() || ''
+    const isPreparedStatementError = 
+      errorMessage.includes('prepared statement') ||
+      errorMessage.includes('already exists') ||
+      error.code === '42P05' ||
+      (error.kind && error.kind.QueryError && error.kind.QueryError.PostgresError && error.kind.QueryError.PostgresError.code === '42P05')
+    
+    if (isPreparedStatementError) {
+      console.log('Prepared statement conflict detected, creating fresh client...')
+      try {
+        // Create a completely fresh client
+        const freshClient = new PrismaClient({
+          datasources: {
+            db: {
+              url: process.env.DATABASE_URL,
+            },
+          },
+          log: ['error'],
+        })
+        
+        console.log('Using fresh client, retrying query...')
+        const result = await queryFn(freshClient)
+        
+        // Clean up the fresh client
+        await freshClient.$disconnect()
+        
+        return result
+      } catch (retryError) {
+        console.error('Retry failed:', retryError)
+        throw retryError
+      }
     }
     throw error
   }
