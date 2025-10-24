@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
       console.log('Database connection: OK')
     } catch (error) {
       console.log('Database connection error:', error)
-      return NextResponse.json({ error: 'Database connection failed', step: 'db_connect', details: error.message }, { status: 500 })
+      return NextResponse.json({ error: 'Database connection failed', step: 'db_connect', details: error instanceof Error ? error.message : String(error) }, { status: 500 })
     }
     
     // Test 3: Check if User table exists
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
       console.log('User table access: OK, count:', userCount)
     } catch (error) {
       console.log('User table error:', error)
-      return NextResponse.json({ error: 'User table access failed', step: 'user_table', details: error.message }, { status: 500 })
+      return NextResponse.json({ error: 'User table access failed', step: 'user_table', details: error instanceof Error ? error.message : String(error) }, { status: 500 })
     }
     
     // Test 4: Check if UserProfile table exists
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
       console.log('UserProfile table access: OK, count:', profileCount)
     } catch (error) {
       console.log('UserProfile table error:', error)
-      return NextResponse.json({ error: 'UserProfile table access failed', step: 'profile_table', details: error.message }, { status: 500 })
+      return NextResponse.json({ error: 'UserProfile table access failed', step: 'profile_table', details: error instanceof Error ? error.message : String(error) }, { status: 500 })
     }
     
     // Test 5: Try to create a test user profile
@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
       console.log('UserProfile creation: OK', testProfile.id)
     } catch (error) {
       console.log('UserProfile creation error:', error)
-      return NextResponse.json({ error: 'UserProfile creation failed', step: 'profile_create', details: error.message }, { status: 500 })
+      return NextResponse.json({ error: 'UserProfile creation failed', step: 'profile_create', details: error instanceof Error ? error.message : String(error) }, { status: 500 })
     }
     
     return NextResponse.json({ 
@@ -75,7 +75,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ 
       error: 'Test failed', 
       step: 'general',
-      details: error.message 
+      details: error instanceof Error ? error.message : String(error)
     }, { status: 500 })
   }
 }
