@@ -1,40 +1,59 @@
 'use client'
 
-import { ChatMessage as ChatMessageType } from '@/types/coach'
+import { cn } from '@/lib/utils'
 
 interface ChatMessageProps {
-  message: ChatMessageType
+  message: {
+    id: string
+    role: 'user' | 'assistant'
+    content: string
+    timestamp?: string
+  }
+  index: number
 }
 
-export default function ChatMessage({ message }: ChatMessageProps) {
+export function ChatMessage({ message, index }: ChatMessageProps) {
   const isUser = message.role === 'user'
-  const isSystem = message.role === 'system'
-
-  // Don't render system messages in the UI
-  if (isSystem) {
-    return null
-  }
-
-  if (isUser) {
-    return (
-      <div className="flex justify-end animate-fadeIn">
-        <div className="max-w-[80%] bg-emerald-500 text-white px-4 py-3 rounded-[20px] rounded-br-[6px] shadow-sm hover:shadow-md transition-shadow">
-          <p className="text-sm leading-relaxed">{message.content}</p>
-        </div>
-      </div>
-    )
-  }
-
+  
   return (
-    <div className="flex gap-3 animate-fadeIn">
-      {/* Avatar */}
-      <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center shadow-sm flex-shrink-0">
-        <span className="text-white font-semibold text-sm">L</span>
-      </div>
-
-      {/* Message */}
-      <div className="max-w-[80%] bg-white px-4 py-3 rounded-[20px] rounded-bl-[6px] shadow-sm hover:shadow-md transition-shadow">
-        <p className="text-sm leading-relaxed text-gray-900">{message.content}</p>
+    <div className={cn(
+      "flex gap-3 animate-fadeIn",
+      isUser && "justify-end"
+    )}>
+      {/* AI Avatar (left side) */}
+      {!isUser && (
+        <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center shadow-sm flex-shrink-0 ring-2 ring-white">
+          <span className="text-white font-semibold text-sm">L</span>
+        </div>
+      )}
+      
+      {/* Message Bubble */}
+      <div className={cn(
+        "max-w-[85%] sm:max-w-[75%] md:max-w-[65%] px-5 py-3.5 rounded-[20px] shadow-sm hover:shadow-md transition-all duration-200 hover:scale-[1.01] group",
+        isUser 
+          ? "bg-gradient-to-br from-emerald-500 to-emerald-600 text-white rounded-tr-md" 
+          : "bg-white border border-gray-100 text-gray-900 rounded-tl-md"
+      )}>
+        {/* User Message */}
+        {isUser && (
+          <p className="text-[15px] leading-relaxed font-normal">
+            {message.content}
+          </p>
+        )}
+        
+        {/* AI Message */}
+        {!isUser && (
+          <p className="text-[15px] leading-relaxed font-normal">
+            {message.content}
+          </p>
+        )}
+        
+        {/* Timestamp (appears on hover) */}
+        <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 mt-1">
+          <span className="text-xs text-gray-400">
+            {message.timestamp || 'Just now'}
+          </span>
+        </div>
       </div>
     </div>
   )

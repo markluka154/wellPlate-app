@@ -137,6 +137,9 @@ importers:
       tailwind-merge:
         specifier: ^2.0.0
         version: 2.0.0
+      tailwind-scrollbar:
+        specifier: ^4.0.2
+        version: 4.0.2(react@18.2.0)(tailwindcss@3.3.5)
       tailwindcss-animate:
         specifier: ^1.0.7
         version: 1.0.7(tailwindcss@3.3.5)
@@ -2542,6 +2545,10 @@ packages:
 
   /@types/phoenix@1.6.6:
     resolution: {integrity: sha512-PIzZZlEppgrpoT2QgbnDU+MMzuR6BbCjllj0bM70lWoejMeNJAxCchxnv7J3XFkI8MpygtRpzXrIlmWUBclP5A==}
+    dev: false
+
+  /@types/prismjs@1.26.5:
+    resolution: {integrity: sha512-AUZTa7hQ2KY5L7AmtSiqxlhWxb4ina0yd8hNbl4TWuqnv/pFP0nDMb3YrfSBf4hJVGLh2YEIBfKaBW/9UEl6IQ==}
     dev: false
 
   /@types/prop-types@15.7.15:
@@ -6615,6 +6622,16 @@ packages:
       js-beautify: 1.15.4
     dev: false
 
+  /prism-react-renderer@2.4.1(react@18.2.0):
+    resolution: {integrity: sha512-ey8Ls/+Di31eqzUxC46h8MksNuGx/n0AAC8uKpwFau4RPDYLuE3EXTp8N8G2vX2N7UC/+IXeNUnlWBGGcAG+Ig==}
+    peerDependencies:
+      react: '>=16.0.0'
+    dependencies:
+      '@types/prismjs': 1.26.5
+      clsx: 2.1.1
+      react: 18.2.0
+    dev: false
+
   /prisma@5.6.0:
     resolution: {integrity: sha512-EEaccku4ZGshdr2cthYHhf7iyvCcXqwJDvnoQRAJg5ge2Tzpv0e2BaMCp+CbbDUwoVTzwgOap9Zp+d4jFa2O9A==}
     engines: {node: '>=16.13'}
@@ -7541,6 +7558,18 @@ packages:
     resolution: {integrity: sha512-WO8qghn9yhsldLSg80au+3/gY9E4hFxIvQ3qOmlpXnqpDKoMruKfi/56BbbMg6fHTQJ9QD3cc79PoWqlaQE4rw==}
     dependencies:
       '@babel/runtime': 7.28.4
+    dev: false
+
+  /tailwind-scrollbar@4.0.2(react@18.2.0)(tailwindcss@3.3.5):
+    resolution: {integrity: sha512-wAQiIxAPqk0MNTPptVe/xoyWi27y+NRGnTwvn4PQnbvB9kp8QUBiGl/wsfoVBHnQxTmhXJSNt9NHTmcz9EivFA==}
+    engines: {node: '>=12.13.0'}
+    peerDependencies:
+      tailwindcss: 4.x
+    dependencies:
+      prism-react-renderer: 2.4.1(react@18.2.0)
+      tailwindcss: 3.3.5
+    transitivePeerDependencies:
+      - react
     dev: false
 
   /tailwindcss-animate@1.0.7(tailwindcss@3.3.5):

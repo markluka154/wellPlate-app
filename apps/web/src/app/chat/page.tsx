@@ -4,11 +4,9 @@ import React, { useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useChatStore } from '@/store/coachStore'
-import ChatHeader from '@/components/chat/ChatHeader'
-import ChatContainer from '@/components/chat/ChatContainer'
-import ChatInput from '@/components/chat/ChatInput'
-import ChatMessage from '@/components/chat/ChatMessage'
-import TypingIndicator from '@/components/chat/TypingIndicator'
+import { ChatHeader } from '@/components/chat/ChatHeader'
+import { ChatContainer } from '@/components/chat/ChatContainer'
+import { ChatInput } from '@/components/chat/ChatInput'
 import { Button } from '@/components/ui/button'
 import { Loader2, ArrowLeft } from 'lucide-react'
 import type { Session } from 'next-auth'
@@ -141,19 +139,20 @@ export default function ChatPage() {
       <ChatHeader />
       
       {/* Chat Messages Container */}
-      <ChatContainer>
-        {messages.map((message) => (
-          <ChatMessage key={message.id} message={message} />
-        ))}
-        
-        {/* Typing Indicator */}
-        {isTyping && <TypingIndicator />}
-      </ChatContainer>
+      <ChatContainer 
+        messages={messages.map(msg => ({
+          id: msg.id,
+          role: msg.role,
+          content: msg.content,
+          timestamp: msg.timestamp?.toLocaleTimeString()
+        }))}
+        isTyping={isTyping}
+      />
       
       {/* Floating Input Area */}
       <ChatInput 
-        onSendMessage={handleSendMessage}
-        isLoading={isLoading}
+        onSend={handleSendMessage}
+        disabled={isLoading}
       />
     </div>
   )
