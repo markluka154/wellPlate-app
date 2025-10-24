@@ -72,8 +72,8 @@ export default function ChatPage() {
             <p><strong>Debug Info:</strong></p>
             <p>Status: {status}</p>
             <p>Has Session: {session ? 'Yes' : 'No'}</p>
-            <p>User ID: {session?.user?.id || 'None'}</p>
-            <p>User Email: {session?.user?.email || 'None'}</p>
+            <p>User ID: {(session as any)?.user?.id || 'None'}</p>
+            <p>User Email: {(session as any)?.user?.email || 'None'}</p>
           </div>
         </div>
       </div>
@@ -100,8 +100,8 @@ export default function ChatPage() {
             <p><strong>Debug Info:</strong></p>
             <p>Status: {status}</p>
             <p>Has Session: {session ? 'Yes' : 'No'}</p>
-            <p>User ID: {session?.user?.id || 'None'}</p>
-            <p>User Email: {session?.user?.email || 'None'}</p>
+            <p>User ID: {(session as any)?.user?.id || 'None'}</p>
+            <p>User Email: {(session as any)?.user?.email || 'None'}</p>
             <p>Session Object: {JSON.stringify(session, null, 2)}</p>
           </div>
         </div>
