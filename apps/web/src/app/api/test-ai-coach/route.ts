@@ -4,6 +4,9 @@ import { authOptions } from '@/lib/auth'
 import { prisma, executeQuery } from '@/lib/supabase'
 import type { Session } from 'next-auth'
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
   try {
     console.log('Testing AI Coach API...')
