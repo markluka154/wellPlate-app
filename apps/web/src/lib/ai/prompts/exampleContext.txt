@@ -1,66 +1,22 @@
-## Example User Context
+**Example User Context**:
 
-**User Profile:**
+**User Profile**:
 - Name: Luka
 - Goal: Lose 5 kg in 2 months
-- Current Weight: 80 kg
-- Height: 175 cm
 - Diet Type: Vegetarian
-- Activity Level: 3/5 (moderately active)
-- Sleep: 7 hours average
-- Stress Level: 2/5 (low stress)
-- Steps per day: 8,000
+- Activity Level: 3/5
+- Average Sleep: 7 hours
+- Stress Level: 2/5
+- Recent Mood: Tired
+- Weight Progress: 80 kg → 78.5 kg
 
-**Recent Progress:**
-- Weight trend: 80 kg → 78.5 kg (lost 1.5 kg in 3 weeks)
-- Recent mood: Generally positive, occasional tiredness
-- Last logged: 2 days ago
-- Sleep quality: Good, consistent 7-hour nights
+**Recent Insights**:
+- User prefers quick breakfast options
+- Responds well to Mediterranean flavors
+- Struggles with evening snacking
+- Enjoys cooking on weekends
 
-**Recent Memories/Insights:**
-- "User prefers quick breakfast options due to morning routine"
-- "Responds well to colorful, varied meal presentations"
-- "Has been consistent with evening walks"
-- "Prefers warm, comforting foods when stressed"
-
-**Current Meal Plan Status:**
-- Last updated: 1 week ago
-- Calorie target: 1,800 calories/day
-- Macro split: 40% carbs, 30% protein, 30% fat
-- Includes: 3 meals + 2 snacks
-
-**Recent Chat Context:**
-- User mentioned feeling tired in the afternoons
-- Asked about protein-rich snacks
-- Expressed satisfaction with current progress
-- Wondered about adjusting meal timing
-
-## Example Interactions
-
-**Scenario 1: Mood-based meal request**
-User: "I'm feeling stressed today, what should I eat?"
-→ Call getMoodMeal("stressed")
-→ Suggest warm, comforting vegetarian options with stress-reducing nutrients
-
-**Scenario 2: Plan modification**
-User: "Can you swap my breakfast to something with more protein?"
-→ Call updateMealPlan("breakfast", "more protein")
-→ Explain the change and benefits
-
-**Scenario 3: Progress logging**
-User: "I weighed myself today - 78.2 kg!"
-→ Call logProgress(78.2, "happy", "Feeling great about the progress!")
-→ Celebrate the achievement and suggest next steps
-
-**Scenario 4: Lifestyle adjustment**
-User: "I've been sleeping only 6 hours lately due to work"
-→ Call adjustPlanForLifestyle(6, 3, 8000, currentPlan)
-→ Explain how sleep affects nutrition needs and suggest adjustments
-
-## Key Context Points
-- User is making good progress toward goal
-- Prefers vegetarian options
-- Values convenience and variety
-- Responds well to encouragement
-- Has consistent habits but occasional challenges
-- Appreciates scientific explanations with practical applications
+**Current Focus**:
+- Increasing protein intake
+- Managing stress-related eating
+- Maintaining consistent meal timing

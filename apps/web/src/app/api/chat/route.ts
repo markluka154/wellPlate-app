@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { prisma, safePrismaQuery } from '@/lib/supabase'
+import { directQuery } from '@/lib/supabase'
 import { createChatCompletion, extractInsights } from '@/lib/ai/openai'
 import { CoachContext } from '@/types/coach'
 import type { Session } from 'next-auth'
@@ -92,44 +92,64 @@ export async function POST(request: NextRequest) {
 
 async function loadUserContext(userId: string): Promise<CoachContext> {
   try {
-    // Load user profile
-    const userProfile = await safePrismaQuery(prisma => prisma.userProfile.findUnique({
-      where: { userId },
-    }))
+    // Load user profile using direct PostgreSQL
+    const userProfileResult = await directQuery('SELECT * FROM "UserProfile" WHERE "userId" = $1', [userId])
+    const userProfile = userProfileResult[0]
 
     if (!userProfile) {
       // Create default profile if none exists
-      const newProfile = await safePrismaQuery(prisma => prisma.userProfile.create({
-        data: {
+      const newProfileId = crypto.randomUUID()
+      await directQuery(`
+        INSERT INTO "UserProfile" ("id", "userId", "goal", "activityLevel", "sleepHours", "stressLevel", "stepsPerDay", "createdAt", "updatedAt")
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      `, [
+        newProfileId,
+        userId,
+        'maintain',
+        3,
+        7,
+        3,
+        8000,
+        new Date(),
+        new Date()
+      ])
+      
+      return {
+        userProfile: {
+          id: newProfileId,
           userId,
+          name: null,
           goal: 'maintain',
+          weightKg: null,
+          heightCm: null,
+          dietType: null,
           activityLevel: 3,
           sleepHours: 7,
           stressLevel: 3,
           stepsPerDay: 8000,
+          createdAt: new Date(),
+          updatedAt: new Date(),
         },
-      }))
-      
-      return {
-        userProfile: newProfile,
         recentMemories: [],
         recentProgress: [],
       }
     }
 
     // Load recent memories (last 10)
-    const recentMemories = await safePrismaQuery(prisma => prisma.coachMemory.findMany({
-      where: { userId },
-      orderBy: { timestamp: 'desc' },
-      take: 10,
-    }))
+    const recentMemories = await directQuery(`
+      SELECT * FROM "CoachMemory" 
+      WHERE "userId" = $1 
+      ORDER BY "timestamp" DESC 
+      LIMIT 10
+    `, [userId])
 
     // Load recent progress (last 7 entries)
-    const recentProgress = await safePrismaQuery(prisma => prisma.progressLog.findMany({
-      where: { userId },
-      orderBy: { date: 'desc' },
-      take: 7,
-    }))
+    const recentProgress = await directQuery(`
+      SELECT * FROM "ProgressLog" 
+      WHERE "userId" = $1 
+      ORDER BY "date" DESC 
+      LIMIT 7
+    `, [userId])
 
     return {
       userProfile,
@@ -164,11 +184,15 @@ async function loadUserContext(userId: string): Promise<CoachContext> {
 
 async function getRecentChatMessages(userId: string) {
   try {
-    // Get the most recent chat session
-    const recentSession = await prisma.chatSession.findFirst({
-      where: { userId },
-      orderBy: { updatedAt: 'desc' },
-    })
+    // Get the most recent chat session using direct PostgreSQL
+    const recentSessionResult = await directQuery(`
+      SELECT * FROM "ChatSession" 
+      WHERE "userId" = $1 
+      ORDER BY "updatedAt" DESC 
+      LIMIT 1
+    `, [userId])
+    
+    const recentSession = recentSessionResult[0]
 
     if (!recentSession) {
       return []
@@ -232,21 +256,27 @@ async function executeFunction(functionName: string, args: any, userId: string) 
     
     logProgress: async (args, userId) => {
       try {
-        const progressLog = await prisma.progressLog.create({
-          data: {
-            userId,
-            weight: args.weight,
-            mood: args.mood,
-            notes: args.notes,
-            sleepHours: args.sleepHours,
-            stressLevel: args.stressLevel,
-            steps: args.steps,
-          },
-        })
+        const progressLogId = crypto.randomUUID()
+        await directQuery(`
+          INSERT INTO "ProgressLog" ("id", "userId", "weight", "calories", "notes", "mood", "sleepHours", "stressLevel", "steps", "date", "createdAt")
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+        `, [
+          progressLogId,
+          userId,
+          args.weight,
+          args.calories,
+          args.notes,
+          args.mood,
+          args.sleepHours,
+          args.stressLevel,
+          args.steps,
+          new Date(),
+          new Date()
+        ])
         
         return {
           success: true,
-          log: progressLog,
+          log: { id: progressLogId, userId, ...args },
           message: 'Progress logged successfully!',
         }
       } catch (error) {
@@ -260,15 +290,18 @@ async function executeFunction(functionName: string, args: any, userId: string) 
     
     adjustPlanForLifestyle: async (args, userId) => {
       try {
-        // Update user profile with new lifestyle data
-        await prisma.userProfile.update({
-          where: { userId },
-          data: {
-            sleepHours: args.sleepHours,
-            stressLevel: args.stressLevel,
-            stepsPerDay: args.stepsPerDay,
-          },
-        })
+        // Update user profile with new lifestyle data using direct PostgreSQL
+        await directQuery(`
+          UPDATE "UserProfile" 
+          SET "sleepHours" = $1, "stressLevel" = $2, "stepsPerDay" = $3, "updatedAt" = $4
+          WHERE "userId" = $5
+        `, [
+          args.sleepHours,
+          args.stressLevel,
+          args.stepsPerDay,
+          new Date(),
+          userId
+        ])
         
         return {
           success: true,
@@ -304,18 +337,19 @@ async function executeFunction(functionName: string, args: any, userId: string) 
 
 async function saveInsights(userId: string, insights: Array<{ type: string; content: string; metadata?: any }>) {
   try {
-    const insightPromises = insights.map(insight =>
-      prisma.coachMemory.create({
-        data: {
-          userId,
-          insightType: insight.type as any,
-          content: insight.content,
-          metadata: insight.metadata,
-        },
-      })
-    )
-
-    await Promise.all(insightPromises)
+    for (const insight of insights) {
+      await directQuery(`
+        INSERT INTO "CoachMemory" ("id", "userId", "insightType", "content", "metadata", "timestamp")
+        VALUES ($1, $2, $3, $4, $5, $6)
+      `, [
+        crypto.randomUUID(),
+        userId,
+        insight.type,
+        insight.content,
+        insight.metadata ? JSON.stringify(insight.metadata) : null,
+        new Date()
+      ])
+    }
   } catch (error) {
     console.error('Error saving insights:', error)
     // Continue execution even if insights can't be saved
@@ -324,20 +358,38 @@ async function saveInsights(userId: string, insights: Array<{ type: string; cont
 
 async function saveChatMessage(userId: string, userMessage: string, assistantMessage: string, type?: string, data?: any) {
   try {
-    // Get or create current chat session
-    let session = await prisma.chatSession.findFirst({
-      where: { userId },
-      orderBy: { updatedAt: 'desc' },
-    })
+    // Get or create current chat session using direct PostgreSQL
+    const sessionResult = await directQuery(`
+      SELECT * FROM "ChatSession" 
+      WHERE "userId" = $1 
+      ORDER BY "updatedAt" DESC 
+      LIMIT 1
+    `, [userId])
+    
+    let session = sessionResult[0]
 
     if (!session) {
-      session = await prisma.chatSession.create({
-        data: {
-          userId,
-          title: 'Chat with Lina',
-          messages: [],
-        },
-      })
+      const sessionId = crypto.randomUUID()
+      await directQuery(`
+        INSERT INTO "ChatSession" ("id", "userId", "title", "messages", "createdAt", "updatedAt")
+        VALUES ($1, $2, $3, $4, $5, $6)
+      `, [
+        sessionId,
+        userId,
+        'Chat with Lina',
+        JSON.stringify([]),
+        new Date(),
+        new Date()
+      ])
+      
+      session = {
+        id: sessionId,
+        userId,
+        title: 'Chat with Lina',
+        messages: [],
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
     }
 
     // Add new messages
@@ -362,13 +414,15 @@ async function saveChatMessage(userId: string, userMessage: string, assistantMes
     const updatedMessages = [...(session.messages as any[]), ...newMessages]
 
     // Update session
-    await prisma.chatSession.update({
-      where: { id: session.id },
-      data: {
-        messages: updatedMessages,
-        updatedAt: new Date(),
-      },
-    })
+    await directQuery(`
+      UPDATE "ChatSession" 
+      SET "messages" = $1, "updatedAt" = $2
+      WHERE "id" = $3
+    `, [
+      JSON.stringify(updatedMessages),
+      new Date(),
+      session.id
+    ])
   } catch (error) {
     console.error('Error saving chat message:', error)
     // Continue execution even if chat can't be saved
