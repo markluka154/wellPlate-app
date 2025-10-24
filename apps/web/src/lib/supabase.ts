@@ -42,16 +42,64 @@ const globalForPrisma = globalThis as unknown as {
 // Proper Prisma client configuration for serverless
 export const prisma = globalForPrisma.prisma ?? new PrismaClient({
   log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-  // Disable prepared statements in serverless environments
   datasources: {
     db: {
       url: process.env.DATABASE_URL,
+    },
+  },
+  // Disable prepared statements for serverless
+  __internal: {
+    engine: {
+      binaryTargets: [],
     },
   },
 })
 
 if (process.env.NODE_ENV !== 'production') {
   globalForPrisma.prisma = prisma
+}
+
+// Helper function to execute queries with proper connection handling
+export async function executeQuery<T>(
+  queryFn: (prisma: PrismaClient) => Promise<T>
+): Promise<T> {
+  try {
+    return await queryFn(prisma)
+  } catch (error: any) {
+    console.error('Database query error:', error)
+    
+    // Check for prepared statement error
+    const errorMessage = error.message || error.toString() || ''
+    const isPreparedStatementError = 
+      errorMessage.includes('prepared statement') ||
+      errorMessage.includes('already exists') ||
+      error.code === '42P05'
+    
+    if (isPreparedStatementError) {
+      console.log('Prepared statement conflict detected, creating fresh client...')
+      
+      // Create a completely fresh Prisma client
+      const freshClient = new PrismaClient({
+        log: ['error'],
+        datasources: {
+          db: {
+            url: process.env.DATABASE_URL,
+          },
+        },
+      })
+      
+      try {
+        const result = await queryFn(freshClient)
+        await freshClient.$disconnect()
+        return result
+      } catch (retryError) {
+        await freshClient.$disconnect()
+        throw retryError
+      }
+    }
+    
+    throw error
+  }
 }
 
 // Raw SQL query function to bypass prepared statements
