@@ -3,15 +3,15 @@
 export interface UserProfile {
   id: string
   userId: string
-  name?: string
+  name: string | null
   goal: 'lose' | 'maintain' | 'gain'
-  weightKg?: number
-  heightCm?: number
-  dietType?: 'omnivore' | 'vegan' | 'vegetarian' | 'keto' | 'mediterranean' | 'paleo'
+  weightKg: number | null
+  heightCm: number | null
+  dietType: 'omnivore' | 'vegan' | 'vegetarian' | 'keto' | 'mediterranean' | 'paleo' | null
   activityLevel: number // 1-5 scale
-  sleepHours?: number
-  stressLevel?: number // 1-5 scale
-  stepsPerDay?: number
+  sleepHours: number | null
+  stressLevel: number | null // 1-5 scale
+  stepsPerDay: number | null
   createdAt: Date
   updatedAt: Date
 }
@@ -21,20 +21,20 @@ export interface CoachMemory {
   userId: string
   insightType: 'goal_progress' | 'mood_pattern' | 'preference' | 'lifestyle_change' | 'achievement'
   content: string
-  metadata?: Record<string, any>
+  metadata: Record<string, any> | null
   timestamp: Date
 }
 
 export interface ProgressLog {
   id: string
   userId: string
-  weight?: number
-  calories?: number
-  notes?: string
-  mood?: 'stressed' | 'tired' | 'happy' | 'energetic' | 'sad' | 'anxious'
-  sleepHours?: number
-  stressLevel?: number
-  steps?: number
+  weight: number | null
+  calories: number | null
+  notes: string | null
+  mood: 'stressed' | 'tired' | 'happy' | 'energetic' | 'sad' | 'anxious' | null
+  sleepHours: number | null
+  stressLevel: number | null
+  steps: number | null
   date: Date
   createdAt: Date
 }
@@ -51,7 +51,7 @@ export interface ChatMessage {
 export interface ChatSession {
   id: string
   userId: string
-  title?: string
+  title: string | null
   messages: ChatMessage[]
   createdAt: Date
   updatedAt: Date
@@ -87,18 +87,18 @@ export interface SuggestCardioPlanParams {
 }
 
 export interface LogProgressParams {
-  weight?: number
-  mood?: string
-  notes?: string
-  sleepHours?: number
-  stressLevel?: number
-  steps?: number
+  weight?: number | null
+  mood?: string | null
+  notes?: string | null
+  sleepHours?: number | null
+  stressLevel?: number | null
+  steps?: number | null
 }
 
 export interface AdjustPlanForLifestyleParams {
-  sleepHours?: number
-  stressLevel?: number
-  stepsPerDay?: number
+  sleepHours?: number | null
+  stressLevel?: number | null
+  stepsPerDay?: number | null
   currentPlan?: any
 }
 
