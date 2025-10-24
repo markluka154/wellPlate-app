@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, BookOpen, Star, ShoppingCart, FileText, Users } from 'lucide-react'
+import { Home, BookOpen, Star, ShoppingCart, FileText, Users, MessageCircle } from 'lucide-react'
 
 const items = [
   { href: '/dashboard', label: 'Dashboard', icon: Home },
@@ -10,6 +10,7 @@ const items = [
   { href: '/dashboard/shopping', label: 'Shopping', icon: ShoppingCart },
   { href: '/dashboard/templates', label: 'Templates', icon: FileText },
   { href: '/dashboard/favorites', label: 'Favorites', icon: Star },
+  { href: '/chat', label: 'AI Coach', icon: MessageCircle },
 ]
 
 export function SidebarNav() {
