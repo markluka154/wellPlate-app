@@ -1,18 +1,19 @@
 'use client'
 
+import { ChatMessage as ChatMessageType } from '@/types/coach'
+
 interface ChatMessageProps {
-  message: {
-    id: string
-    role: 'user' | 'assistant'
-    content: string
-    timestamp?: Date
-    type?: string
-    data?: any
-  }
+  message: ChatMessageType
 }
 
 export default function ChatMessage({ message }: ChatMessageProps) {
   const isUser = message.role === 'user'
+  const isSystem = message.role === 'system'
+
+  // Don't render system messages in the UI
+  if (isSystem) {
+    return null
+  }
 
   if (isUser) {
     return (
