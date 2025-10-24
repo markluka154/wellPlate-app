@@ -41,20 +41,7 @@ const globalForPrisma = globalThis as unknown as {
 
 // Create a function that returns a fresh Prisma client
 export function getPrismaClient(): PrismaClient {
-  // In production/serverless, create a new client for each request to avoid prepared statement conflicts
-  if (process.env.NODE_ENV === 'production') {
-    return new PrismaClient({
-      datasources: {
-        db: {
-          url: process.env.DATABASE_URL,
-        },
-      },
-      log: ['error'],
-    })
-  }
-  
-  // In development, use singleton
-  return globalForPrisma.prisma ?? new PrismaClient({
+  return new PrismaClient({
     datasources: {
       db: {
         url: process.env.DATABASE_URL,
@@ -67,6 +54,17 @@ export function getPrismaClient(): PrismaClient {
 export const prisma = getPrismaClient()
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
+
+// Raw SQL query function to bypass prepared statements
+export async function rawQuery<T = any>(sql: string, params: any[] = []): Promise<T[]> {
+  const client = getPrismaClient()
+  try {
+    const result = await client.$queryRawUnsafe(sql, ...params)
+    return result as T[]
+  } finally {
+    await client.$disconnect()
+  }
+}
 
 // Helper function to safely execute Prisma queries
 export async function safePrismaQuery<T>(

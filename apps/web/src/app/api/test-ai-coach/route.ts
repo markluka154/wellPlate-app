@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { prisma, safePrismaQuery } from '@/lib/supabase'
+import { prisma, safePrismaQuery, rawQuery } from '@/lib/supabase'
 import type { Session } from 'next-auth'
 
 export async function GET(request: NextRequest) {
@@ -25,39 +25,52 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Database connection failed', step: 'db_connect', details: error instanceof Error ? error.message : String(error) }, { status: 500 })
     }
     
-    // Test 3: Check if User table exists
+    // Test 3: Check if User table exists using raw SQL
     try {
-      const userCount = await safePrismaQuery(prisma => prisma.user.count())
+      const userResult = await rawQuery('SELECT COUNT(*) as count FROM "User"')
+      const userCount = userResult[0]?.count || 0
       console.log('User table access: OK, count:', userCount)
     } catch (error) {
       console.log('User table error:', error)
       return NextResponse.json({ error: 'User table access failed', step: 'user_table', details: error instanceof Error ? error.message : String(error) }, { status: 500 })
     }
     
-    // Test 4: Check if UserProfile table exists
+    // Test 4: Check if UserProfile table exists using raw SQL
     try {
-      const profileCount = await safePrismaQuery(prisma => prisma.userProfile.count())
+      const profileResult = await rawQuery('SELECT COUNT(*) as count FROM "UserProfile"')
+      const profileCount = profileResult[0]?.count || 0
       console.log('UserProfile table access: OK, count:', profileCount)
     } catch (error) {
       console.log('UserProfile table error:', error)
       return NextResponse.json({ error: 'UserProfile table access failed', step: 'profile_table', details: error instanceof Error ? error.message : String(error) }, { status: 500 })
     }
     
-    // Test 5: Try to create a test user profile
+    // Test 5: Try to create a test user profile using raw SQL
     try {
-      const testProfile = await safePrismaQuery(prisma => prisma.userProfile.upsert({
-        where: { userId: session.user.id },
-        update: {},
-        create: {
-          userId: session.user.id,
-          goal: 'maintain',
-          activityLevel: 3,
-          sleepHours: 7,
-          stressLevel: 3,
-          stepsPerDay: 8000,
-        },
-      }))
-      console.log('UserProfile creation: OK', testProfile.id)
+      // First check if profile exists
+      const existingProfile = await rawQuery('SELECT id FROM "UserProfile" WHERE "userId" = $1', [session.user.id])
+      
+      if (existingProfile.length > 0) {
+        console.log('UserProfile already exists:', existingProfile[0].id)
+      } else {
+        // Create new profile using raw SQL
+        const insertResult = await rawQuery(`
+          INSERT INTO "UserProfile" ("id", "userId", "goal", "activityLevel", "sleepHours", "stressLevel", "stepsPerDay", "createdAt", "updatedAt")
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+          RETURNING id
+        `, [
+          crypto.randomUUID(),
+          session.user.id,
+          'maintain',
+          3,
+          7,
+          3,
+          8000,
+          new Date(),
+          new Date()
+        ])
+        console.log('UserProfile created: OK', insertResult[0]?.id)
+      }
     } catch (error) {
       console.log('UserProfile creation error:', error)
       return NextResponse.json({ error: 'UserProfile creation failed', step: 'profile_create', details: error instanceof Error ? error.message : String(error) }, { status: 500 })
