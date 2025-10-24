@@ -4,10 +4,11 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/supabase'
 import { createChatCompletion, extractInsights } from '@/lib/ai/openai'
 import { CoachContext } from '@/types/coach'
+import type { Session } from 'next-auth'
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getServerSession(authOptions) as Session | null
     
     if (!session?.user?.id) {
       return NextResponse.json(
@@ -313,7 +314,7 @@ async function saveChatMessage(userId: string, userMessage: string, assistantMes
 // Initialize chat endpoint
 export async function PUT(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getServerSession(authOptions) as Session | null
     
     if (!session?.user?.id) {
       return NextResponse.json(

@@ -9,6 +9,7 @@ import { ChatUI } from '@/components/chat/ChatUI'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Loader2, ArrowLeft } from 'lucide-react'
+import type { Session } from 'next-auth'
 
 export default function ChatPage() {
   const { data: session, status } = useSession()
