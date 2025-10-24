@@ -62,8 +62,6 @@ export async function GET(request: NextRequest) {
         dislikes: pref.dislikes,
         cookingEffort: pref.cookingEffort,
         caloriesTarget: pref.caloriesTarget,
-        mealsPerDay: pref.mealsPerDay,
-        includeProteinShakes: pref.includeProteinShakes,
         createdAt: pref.createdAt,
         updatedAt: pref.updatedAt
       })),

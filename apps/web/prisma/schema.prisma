@@ -52,6 +52,8 @@ model User {
   mealPreferences MealPreference[]
   mealPlans     MealPlan[]
   documents     Document[]
+  userProfile   UserProfile?
+  chatSessions  ChatSession[]
 }
 
 model VerificationToken {
@@ -120,4 +122,63 @@ model Document {
 
   user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   mealPlan MealPlan @relation(fields: [mealPlanId], references: [id], onDelete: Cascade)
+}
+
+// AI Coach Memory System Tables
+model UserProfile {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  name          String?
+  goal          String   // lose, maintain, gain
+  weightKg      Float?
+  heightCm      Int?
+  dietType      String?  // omnivore, vegan, vegetarian, keto, mediterranean, paleo
+  activityLevel Int      @default(3) // 1-5 scale
+  sleepHours    Float?   @default(7)
+  stressLevel   Int?     @default(3) // 1-5 scale
+  stepsPerDay   Int?     @default(8000)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  coachMemories CoachMemory[]
+  progressLogs ProgressLog[]
+}
+
+model CoachMemory {
+  id          String   @id @default(cuid())
+  userId      String
+  insightType String   // goal_progress, mood_pattern, preference, lifestyle_change, achievement
+  content     String   // The actual insight text
+  metadata    Json?    // Additional context data
+  timestamp   DateTime @default(now())
+
+  userProfile UserProfile @relation(fields: [userId], references: [userId], onDelete: Cascade)
+}
+
+model ProgressLog {
+  id          String   @id @default(cuid())
+  userId      String
+  weight      Float?
+  calories    Int?
+  notes       String?
+  mood        String?  // stressed, tired, happy, energetic, sad, anxious
+  sleepHours  Float?
+  stressLevel Int?
+  steps       Int?
+  date        DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  userProfile UserProfile @relation(fields: [userId], references: [userId], onDelete: Cascade)
+}
+
+model ChatSession {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String?
+  messages  Json     // Array of chat messages
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
