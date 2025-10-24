@@ -47,12 +47,6 @@ export const prisma = globalForPrisma.prisma ?? new PrismaClient({
       url: process.env.DATABASE_URL,
     },
   },
-  // Disable prepared statements for serverless
-  __internal: {
-    engine: {
-      binaryTargets: [],
-    },
-  },
 })
 
 if (process.env.NODE_ENV !== 'production') {
