@@ -19,9 +19,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'No session', step: 'session' }, { status: 401 })
     }
     
-    // Test 2: Check database connection
+    // Test 2: Check database connection with direct PostgreSQL
     try {
-      await prisma.$connect()
+      await directQuery('SELECT 1 as test')
       console.log('Database connection: OK')
     } catch (error) {
       console.log('Database connection error:', error)
