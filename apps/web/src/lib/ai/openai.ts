@@ -237,7 +237,7 @@ ${recentMemories.slice(-5).map(m => `- ${m.content}`).join('\n')}
 
 // Main chat completion function
 export async function createChatCompletion(
-  messages: Array<{ role: string; content: string }>,
+  messages: Array<{ role: 'user' | 'assistant' | 'system'; content: string }>,
   context: CoachContext,
   onFunctionCall?: (name: string, args: any) => Promise<any>
 ): Promise<{
@@ -260,7 +260,10 @@ ${contextPrompt}`
       model: 'gpt-4o',
       messages: [
         { role: 'system', content: systemMessage },
-        ...messages,
+        ...messages.map(msg => ({
+          role: msg.role as 'user' | 'assistant' | 'system',
+          content: msg.content
+        })),
       ],
       functions: functionDefinitions,
       function_call: 'auto',
@@ -282,7 +285,10 @@ ${contextPrompt}`
           model: 'gpt-4o',
           messages: [
             { role: 'system', content: systemMessage },
-            ...messages,
+            ...messages.map(msg => ({
+              role: msg.role as 'user' | 'assistant' | 'system',
+              content: msg.content
+            })),
             {
               role: 'assistant',
               content: null,
