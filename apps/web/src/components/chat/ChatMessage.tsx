@@ -29,16 +29,24 @@ export function ChatMessage({ message, index }: ChatMessageProps) {
       
       {/* Message Bubble */}
       <div className={cn(
-        "max-w-[85%] sm:max-w-[75%] md:max-w-[65%] px-5 py-3.5 rounded-[20px] shadow-sm hover:shadow-md transition-all duration-200 hover:scale-[1.01] group",
-        isUser 
-          ? "bg-gradient-to-br from-emerald-500 to-emerald-600 text-white rounded-tr-md" 
-          : "bg-white border border-gray-100 text-gray-900 rounded-tl-md"
+        "max-w-[85%] sm:max-w-[75%] md:max-w-[65%] group",
+        !isUser && "px-5 py-3.5 rounded-[20px] rounded-tl-md bg-white border border-gray-100 text-gray-900 shadow-sm hover:shadow-md transition-all duration-200 hover:scale-[1.01]"
       )}>
         {/* User Message */}
         {isUser && (
-          <p className="text-[15px] leading-relaxed font-normal">
+          <div className="
+            bg-gradient-to-br from-emerald-500 to-emerald-600
+            text-white
+            px-5 py-3.5
+            rounded-[20px] rounded-tr-md
+            shadow-sm shadow-emerald-500/30
+            font-normal text-[15px] leading-relaxed
+            transition-all duration-200
+            hover:shadow-md hover:shadow-emerald-500/40
+            hover:scale-[1.01]
+          ">
             {message.content}
-          </p>
+          </div>
         )}
         
         {/* AI Message */}
