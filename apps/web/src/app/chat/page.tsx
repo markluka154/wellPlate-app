@@ -140,12 +140,14 @@ export default function ChatPage() {
       
       {/* Chat Messages Container */}
       <ChatContainer 
-        messages={messages.map(msg => ({
-          id: msg.id,
-          role: msg.role,
-          content: msg.content,
-          timestamp: msg.timestamp?.toLocaleTimeString()
-        }))}
+        messages={messages
+          .filter(msg => msg.role !== 'system') // Filter out system messages
+          .map(msg => ({
+            id: msg.id,
+            role: msg.role as 'user' | 'assistant', // Type assertion
+            content: msg.content,
+            timestamp: msg.timestamp?.toLocaleTimeString()
+          }))}
         isTyping={isTyping}
       />
       
