@@ -4,10 +4,10 @@ export interface UserProfile {
   id: string
   userId: string
   name: string | null
-  goal: 'lose' | 'maintain' | 'gain'
+  goal: string
   weightKg: number | null
   heightCm: number | null
-  dietType: 'omnivore' | 'vegan' | 'vegetarian' | 'keto' | 'mediterranean' | 'paleo' | null
+  dietType: string | null
   activityLevel: number // 1-5 scale
   sleepHours: number | null
   stressLevel: number | null // 1-5 scale
@@ -31,7 +31,7 @@ export interface ProgressLog {
   weight: number | null
   calories: number | null
   notes: string | null
-  mood: 'stressed' | 'tired' | 'happy' | 'energetic' | 'sad' | 'anxious' | null
+  mood: string | null
   sleepHours: number | null
   stressLevel: number | null
   steps: number | null
