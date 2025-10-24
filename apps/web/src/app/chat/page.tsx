@@ -3,10 +3,12 @@
 import React, { useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
 import { useChatStore } from '@/store/coachStore'
-import { ChatUI } from '@/components/chat/ChatUI'
-import { Card } from '@/components/ui/card'
+import ChatHeader from '@/components/chat/ChatHeader'
+import ChatContainer from '@/components/chat/ChatContainer'
+import ChatInput from '@/components/chat/ChatInput'
+import ChatMessage from '@/components/chat/ChatMessage'
+import TypingIndicator from '@/components/chat/TypingIndicator'
 import { Button } from '@/components/ui/button'
 import { Loader2, ArrowLeft } from 'lucide-react'
 import type { Session } from 'next-auth'
@@ -20,6 +22,9 @@ export default function ChatPage() {
     error,
     initializeChat,
     userProfile,
+    messages,
+    sendMessage,
+    isTyping,
   } = useChatStore()
 
   useEffect(() => {
@@ -34,6 +39,14 @@ export default function ChatPage() {
       initializeChat(session.user.id)
     }
   }, [session, status, isInitialized, isLoading, initializeChat, router])
+
+  const handleSendMessage = async (message: string) => {
+    try {
+      await sendMessage(message)
+    } catch (err) {
+      console.error('Failed to send message:', err)
+    }
+  }
 
   if (status === 'loading') {
     return (
@@ -56,7 +69,7 @@ export default function ChatPage() {
           </p>
           <Button 
             onClick={() => router.push('/signin')}
-            className="bg-gray-900 hover:bg-gray-800 text-white"
+            className="bg-emerald-500 hover:bg-emerald-600 text-white"
           >
             Sign In to Continue
           </Button>
@@ -74,7 +87,7 @@ export default function ChatPage() {
           <div className="space-x-3">
             <Button 
               onClick={() => initializeChat(session.user.id)}
-              className="bg-gray-900 hover:bg-gray-800 text-white"
+              className="bg-emerald-500 hover:bg-emerald-600 text-white"
             >
               Try Again
             </Button>
@@ -92,89 +105,25 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Mobile Header */}
-      <div className="lg:hidden bg-white border-b border-gray-200 px-4 py-3">
-        <div className="flex items-center justify-between">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => router.push('/dashboard')}
-            className="text-gray-600 hover:text-gray-900"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
-          </Button>
-          <h1 className="text-lg font-medium text-gray-900">AI Coach</h1>
-          <div className="w-8" /> {/* Spacer for centering */}
-        </div>
-      </div>
-
-      {/* Desktop Sidebar */}
-      <div className="hidden lg:block fixed left-0 top-0 w-64 h-full bg-white border-r border-gray-200">
-        <div className="p-6">
-          <div className="flex items-center space-x-3 mb-8">
-            <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">
-              <span className="text-sm font-medium text-gray-600">AI</span>
-            </div>
-            <div>
-              <h1 className="text-lg font-medium text-gray-900">AI Coach</h1>
-              <p className="text-sm text-gray-500">Nutrition Assistant</p>
-            </div>
-          </div>
-
-          {userProfile && (
-            <div className="bg-gray-50 rounded-lg p-4 mb-6">
-              <h3 className="font-medium text-gray-900 mb-2">Your Profile</h3>
-              <div className="space-y-2 text-sm text-gray-600">
-                <div className="flex justify-between">
-                  <span>Goal:</span>
-                  <span className="font-medium capitalize">{userProfile.goal}</span>
-                </div>
-                {userProfile.weightKg && (
-                  <div className="flex justify-between">
-                    <span>Weight:</span>
-                    <span className="font-medium">{userProfile.weightKg} kg</span>
-                  </div>
-                )}
-                <div className="flex justify-between">
-                  <span>Activity:</span>
-                  <span className="font-medium">{userProfile.activityLevel}/5</span>
-                </div>
-                {userProfile.dietType && (
-                  <div className="flex justify-between">
-                    <span>Diet:</span>
-                    <span className="font-medium capitalize">{userProfile.dietType}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          <div className="space-y-2">
-            <Button
-              variant="ghost"
-              onClick={() => router.push('/dashboard')}
-              className="w-full justify-start text-gray-600 hover:text-gray-900"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Dashboard
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Chat Area */}
-      <div className="lg:ml-64">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
-          className="h-screen lg:h-screen"
-        >
-          <ChatUI />
-        </motion.div>
-      </div>
+    <div className="min-h-screen bg-white flex flex-col">
+      {/* Top Gradient Header */}
+      <ChatHeader />
+      
+      {/* Chat Messages Container */}
+      <ChatContainer>
+        {messages.map((message) => (
+          <ChatMessage key={message.id} message={message} />
+        ))}
+        
+        {/* Typing Indicator */}
+        {isTyping && <TypingIndicator />}
+      </ChatContainer>
+      
+      {/* Floating Input Area */}
+      <ChatInput 
+        onSendMessage={handleSendMessage}
+        isLoading={isLoading}
+      />
     </div>
   )
 }

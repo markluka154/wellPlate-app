@@ -6,11 +6,13 @@ interface ChatStore extends ChatState {
   // Additional state
   isInitialized: boolean
   error?: string
+  isTyping: boolean
   
   // Additional actions
   initializeChat: (userId: string) => Promise<void>
   setError: (error: string | undefined) => void
   retryLastMessage: () => Promise<void>
+  setIsTyping: (typing: boolean) => void
 }
 
 export const useChatStore = create<ChatStore>()(
@@ -25,6 +27,7 @@ export const useChatStore = create<ChatStore>()(
       recentProgress: [],
       isInitialized: false,
       error: undefined,
+      isTyping: false,
 
       // Actions
       addMessage: (message: Omit<ChatMessage, 'id' | 'timestamp'>) => {
@@ -79,6 +82,10 @@ export const useChatStore = create<ChatStore>()(
         set({ error })
       },
 
+      setIsTyping: (typing: boolean) => {
+        set({ isTyping: typing })
+      },
+
       initializeChat: async (userId: string) => {
         try {
           set({ isLoading: true, error: undefined })
@@ -129,7 +136,7 @@ export const useChatStore = create<ChatStore>()(
       },
 
       sendMessage: async (content: string) => {
-        const { addMessage, setLoading, setError, userProfile } = get()
+        const { addMessage, setLoading, setError, setIsTyping, userProfile } = get()
         
         if (!userProfile) {
           setError('Please initialize chat first')
@@ -145,6 +152,7 @@ export const useChatStore = create<ChatStore>()(
           })
           
           setLoading(true)
+          setIsTyping(true)
           setError(undefined)
           
           // Send to API
@@ -192,6 +200,7 @@ export const useChatStore = create<ChatStore>()(
           })
         } finally {
           setLoading(false)
+          setIsTyping(false)
         }
       },
 
