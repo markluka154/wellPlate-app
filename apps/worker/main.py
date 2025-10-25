@@ -306,6 +306,7 @@ async def generate_meal_plan(preferences: MealPreference):
 
         # ---------- FINAL SYSTEM PROMPT ----------
         meals_count = preferences.mealsPerDay
+        price_style = map_effort_to_price_style(preferences.cookingEffort)
         system_prompt = f"""
 You are a nutritionist creating personalized meal plans. Generate DIFFERENT meals for different user profiles.
 
