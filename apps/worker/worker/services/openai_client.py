@@ -44,9 +44,16 @@ class OpenAIClient:
             # Log what AI returned before validation
             logger.info(f"🔍 AI returned data with {len(meal_plan_data.get('plan', []))} days")
             if meal_plan_data.get('plan') and len(meal_plan_data['plan']) > 0:
-                logger.info(f"🔍 First day has {len(meal_plan_data['plan'][0].get('meals', []))} meals")
+                actual_meals = len(meal_plan_data['plan'][0].get('meals', []))
+                expected_meals = preferences.mealsPerDay
+                logger.info(f"🔍 First day has {actual_meals} meals, expected {expected_meals}")
                 meal_names = [meal.get('name', 'unnamed') for meal in meal_plan_data['plan'][0].get('meals', [])]
                 logger.info(f"🔍 Meal names from AI: {meal_names}")
+                
+                # CRITICAL: If meal count is wrong, reject and retry
+                if actual_meals != expected_meals:
+                    logger.error(f"🚨 MEAL COUNT MISMATCH: Expected {expected_meals}, got {actual_meals}")
+                    raise ValueError(f"AI generated {actual_meals} meals instead of {expected_meals}. This is unacceptable.")
             
             # Validate and clean the data
             return self._validate_and_clean_response(meal_plan_data, preferences)
@@ -128,7 +135,11 @@ MEAL TIMING ENFORCEMENT:
 - Dinner meals should be the heartiest and most satisfying
 - Snacks should be light and portable, not full meals
 
-🚨 CRITICAL JSON STRUCTURE - FOLLOW EXACTLY:
+🚨 CRITICAL: You are generating a meal plan for {meals_per_day} meals per day.
+🚨 The "meals" array MUST contain EXACTLY {meals_per_day} meal objects.
+🚨 Count them: 1, 2, 3{', 4' if meals_per_day >= 4 else ''}{', 5' if meals_per_day >= 5 else ''}{', 6' if meals_per_day >= 6 else ''}
+
+🚨 JSON STRUCTURE - FOLLOW EXACTLY:
 You MUST create a JSON with EXACTLY {meals_per_day} meals in the "meals" array:
 
 {{
