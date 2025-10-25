@@ -460,6 +460,7 @@ export async function POST(request: NextRequest) {
 
       mealPlanData = await workerResponse.json()
       console.log('✅ Worker service response received')
+      console.log('🔍 Worker response data:', JSON.stringify(mealPlanData, null, 2))
     } catch (workerError) {
       console.error('❌ Worker service connection failed:', workerError)
       console.error('❌ Worker URL:', workerUrl)
