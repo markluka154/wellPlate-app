@@ -33,7 +33,31 @@ export function ChatInput({ onSend, disabled = false, userId }: ChatInputProps) 
       
       // If a meal is attached, prepend it to the message
       if (attachedMeal) {
-        messageToSend = `[Attached: ${attachedMeal.name}] ${messageToSend}`
+        // Create a detailed meal context for the AI
+        const mealContext = `
+[ATTACHED MEAL DETAILS]
+Meal Name: ${attachedMeal.name}
+Type: ${attachedMeal.type}
+Total Calories: ${attachedMeal.totalCalories}
+Protein: ${attachedMeal.totalProtein}g
+Carbs: ${attachedMeal.totalCarbs}g
+Fat: ${attachedMeal.totalFat}g
+Prep Time: ${attachedMeal.prepTime} minutes
+Cook Time: ${attachedMeal.cookTime} minutes
+Difficulty: ${attachedMeal.difficulty}
+
+INGREDIENTS:
+${attachedMeal.ingredients.map(ing => `- ${ing.item} (${ing.qty})`).join('\n')}
+
+COOKING STEPS:
+${attachedMeal.steps.map((step, index) => `${index + 1}. ${step}`).join('\n')}
+
+[END ATTACHED MEAL DETAILS]
+
+User Question: ${messageToSend}
+        `.trim()
+        
+        messageToSend = mealContext
         setAttachedMeal(null) // Clear attached meal after sending
       }
       
