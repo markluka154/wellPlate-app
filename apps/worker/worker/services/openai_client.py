@@ -86,6 +86,8 @@ class OpenAIClient:
 """
 
         prompt = f"""
+🚨 CRITICAL: You MUST generate EXACTLY {meals_per_day} meals per day. This is NON-NEGOTIABLE.
+
 Create a detailed 7-day meal plan for a {preferences.age}-year-old {preferences.sex} who weighs {preferences.weightKg}kg and is {preferences.heightCm}cm tall.
 
 Goals and Preferences:
@@ -98,9 +100,9 @@ Goals and Preferences:
 - Allergies: {', '.join(preferences.allergies) if preferences.allergies else 'None'}
 - Dislikes: {', '.join(preferences.dislikes) if preferences.dislikes else 'None'}
 
-CRITICAL REQUIREMENTS:
-1. Create EXACTLY 7 days of meals with EXACTLY {meals_per_day} meals per day
-2. Each meal must be appropriate for its designated time:
+🚨 ABSOLUTE REQUIREMENTS (FAILURE TO FOLLOW WILL RESULT IN REJECTION):
+1. 🚨 EXACTLY {meals_per_day} meals per day for ALL 7 days - NO EXCEPTIONS
+2. 🚨 Each meal must be appropriate for its designated time:
    - BREAKFAST: Light, morning-appropriate meals (eggs, oatmeal, smoothies, toast, yogurt, fruit, pancakes, cereal)
    - LUNCH: Midday meals (salads, sandwiches, soups, light proteins, wraps, bowls)
    - DINNER: Hearty evening meals (roasted meats, pasta, substantial dishes, casseroles, stir-fries)
@@ -113,6 +115,11 @@ CRITICAL REQUIREMENTS:
 8. Stay within ±10% of the calorie target
 9. Make meals practical for {preferences.cookingEffort} cooking
 10. Include a comprehensive grocery list organized by category{protein_instructions}
+
+🚨 MEAL COUNT VERIFICATION:
+- If you generate fewer than {meals_per_day} meals, your response will be REJECTED
+- If you generate more than {meals_per_day} meals, your response will be REJECTED
+- You MUST count your meals before submitting: 1, 2, 3{', 4' if meals_per_day >= 4 else ''}{', 5' if meals_per_day >= 5 else ''}{', 6' if meals_per_day >= 6 else ''}
 
 MEAL TIMING ENFORCEMENT:
 - Breakfast meals should NEVER include heavy dinner foods like beef quesadillas, pasta, or roasted meats
@@ -153,7 +160,8 @@ Return the response as a JSON object with this exact structure:
 }}
 
 Ensure all nutritional values are realistic and the total daily calories are close to {calorie_target}.
-CRITICAL: Double-check that you have created EXACTLY {meals_per_day} meals per day for all 7 days.
+🚨 CRITICAL FINAL CHECK: Count your meals - you MUST have EXACTLY {meals_per_day} meals per day for all 7 days.
+🚨 If you have fewer or more than {meals_per_day} meals, STOP and regenerate with the correct count.
 """
         
         logger.info(f"🔍 Generated prompt for {meals_per_day} meals per day")

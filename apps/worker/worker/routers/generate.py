@@ -15,7 +15,7 @@ async def generate_meal_plan(request: MealPlanRequest):
         client = OpenAIClient()
         
         # Generate meal plan with retry logic
-        max_retries = 3
+        max_retries = 5
         for attempt in range(max_retries):
             try:
                 meal_plan = await client.generate_meal_plan(request.preferences)
@@ -48,7 +48,7 @@ async def generate_meal_plan_direct(preferences: MealPreference):
         client = OpenAIClient()
         
         # Generate meal plan with retry logic
-        max_retries = 3
+        max_retries = 5
         for attempt in range(max_retries):
             try:
                 meal_plan = await client.generate_meal_plan(preferences)
