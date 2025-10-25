@@ -166,8 +166,8 @@ export class SmartContextAnalyzer {
       .filter(memory => memory.insightType === 'energy_level')
       .map(memory => ({
         energy: memory.content.toLowerCase(),
-        date: new Date(memory.createdAt),
-        dayOfWeek: new Date(memory.createdAt).getDay()
+        date: new Date(memory.timestamp),
+        dayOfWeek: new Date(memory.timestamp).getDay()
       }))
 
     if (energyData.length >= 5) {
@@ -335,7 +335,7 @@ export class SmartContextAnalyzer {
           mealTimes.push({
             meal,
             time: timeMatch[0],
-            date: new Date(memory.createdAt)
+            date: new Date(memory.timestamp)
           })
         }
       }
