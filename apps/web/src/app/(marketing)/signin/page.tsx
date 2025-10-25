@@ -58,8 +58,10 @@ export default function SignInPage() {
     setIsSuccess(false)
 
     try {
+      console.log('🔍 Starting Google sign-in process...')
       await signIn('google', {
         callbackUrl: '/dashboard',
+        redirect: true,
       })
     } catch (error) {
       console.error('Google sign in error:', error)
@@ -70,6 +72,8 @@ export default function SignInPage() {
   }
 
   useEffect(() => {
+    console.log('🔍 Sign-in page session status:', { status, hasSession: !!session, hasUser: !!session?.user, hasUserId: !!session?.user?.id })
+    
     if (status !== 'authenticated' || !session?.user?.email) return
 
     const nextUser = {
@@ -79,10 +83,12 @@ export default function SignInPage() {
 
     try {
       localStorage.setItem('wellplate:user', JSON.stringify(nextUser))
+      console.log('✅ User session persisted to localStorage')
     } catch (error) {
       console.warn('Failed to persist user session:', error)
     }
 
+    console.log('✅ Redirecting to dashboard after successful authentication')
     router.replace('/dashboard')
   }, [status, session, router])
 

@@ -34,18 +34,31 @@ export default function ChatPage() {
       userId: session?.user?.id,
       userEmail: session?.user?.email,
       isInitialized,
-      isLoading
+      isLoading,
+      userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : 'server',
+      isMobile: typeof window !== 'undefined' ? /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(window.navigator.userAgent) : false
     })
 
     if (status === 'loading') return
     
-    if (!session?.user?.id) {
-      console.log('❌ No session or user ID, redirecting to signin')
-      router.push('/signin')
-      return
+    // Add a small delay for mobile to ensure session is properly loaded
+    if (typeof window !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(window.navigator.userAgent)) {
+      setTimeout(() => {
+        if (!session?.user?.id) {
+          console.log('❌ No session or user ID on mobile, redirecting to signin')
+          router.push('/signin')
+          return
+        }
+      }, 100)
+    } else {
+      if (!session?.user?.id) {
+        console.log('❌ No session or user ID, redirecting to signin')
+        router.push('/signin')
+        return
+      }
     }
 
-    if (!isInitialized && !isLoading) {
+    if (!isInitialized && !isLoading && session?.user?.id) {
       console.log('✅ Initializing chat for user:', session.user.id)
       initializeChat(session.user.id)
     }

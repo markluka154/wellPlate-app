@@ -170,6 +170,13 @@ export const authOptions: NextAuthOptions = {
             clientId: process.env.GOOGLE_CLIENT_ID,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET,
             allowDangerousEmailAccountLinking: true,
+            authorization: {
+              params: {
+                prompt: "consent",
+                access_type: "offline",
+                response_type: "code"
+              }
+            }
           }),
         ]
       : []),
@@ -239,10 +246,30 @@ export const authOptions: NextAuthOptions = {
       return true
     },
     async redirect({ url, baseUrl }) {
-      // Ensure redirects always go to the dashboard for authenticated users
-      if (url.startsWith('/')) return `${baseUrl}${url}`
-      if (new URL(url).origin === baseUrl) return url
-      return `${baseUrl}/dashboard`
+      console.log('🔍 NextAuth redirect callback:', { url, baseUrl })
+      
+      // Handle relative URLs
+      if (url.startsWith('/')) {
+        const redirectUrl = `${baseUrl}${url}`
+        console.log('✅ Redirecting to relative URL:', redirectUrl)
+        return redirectUrl
+      }
+      
+      // Handle absolute URLs from same origin
+      try {
+        const urlObj = new URL(url)
+        if (urlObj.origin === baseUrl) {
+          console.log('✅ Redirecting to same origin URL:', url)
+          return url
+        }
+      } catch (error) {
+        console.log('⚠️ Invalid URL in redirect:', url)
+      }
+      
+      // Default redirect to dashboard
+      const defaultRedirect = `${baseUrl}/dashboard`
+      console.log('✅ Default redirect to dashboard:', defaultRedirect)
+      return defaultRedirect
     },
   },
   pages: {
@@ -252,5 +279,16 @@ export const authOptions: NextAuthOptions = {
     strategy: 'jwt',
     maxAge: 30 * 24 * 60 * 60, // 30 days
     updateAge: 24 * 60 * 60, // Update session every 24 hours
+  },
+  cookies: {
+    sessionToken: {
+      name: `next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      },
+    },
   },
 }
