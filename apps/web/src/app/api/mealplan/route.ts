@@ -452,15 +452,26 @@ export async function POST(request: NextRequest) {
       if (!workerResponse.ok) {
         const errorText = await workerResponse.text()
         console.error('❌ Worker service failed:', errorText)
+        console.error('❌ Worker response status:', workerResponse.status)
+        console.error('❌ Worker response headers:', Object.fromEntries(workerResponse.headers.entries()))
         return NextResponse.json({
           error: 'AI service temporarily unavailable',
           issues: ['Failed to generate meal plan. Please try again in a few minutes.']
         }, { status: 502 })
       }
 
-      mealPlanData = await workerResponse.json()
-      console.log('✅ Worker service response received')
-      console.log('🔍 Worker response data:', JSON.stringify(mealPlanData, null, 2))
+      const responseText = await workerResponse.text()
+      console.log('🔍 Raw worker response:', responseText)
+      
+      try {
+        mealPlanData = JSON.parse(responseText)
+        console.log('✅ Worker service response received')
+        console.log('🔍 Worker response data:', JSON.stringify(mealPlanData, null, 2))
+      } catch (parseError) {
+        console.error('❌ Failed to parse worker response as JSON:', parseError)
+        console.error('❌ Raw response was:', responseText)
+        throw new Error('Invalid JSON response from worker service')
+      }
     } catch (workerError) {
       console.error('❌ Worker service connection failed:', workerError)
       console.error('❌ Worker URL:', workerUrl)
