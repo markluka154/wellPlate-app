@@ -72,10 +72,12 @@ export function ChatInput({ onSend, disabled = false }: ChatInputProps) {
         
         {/* Bottom Action Bar */}
         <div className="absolute bottom-2 right-4 flex items-center gap-2">
-          {/* Character Counter */}
-          <span className="text-xs text-gray-400">
-            {message.length}/{maxLength}
-          </span>
+          {/* Character Counter - Only show when there's text */}
+          {message.length > 0 && (
+            <span className="text-xs text-gray-400 bg-white/80 px-2 py-1 rounded-md backdrop-blur-sm">
+              {message.length}/{maxLength}
+            </span>
+          )}
           
           {/* Send Button */}
           <button
