@@ -91,16 +91,27 @@ Goals and Preferences:
 - Allergies: {', '.join(preferences.allergies) if preferences.allergies else 'None'}
 - Dislikes: {', '.join(preferences.dislikes) if preferences.dislikes else 'None'}
 
-Requirements:
-1. Create exactly 7 days of meals ({meals_per_day} meals per day: {', '.join(meal_names)})
-2. Each meal must include detailed nutritional information (calories, protein, carbs, fat)
-3. Provide complete ingredient lists with quantities
-4. Include step-by-step cooking instructions
-5. Ensure meals are appropriate for the {preferences.dietType} diet
-6. Avoid all allergens: {', '.join(preferences.allergies) if preferences.allergies else 'None'}
-7. Stay within ±10% of the calorie target
-8. Make meals practical for {preferences.cookingEffort} cooking
-9. Include a comprehensive grocery list organized by category{protein_instructions}
+CRITICAL REQUIREMENTS:
+1. Create EXACTLY 7 days of meals with EXACTLY {meals_per_day} meals per day
+2. Each meal must be appropriate for its designated time:
+   - BREAKFAST: Light, morning-appropriate meals (eggs, oatmeal, smoothies, toast, yogurt, fruit, pancakes, cereal)
+   - LUNCH: Midday meals (salads, sandwiches, soups, light proteins, wraps, bowls)
+   - DINNER: Hearty evening meals (roasted meats, pasta, substantial dishes, casseroles, stir-fries)
+   - SNACKS: Light, portable options (nuts, fruit, yogurt, energy balls, smoothies)
+3. Each meal must include detailed nutritional information (calories, protein, carbs, fat)
+4. Provide complete ingredient lists with quantities
+5. Include step-by-step cooking instructions
+6. Ensure meals are appropriate for the {preferences.dietType} diet
+7. Avoid all allergens: {', '.join(preferences.allergies) if preferences.allergies else 'None'}
+8. Stay within ±10% of the calorie target
+9. Make meals practical for {preferences.cookingEffort} cooking
+10. Include a comprehensive grocery list organized by category{protein_instructions}
+
+MEAL TIMING ENFORCEMENT:
+- Breakfast meals should NEVER include heavy dinner foods like beef quesadillas, pasta, or roasted meats
+- Lunch meals should be lighter than dinner but more substantial than breakfast
+- Dinner meals should be the heartiest and most satisfying
+- Snacks should be light and portable, not full meals
 
 Return the response as a JSON object with this exact structure:
 {{
@@ -135,6 +146,7 @@ Return the response as a JSON object with this exact structure:
 }}
 
 Ensure all nutritional values are realistic and the total daily calories are close to {calorie_target}.
+CRITICAL: Double-check that you have created EXACTLY {meals_per_day} meals per day for all 7 days.
 """
         return prompt
     
@@ -166,26 +178,52 @@ Ensure all nutritional values are realistic and the total daily calories are clo
         
         # Validate we have 7 days
         if len(data["plan"]) != 7:
-            raise ValueError("Must have exactly 7 days")
+            raise ValueError(f"Must have exactly 7 days, got {len(data['plan'])}")
         
         # Validate each day has the correct number of meals
         expected_meals = preferences.mealsPerDay
-        for day in data["plan"]:
-            if len(day["meals"]) != expected_meals:
-                raise ValueError(f"Each day must have exactly {expected_meals} meals")
+        for day_idx, day in enumerate(data["plan"]):
+            actual_meals = len(day["meals"])
+            if actual_meals != expected_meals:
+                raise ValueError(f"Day {day_idx + 1} must have exactly {expected_meals} meals, got {actual_meals}")
+        
+        # Validate meal timing appropriateness
+        meal_names = ["breakfast", "lunch", "dinner"]
+        if expected_meals == 4:
+            meal_names = ["breakfast", "lunch", "dinner", "snack"]
+        elif expected_meals == 5:
+            meal_names = ["breakfast", "lunch", "dinner", "afternoon snack", "evening snack"]
+        elif expected_meals == 6:
+            meal_names = ["breakfast", "morning snack", "lunch", "afternoon snack", "dinner", "evening snack"]
+        
+        # Check for inappropriate meal timing
+        for day_idx, day in enumerate(data["plan"]):
+            for meal_idx, meal in enumerate(day["meals"]):
+                meal_name = meal["name"].lower()
+                
+                # Check breakfast meals
+                if meal_idx == 0:  # First meal should be breakfast
+                    inappropriate_dinner_foods = ["quesadilla", "pasta", "roasted", "beef", "steak", "casserole", "lasagna"]
+                    if any(food in meal_name for food in inappropriate_dinner_foods):
+                        logger.warning(f"Day {day_idx + 1}, Meal {meal_idx + 1}: '{meal['name']}' may not be appropriate for breakfast")
+                
+                # Check dinner meals (last substantial meal)
+                if meal_idx == expected_meals - 1 or (expected_meals > 3 and meal_idx == expected_meals - 2):
+                    if "snack" in meal_name or "light" in meal_name:
+                        logger.warning(f"Day {day_idx + 1}, Meal {meal_idx + 1}: '{meal['name']}' may be too light for dinner")
         
         # Validate nutritional values are reasonable
         totals = data["totals"]
         if totals["kcal"] < 1000 or totals["kcal"] > 5000:
-            raise ValueError("Total calories out of reasonable range")
+            raise ValueError(f"Total calories {totals['kcal']} out of reasonable range (1000-5000)")
         
         # Ensure no allergens are present
         if preferences.allergies:
-            for day in data["plan"]:
-                for meal in day["meals"]:
+            for day_idx, day in enumerate(data["plan"]):
+                for meal_idx, meal in enumerate(day["meals"]):
                     for ingredient in meal["ingredients"]:
                         for allergen in preferences.allergies:
                             if allergen.lower() in ingredient["item"].lower():
-                                raise ValueError(f"Allergen '{allergen}' found in meal")
+                                raise ValueError(f"Allergen '{allergen}' found in Day {day_idx + 1}, Meal {meal_idx + 1}: {ingredient['item']}")
         
         return data
