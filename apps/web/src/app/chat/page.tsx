@@ -134,7 +134,7 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-emerald-50 via-white to-blue-50/30 flex flex-col">
       {/* Top Gradient Header */}
       <ChatHeader />
       
