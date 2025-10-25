@@ -11,6 +11,8 @@ export const mealPreferenceSchema = z.object({
   dislikes: z.array(z.string()).default([]),
   cookingEffort: z.enum(['quick', 'budget', 'gourmet']),
   caloriesTarget: z.number().min(800).max(5000).optional(),
+  mealsPerDay: z.number().min(3).max(6).default(3),
+  includeProteinShakes: z.boolean().default(false),
 })
 
 export type MealPreferenceInput = z.infer<typeof mealPreferenceSchema>
