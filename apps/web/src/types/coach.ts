@@ -214,7 +214,7 @@ export interface ChatState {
   setMemories: (memories: CoachMemory[]) => void
   setProgress: (progress: ProgressLog[]) => void
   clearChat: () => void
-  sendMessage: (content: string) => Promise<void>
+  sendMessage: (content: string, displayContent?: string) => Promise<void>
 }
 
 // Context Types for AI
