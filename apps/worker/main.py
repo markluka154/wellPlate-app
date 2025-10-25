@@ -301,10 +301,10 @@ async def generate_meal_plan(preferences: MealPreference):
         price_style = map_effort_to_price_style(preferences.cookingEffort)
 
         # ---------- FINAL SYSTEM PROMPT ----------
-        system_prompt = """
+        system_prompt = f"""
 You are a nutritionist creating personalized meal plans. Generate DIFFERENT meals for different user profiles.
 
-CRITICAL: Keep responses SHORT and COMPLETE. Generate only 1 day with 3 meals.
+CRITICAL: Keep responses SHORT and COMPLETE. Generate only 1 day with EXACTLY {preferences.mealsPerDay} meals.
 
 RULES:
 
@@ -428,14 +428,14 @@ Return ONLY valid JSON, with this top-level shape:
 
         # -------- OpenAI Call (force JSON mode) --------
         response = openai_client.chat.completions.create(
-            model="gpt-4o-mini",
+            model="gpt-4o",
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "assistant", "content": "Return ONLY one valid JSON object. No markdown."},
                 {"role": "user", "content": json.dumps(user_payload)}
             ],
             max_tokens=2500,
-            temperature=0.85,
+            temperature=0.3,
             response_format={"type": "json_object"}
         )
 
