@@ -303,6 +303,8 @@ async def generate_meal_plan(preferences: MealPreference):
     try:
         print(f"🤖 Generating meal plan for: {preferences.age}yo {preferences.sex}, {preferences.goal} goal")
         print(f"🔍 Requesting {preferences.mealsPerDay} meals per day")
+        if preferences.includeProteinShakes:
+            print(f"🥤 Including protein shakes as requested")
 
         # ---------- FINAL SYSTEM PROMPT ----------
         meals_count = preferences.mealsPerDay
@@ -357,6 +359,7 @@ At the end of each day:
    * quick & easy → ≤25 minutes, minimal ingredients, straightforward methods
    * gourmet → elevated, premium ingredients, more technique (still approachable)
    * budget friendly → cost-efficient staples and simple methods
+- PROTEIN SHAKES: If include_protein_shakes is true, include 1-2 protein shake meals per day (especially for muscle gain goals)
 
 5) CLARITY & CUSTOMER-FRIENDLINESS
 - Professional, approachable tone
@@ -422,7 +425,8 @@ Return ONLY valid JSON, with this top-level shape:
             },
             # generation knobs
             "timeframe_days": 1,
-            "meals_per_day": 3,
+            "meals_per_day": preferences.mealsPerDay,
+            "include_protein_shakes": preferences.includeProteinShakes,
             "pricing_style_from_effort": price_style,
             "diversity_requirements": {
                 "no_repeat_within_week": True,
