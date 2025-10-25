@@ -1,30 +1,148 @@
-import { PrismaAdapter } from '@next-auth/prisma-adapter'
 import { NextAuthOptions } from 'next-auth'
 import EmailProvider from 'next-auth/providers/email'
 import GoogleProvider from 'next-auth/providers/google'
-import { PrismaClient } from '@prisma/client'
 
-// Create a dedicated Prisma client for NextAuth to avoid prepared statement conflicts
-const globalForPrisma = globalThis as unknown as {
-  prismaAuth: PrismaClient | undefined
-}
-
-// Create a function to get a fresh Prisma client for NextAuth
-function getPrismaAuthClient() {
-  return new PrismaClient({
-    log: process.env.NODE_ENV === 'development' ? ['error'] : ['error'],
-    datasources: {
-      db: {
-        url: process.env.DATABASE_URL,
-      },
-    },
+// Direct database query function to avoid prepared statement conflicts
+async function directQuery(query: string, params: any[] = []) {
+  const { Client } = await import('pg')
+  const client = new Client({
+    connectionString: process.env.DATABASE_URL,
   })
+  
+  try {
+    await client.connect()
+    const result = await client.query(query, params)
+    return result.rows
+  } finally {
+    await client.end()
+  }
 }
 
-const prismaAuth = globalForPrisma.prismaAuth ?? getPrismaAuthClient()
-
-if (process.env.NODE_ENV !== 'production') {
-  globalForPrisma.prismaAuth = prismaAuth
+// Custom adapter functions using directQuery
+const customAdapter = {
+  async createUser(user: any) {
+    const result = await directQuery(
+      'INSERT INTO "User" (id, email, name, "emailVerified", "createdAt", "updatedAt") VALUES (gen_random_uuid()::text, $1, $2, $3, NOW(), NOW()) RETURNING *',
+      [user.email, user.name, user.emailVerified || null]
+    )
+    return result[0]
+  },
+  
+  async getUser(id: string) {
+    const result = await directQuery('SELECT * FROM "User" WHERE id = $1', [id])
+    return result[0] || null
+  },
+  
+  async getUserByEmail(email: string) {
+    const result = await directQuery('SELECT * FROM "User" WHERE email = $1', [email])
+    return result[0] || null
+  },
+  
+  async getUserByAccount({ providerAccountId, provider }: any) {
+    const result = await directQuery(
+      'SELECT u.* FROM "User" u JOIN "Account" a ON u.id = a."userId" WHERE a."providerAccountId" = $1 AND a.provider = $2',
+      [providerAccountId, provider]
+    )
+    return result[0] || null
+  },
+  
+  async updateUser(user: any) {
+    const result = await directQuery(
+      'UPDATE "User" SET email = $1, name = $2, "emailVerified" = $3, "updatedAt" = NOW() WHERE id = $4 RETURNING *',
+      [user.email, user.name, user.emailVerified, user.id]
+    )
+    return result[0]
+  },
+  
+  async deleteUser(userId: string) {
+    await directQuery('DELETE FROM "User" WHERE id = $1', [userId])
+  },
+  
+  async linkAccount(account: any) {
+    const result = await directQuery(
+      'INSERT INTO "Account" (id, "userId", type, provider, "providerAccountId", "refresh_token", "access_token", "expires_at", "token_type", "scope", "id_token", session_state, "createdAt", "updatedAt") VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW()) RETURNING *',
+      [
+        account.userId,
+        account.type,
+        account.provider,
+        account.providerAccountId,
+        account.refresh_token,
+        account.access_token,
+        account.expires_at,
+        account.token_type,
+        account.scope,
+        account.id_token,
+        account.session_state
+      ]
+    )
+    return result[0]
+  },
+  
+  async unlinkAccount({ providerAccountId, provider }: any) {
+    await directQuery(
+      'DELETE FROM "Account" WHERE "providerAccountId" = $1 AND provider = $2',
+      [providerAccountId, provider]
+    )
+  },
+  
+  async createSession(session: any) {
+    const result = await directQuery(
+      'INSERT INTO "Session" (id, "userId", expires, "sessionToken", "createdAt", "updatedAt") VALUES (gen_random_uuid()::text, $1, $2, $3, NOW(), NOW()) RETURNING *',
+      [session.userId, session.expires, session.sessionToken]
+    )
+    return result[0]
+  },
+  
+  async getSessionAndUser(sessionToken: string) {
+    const result = await directQuery(
+      'SELECT s.*, u.* FROM "Session" s JOIN "User" u ON s."userId" = u.id WHERE s."sessionToken" = $1',
+      [sessionToken]
+    )
+    if (!result[0]) return null
+    return {
+      session: {
+        id: result[0].id,
+        sessionToken: result[0].sessionToken,
+        userId: result[0].userId,
+        expires: result[0].expires
+      },
+      user: {
+        id: result[0].id,
+        email: result[0].email,
+        name: result[0].name,
+        image: result[0].image,
+        emailVerified: result[0].emailVerified
+      }
+    }
+  },
+  
+  async updateSession(session: any) {
+    const result = await directQuery(
+      'UPDATE "Session" SET expires = $1, "updatedAt" = NOW() WHERE "sessionToken" = $2 RETURNING *',
+      [session.expires, session.sessionToken]
+    )
+    return result[0]
+  },
+  
+  async deleteSession(sessionToken: string) {
+    await directQuery('DELETE FROM "Session" WHERE "sessionToken" = $1', [sessionToken])
+  },
+  
+  async createVerificationToken(verificationToken: any) {
+    const result = await directQuery(
+      'INSERT INTO "VerificationToken" (identifier, token, expires, "createdAt", "updatedAt") VALUES ($1, $2, $3, NOW(), NOW()) RETURNING *',
+      [verificationToken.identifier, verificationToken.token, verificationToken.expires]
+    )
+    return result[0]
+  },
+  
+  async useVerificationToken({ identifier, token }: any) {
+    const result = await directQuery(
+      'DELETE FROM "VerificationToken" WHERE identifier = $1 AND token = $2 RETURNING *',
+      [identifier, token]
+    )
+    return result[0] || null
+  }
 }
 
 // Dynamic import for Resend to avoid build-time issues
@@ -53,7 +171,7 @@ async function getResend() {
 
 export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET || 'fallback-secret-for-development',
-  adapter: PrismaAdapter(prismaAuth),
+  adapter: customAdapter,
   providers: [
     EmailProvider({
       from: 'WellPlate <getwellplate@gmail.com>',
@@ -226,17 +344,10 @@ export const authOptions: NextAuthOptions = {
       // Ensure user has a subscription record
       if (user.id) {
         try {
-          const freshClient = getPrismaAuthClient()
-          await freshClient.subscription.upsert({
-            where: { userId: user.id },
-            update: {},
-            create: {
-              userId: user.id,
-              plan: 'FREE',
-              status: 'active',
-            },
-          })
-          await freshClient.$disconnect()
+          await directQuery(
+            'INSERT INTO "Subscription" (id, "userId", plan, status, "createdAt", "updatedAt") VALUES (gen_random_uuid()::text, $1, $2, $3, NOW(), NOW()) ON CONFLICT ("userId") DO NOTHING',
+            [user.id, 'FREE', 'active']
+          )
           console.log('✅ Subscription record created for user:', user.id)
         } catch (error) {
           console.error('❌ Error creating subscription record:', error)
