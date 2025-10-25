@@ -427,40 +427,81 @@ Return ONLY valid JSON, with this top-level shape:
             "nonce": f"{int(time())}_{preferences.age}_{preferences.goal}_{preferences.sex}_{preferences.dietType}"
         }
 
-        # -------- OpenAI Call (force JSON mode) --------
-        response = openai_client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "assistant", "content": "Return ONLY one valid JSON object. No markdown."},
-                {"role": "user", "content": json.dumps(user_payload)}
-            ],
-            max_tokens=2500,
-            temperature=0.3,
-            response_format={"type": "json_object"}
-        )
-
-        ai_response = response.choices[0].message.content.strip()
-        print(f"✅ AI JSON received: {len(ai_response)} chars")
-
-        # Strict parse; if fails, soft repair
-        try:
-            meal_plan_data = json.loads(ai_response)
-            print("✅ JSON parsed strictly")
-        except json.JSONDecodeError as e1:
-            print(f"⚠️ Strict JSON parse failed: {e1}")
+        # -------- OpenAI Call with Retry Logic --------
+        max_retries = 5
+        meal_plan_data = None
+        
+        for attempt in range(1, max_retries + 1):
             try:
-                meal_plan_data = soft_json_parse(ai_response)
-                print("✅ soft_json_parse succeeded")
-            except Exception as e2:
-                print(f"❌ soft_json_parse failed: {e2}")
-                print(f"Raw response (head): {ai_response[:400]}...")
-                print(f"Raw response (tail): ...{ai_response[-400:]}")
-                raise HTTPException(status_code=502, detail=f"Bad AI JSON response: {str(e2)}")
+                print(f"🔄 Attempt {attempt} of {max_retries}")
+                
+                response = openai_client.chat.completions.create(
+                    model="gpt-4o",
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "assistant", "content": "Return ONLY one valid JSON object. No markdown."},
+                        {"role": "user", "content": json.dumps(user_payload)}
+                    ],
+                    max_tokens=2500,
+                    temperature=0.3,
+                    response_format={"type": "json_object"}
+                )
 
-        meal_plan_data = sanitize_meal_plan(meal_plan_data)
-        print(f"🔍 Keys after sanitization: {list(meal_plan_data.keys())}")
-        return meal_plan_data
+                ai_response = response.choices[0].message.content.strip()
+                print(f"✅ AI JSON received: {len(ai_response)} chars")
+
+                # Strict parse; if fails, soft repair
+                try:
+                    meal_plan_data = json.loads(ai_response)
+                    print("✅ JSON parsed strictly")
+                except json.JSONDecodeError as e1:
+                    print(f"⚠️ Strict JSON parse failed: {e1}")
+                    try:
+                        meal_plan_data = soft_json_parse(ai_response)
+                        print("✅ soft_json_parse succeeded")
+                    except Exception as e2:
+                        print(f"❌ soft_json_parse failed: {e2}")
+                        print(f"Raw response (head): {ai_response[:400]}...")
+                        print(f"Raw response (tail): ...{ai_response[-400:]}")
+                        raise HTTPException(status_code=502, detail=f"Bad AI JSON response: {str(e2)}")
+
+                meal_plan_data = sanitize_meal_plan(meal_plan_data)
+                print(f"🔍 Keys after sanitization: {list(meal_plan_data.keys())}")
+                
+                # CRITICAL: Validate meal count matches request
+                if meal_plan_data.get("plan") and len(meal_plan_data["plan"]) > 0:
+                    meals = meal_plan_data["plan"][0].get("meals", [])
+                    actual_meal_count = len(meals)
+                    expected_meal_count = preferences.mealsPerDay
+                    print(f"🔍 MEAL COUNT CHECK: Got {actual_meal_count} meals, expected {expected_meal_count}")
+                    
+                    if actual_meal_count == expected_meal_count:
+                        print(f"✅ MEAL COUNT MATCHES: {actual_meal_count} meals generated as expected")
+                        return meal_plan_data
+                    else:
+                        print(f"🚨 MEAL COUNT MISMATCH: Expected {expected_meal_count}, got {actual_meal_count}")
+                        if attempt < max_retries:
+                            print(f"🔄 Retrying... (attempt {attempt + 1}/{max_retries})")
+                            continue
+                        else:
+                            raise HTTPException(
+                                status_code=502, 
+                                detail=f"AI generated {actual_meal_count} meals instead of {expected_meal_count} after {max_retries} attempts."
+                            )
+                else:
+                    print("⚠️ No meals found in response structure")
+                    if attempt < max_retries:
+                        print(f"🔄 Retrying... (attempt {attempt + 1}/{max_retries})")
+                        continue
+            except HTTPException:
+                raise  # Re-raise HTTP exceptions immediately
+            except Exception as e:
+                print(f"❌ Error on attempt {attempt}: {e}")
+                if attempt >= max_retries:
+                    raise HTTPException(status_code=502, detail=f"Failed after {max_retries} attempts: {str(e)}")
+                print(f"🔄 Retrying... (attempt {attempt + 1}/{max_retries})")
+        
+        raise HTTPException(status_code=502, detail="Failed to generate meal plan after all retries")
 
     except Exception as e:
         print(f"❌ Meal plan generation error: {e}")
