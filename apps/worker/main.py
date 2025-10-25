@@ -291,7 +291,10 @@ async def health_check():
     return {
         "status": "healthy",
         "timestamp": datetime.now().isoformat(),
-        "service": "NutriAI Worker Service"
+        "service": "NutriAI Worker Service",
+        "version": "3b87804-fixed",
+        "has_mealsPerDay": True,
+        "has_retry_logic": True
     }
 
 @app.post("/generate")
