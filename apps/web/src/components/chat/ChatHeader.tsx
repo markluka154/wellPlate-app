@@ -1,8 +1,11 @@
 'use client'
 
-import { MoreVertical } from 'lucide-react'
+import { MoreVertical, LayoutDashboard } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 export function ChatHeader() {
+  const router = useRouter()
+
   return (
     <div className="h-[60px] bg-gradient-to-r from-emerald-50 via-blue-50 to-orange-50 border-b border-gray-200 flex items-center justify-between px-6 backdrop-blur-xl">
       {/* Left: Lina Avatar + Info */}
@@ -24,7 +27,14 @@ export function ChatHeader() {
       </div>
 
       {/* Right: Actions */}
-      <div className="flex items-center">
+      <div className="flex items-center gap-2">
+        <button 
+          onClick={() => router.push('/dashboard')}
+          className="p-2 hover:bg-gray-100 rounded-full transition-colors hover:scale-105"
+          title="Go to Dashboard"
+        >
+          <LayoutDashboard className="w-5 h-5 text-gray-500" />
+        </button>
         <button className="p-2 hover:bg-gray-100 rounded-full transition-colors hover:scale-105">
           <MoreVertical className="w-5 h-5 text-gray-500" />
         </button>

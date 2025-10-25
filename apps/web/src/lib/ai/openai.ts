@@ -176,6 +176,131 @@ export const functionDefinitions = [
         }
       }
     }
+  },
+  {
+    name: 'suggestIngredientSubstitution',
+    description: 'Suggest alternative ingredients for dietary restrictions, allergies, or preferences',
+    parameters: {
+      type: 'object',
+      properties: {
+        originalIngredient: {
+          type: 'string',
+          description: 'The ingredient to replace'
+        },
+        reason: {
+          type: 'string',
+          enum: ['allergy', 'dislike', 'unavailable', 'dietary_restriction', 'budget', 'preference'],
+          description: 'Reason for substitution'
+        },
+        dietaryRestrictions: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'User dietary restrictions (vegan, gluten-free, etc.)'
+        },
+        mealType: {
+          type: 'string',
+          enum: ['breakfast', 'lunch', 'dinner', 'snack'],
+          description: 'Type of meal being modified'
+        }
+      },
+      required: ['originalIngredient', 'reason']
+    }
+  },
+  {
+    name: 'modifyMealNutrition',
+    description: 'Adjust meal nutritional content based on user goals',
+    parameters: {
+      type: 'object',
+      properties: {
+        meal: {
+          type: 'string',
+          description: 'Description of the current meal'
+        },
+        goal: {
+          type: 'string',
+          enum: ['increase_protein', 'reduce_carbs', 'add_fiber', 'reduce_fat', 'increase_vegetables', 'reduce_sodium'],
+          description: 'Nutritional adjustment goal'
+        },
+        intensity: {
+          type: 'string',
+          enum: ['subtle', 'moderate', 'significant'],
+          description: 'Level of modification'
+        }
+      },
+      required: ['meal', 'goal']
+    }
+  },
+  {
+    name: 'createQuickVersion',
+    description: 'Create a faster, simpler version of a meal for time constraints',
+    parameters: {
+      type: 'object',
+      properties: {
+        originalMeal: {
+          type: 'string',
+          description: 'Description of the original meal'
+        },
+        timeConstraint: {
+          type: 'string',
+          enum: ['15_minutes', '30_minutes', '45_minutes'],
+          description: 'Available cooking time'
+        },
+        cookingMethod: {
+          type: 'string',
+          enum: ['stovetop', 'microwave', 'no_cook', 'one_pot'],
+          description: 'Preferred cooking method'
+        }
+      },
+      required: ['originalMeal', 'timeConstraint']
+    }
+  },
+  {
+    name: 'suggestSeasonalAlternatives',
+    description: 'Suggest seasonal ingredient alternatives for better availability and nutrition',
+    parameters: {
+      type: 'object',
+      properties: {
+        ingredients: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'List of ingredients to find alternatives for'
+        },
+        season: {
+          type: 'string',
+          enum: ['spring', 'summer', 'fall', 'winter'],
+          description: 'Current season'
+        },
+        region: {
+          type: 'string',
+          description: 'User location/region for local availability'
+        }
+      },
+      required: ['ingredients', 'season']
+    }
+  },
+  {
+    name: 'adjustMealFlavor',
+    description: 'Modify meal flavors based on user preferences',
+    parameters: {
+      type: 'object',
+      properties: {
+        meal: {
+          type: 'string',
+          description: 'Description of the current meal'
+        },
+        flavorPreference: {
+          type: 'string',
+          enum: ['less_spicy', 'more_spicy', 'less_salty', 'more_herbs', 'milder', 'bolder'],
+          description: 'Desired flavor adjustment'
+        },
+        cuisineStyle: {
+          type: 'string',
+          enum: ['mediterranean', 'asian', 'mexican', 'italian', 'indian', 'american'],
+          description: 'Preferred cuisine style'
+        }
+      },
+      required: ['meal', 'flavorPreference']
+    }
   }
 ]
 
@@ -247,6 +372,10 @@ const SYSTEM_PROMPT = `You are **Lina**, the WellPlate AI Nutrition Coach - a hi
 - Provide evidence-based recommendations with clear explanations
 - Offer practical implementation strategies
 - Follow up on progress and adjust recommendations as needed
+- **Proactively offer meal modifications** when users express dissatisfaction
+- **Suggest ingredient substitutions** for allergies, dislikes, or unavailability
+- **Provide cooking alternatives** for time constraints or equipment limitations
+- **Explain nutritional benefits** of suggested changes
 
 ## **🚫 SAFETY GUIDELINES**
 
@@ -288,6 +417,13 @@ const DEVELOPER_PROMPT = `**Available Functions**:
 - \`optimizeForBloodSugar(condition)\` - Glycemic control strategies
 - \`supportHormonalBalance(condition)\` - Nutrition for hormonal health
 - \`enhanceGutHealth(symptoms)\` - Microbiome-supporting recommendations
+
+### **Meal Modification & Customization**
+- \`suggestIngredientSubstitution(originalIngredient, reason, dietaryRestrictions, mealType)\` - Smart ingredient alternatives
+- \`modifyMealNutrition(meal, goal, intensity)\` - Adjust nutritional content (protein, carbs, fiber, etc.)
+- \`createQuickVersion(originalMeal, timeConstraint, cookingMethod)\` - Faster meal versions for time constraints
+- \`suggestSeasonalAlternatives(ingredients, season, region)\` - Seasonal ingredient substitutions
+- \`adjustMealFlavor(meal, flavorPreference, cuisineStyle)\` - Modify flavors and seasoning
 
 ### **Lifestyle Integration**
 - \`suggestMealPrepStrategy(timeAvailable, goals)\` - Practical meal preparation plans
