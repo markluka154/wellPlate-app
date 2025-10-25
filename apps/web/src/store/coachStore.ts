@@ -7,12 +7,14 @@ interface ChatStore extends ChatState {
   isInitialized: boolean
   error?: string
   isTyping: boolean
+  currentUserId?: string
   
   // Additional actions
   initializeChat: (userId: string) => Promise<void>
   setError: (error: string | undefined) => void
   retryLastMessage: () => Promise<void>
   setIsTyping: (typing: boolean) => void
+  clearForNewUser: (userId: string) => void
 }
 
 export const useChatStore = create<ChatStore>()(
@@ -28,6 +30,7 @@ export const useChatStore = create<ChatStore>()(
       isInitialized: false,
       error: undefined,
       isTyping: false,
+      currentUserId: undefined,
 
       // Actions
       addMessage: (message: Omit<ChatMessage, 'id' | 'timestamp'>) => {
@@ -86,8 +89,32 @@ export const useChatStore = create<ChatStore>()(
         set({ isTyping: typing })
       },
 
+      clearForNewUser: (userId: string) => {
+        const currentUserId = get().currentUserId
+        if (currentUserId && currentUserId !== userId) {
+          console.log('🔄 Clearing chat store for new user:', userId)
+          set({
+            messages: [],
+            currentSession: undefined,
+            userProfile: undefined,
+            recentMemories: [],
+            recentProgress: [],
+            isInitialized: false,
+            error: undefined,
+            isLoading: false,
+            isTyping: false,
+            currentUserId: userId,
+          })
+        } else if (!currentUserId) {
+          set({ currentUserId: userId })
+        }
+      },
+
       initializeChat: async (userId: string) => {
         try {
+          // Clear store if different user
+          get().clearForNewUser(userId)
+          
           set({ isLoading: true, error: undefined })
           
           // Load user profile, memories, and progress
@@ -228,6 +255,7 @@ export const useChatStore = create<ChatStore>()(
         userProfile: state.userProfile,
         recentMemories: state.recentMemories,
         recentProgress: state.recentProgress,
+        currentUserId: state.currentUserId,
       }),
     }
   )
