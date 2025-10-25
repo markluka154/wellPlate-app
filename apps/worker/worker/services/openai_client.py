@@ -148,6 +148,9 @@ Return the response as a JSON object with this exact structure:
 Ensure all nutritional values are realistic and the total daily calories are close to {calorie_target}.
 CRITICAL: Double-check that you have created EXACTLY {meals_per_day} meals per day for all 7 days.
 """
+        
+        logger.info(f"🔍 Generated prompt for {meals_per_day} meals per day")
+        logger.info(f"🔍 Meal names: {meal_names}")
         return prompt
     
     def _calculate_calorie_target(self, preferences: MealPreference) -> int:
@@ -182,10 +185,15 @@ CRITICAL: Double-check that you have created EXACTLY {meals_per_day} meals per d
         
         # Validate each day has the correct number of meals
         expected_meals = preferences.mealsPerDay
+        logger.info(f"🔍 Validating meal count: expected {expected_meals}, got {len(data['plan'][0]['meals']) if data['plan'] else 'no plan'}")
+        
         for day_idx, day in enumerate(data["plan"]):
             actual_meals = len(day["meals"])
             if actual_meals != expected_meals:
+                logger.error(f"❌ Meal count validation failed: Day {day_idx + 1} must have exactly {expected_meals} meals, got {actual_meals}")
                 raise ValueError(f"Day {day_idx + 1} must have exactly {expected_meals} meals, got {actual_meals}")
+        
+        logger.info(f"✅ Meal count validation passed: {expected_meals} meals per day")
         
         # Validate meal timing appropriateness
         meal_names = ["breakfast", "lunch", "dinner"]
