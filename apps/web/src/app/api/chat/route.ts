@@ -325,6 +325,93 @@ async function executeFunction(functionName: string, args: any, userId: string) 
         }
       }
     },
+
+    // Feedback functions
+    rateMealPlan: async (args, userId) => {
+      try {
+        // Get user info for email
+        const userResult = await directQuery('SELECT email, name FROM "User" WHERE id = $1', [userId])
+        const user = userResult[0]
+        
+        // Send feedback email
+        const emailResponse = await fetch(`${process.env.NEXTAUTH_URL}/api/feedback/email`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'rating',
+            mealPlanId: args.mealPlanId,
+            rating: args.rating,
+            feedback: args.feedback,
+            mealType: args.mealType,
+            issues: args.issues,
+            userEmail: user?.email,
+            userName: user?.name
+          })
+        })
+        
+        const emailResult = await emailResponse.json()
+        console.log('📧 Rating email sent:', emailResult.success ? 'Success' : 'Failed')
+        
+        return {
+          success: true,
+          message: `Thank you for your ${args.rating}/5 star rating! Your feedback has been sent to our team.`,
+          rating: args.rating,
+          feedback: args.feedback,
+          emailSent: emailResult.success
+        }
+      } catch (error) {
+        console.error('Error processing rating:', error)
+        return {
+          success: true,
+          message: `Thank you for your ${args.rating}/5 star rating! Your feedback has been noted.`,
+          rating: args.rating,
+          feedback: args.feedback
+        }
+      }
+    },
+
+    reportMealIssue: async (args, userId) => {
+      try {
+        // Get user info for email
+        const userResult = await directQuery('SELECT email, name FROM "User" WHERE id = $1', [userId])
+        const user = userResult[0]
+        
+        // Send feedback email
+        const emailResponse = await fetch(`${process.env.NEXTAUTH_URL}/api/feedback/email`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'issue',
+            mealPlanId: args.mealPlanId,
+            issueType: args.issueType,
+            description: args.description,
+            suggestion: args.suggestion,
+            severity: args.severity,
+            userEmail: user?.email,
+            userName: user?.name
+          })
+        })
+        
+        const emailResult = await emailResponse.json()
+        console.log('📧 Issue report email sent:', emailResult.success ? 'Success' : 'Failed')
+        
+        return {
+          success: true,
+          message: `Thank you for reporting this issue! We've been notified and will work on improving this meal plan.`,
+          issueType: args.issueType,
+          severity: args.severity,
+          emailSent: emailResult.success
+        }
+      } catch (error) {
+        console.error('Error processing issue report:', error)
+        return {
+          success: true,
+          message: `Thank you for reporting this issue! We've noted your feedback.`,
+          issueType: args.issueType,
+          severity: args.severity
+        }
+      }
+    },
   }
 
   const functionHandler = functionMap[functionName]

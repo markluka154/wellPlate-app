@@ -301,6 +301,72 @@ export const functionDefinitions = [
       },
       required: ['meal', 'flavorPreference']
     }
+  },
+  {
+    name: 'rateMealPlan',
+    description: 'Rate a meal plan and provide feedback',
+    parameters: {
+      type: 'object',
+      properties: {
+        mealPlanId: {
+          type: 'string',
+          description: 'Identifier for the meal plan'
+        },
+        rating: {
+          type: 'number',
+          minimum: 1,
+          maximum: 5,
+          description: 'Rating from 1 (poor) to 5 (excellent)'
+        },
+        feedback: {
+          type: 'string',
+          description: 'Detailed feedback about the meal plan'
+        },
+        mealType: {
+          type: 'string',
+          enum: ['breakfast', 'lunch', 'dinner', 'snack', 'full_day'],
+          description: 'Type of meal being rated'
+        },
+        issues: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'List of specific issues or problems'
+        }
+      },
+      required: ['mealPlanId', 'rating', 'feedback']
+    }
+  },
+  {
+    name: 'reportMealIssue',
+    description: 'Report specific issues with a meal plan',
+    parameters: {
+      type: 'object',
+      properties: {
+        mealPlanId: {
+          type: 'string',
+          description: 'Identifier for the meal plan'
+        },
+        issueType: {
+          type: 'string',
+          enum: ['ingredient_unavailable', 'too_spicy', 'too_bland', 'cooking_time', 'nutritional_concern', 'allergy_risk', 'taste_dislike'],
+          description: 'Type of issue reported'
+        },
+        description: {
+          type: 'string',
+          description: 'Detailed description of the issue'
+        },
+        suggestion: {
+          type: 'string',
+          description: 'User suggestion for improvement'
+        },
+        severity: {
+          type: 'string',
+          enum: ['low', 'medium', 'high'],
+          description: 'Severity of the issue'
+        }
+      },
+      required: ['mealPlanId', 'issueType', 'description']
+    }
   }
 ]
 
@@ -424,6 +490,10 @@ const DEVELOPER_PROMPT = `**Available Functions**:
 - \`createQuickVersion(originalMeal, timeConstraint, cookingMethod)\` - Faster meal versions for time constraints
 - \`suggestSeasonalAlternatives(ingredients, season, region)\` - Seasonal ingredient substitutions
 - \`adjustMealFlavor(meal, flavorPreference, cuisineStyle)\` - Modify flavors and seasoning
+
+### **Feedback & Rating System**
+- \`rateMealPlan(mealPlanId, rating, feedback, mealType, issues)\` - Rate meal plans and provide detailed feedback
+- \`reportMealIssue(mealPlanId, issueType, description, suggestion, severity)\` - Report specific meal issues
 
 ### **Lifestyle Integration**
 - \`suggestMealPrepStrategy(timeAvailable, goals)\` - Practical meal preparation plans
