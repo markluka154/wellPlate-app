@@ -72,7 +72,7 @@ const customAdapter = {
   async linkAccount(account: any) {
     console.log('🔧 Custom adapter: linkAccount called with:', account.provider)
     const result = await directQuery(
-      'INSERT INTO "Account" (id, "userId", type, provider, "providerAccountId", "refresh_token", "access_token", "expires_at", "token_type", "scope", "id_token", session_state, "createdAt", "updatedAt") VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW()) RETURNING *',
+      'INSERT INTO "Account" (id, "userId", type, provider, "providerAccountId", "refresh_token", "access_token", "expires_at", "token_type", "scope", "id_token", session_state) VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *',
       [
         account.userId,
         account.type,
@@ -102,7 +102,7 @@ const customAdapter = {
   async createSession(session: any) {
     console.log('🔧 Custom adapter: createSession called')
     const result = await directQuery(
-      'INSERT INTO "Session" (id, "userId", expires, "sessionToken", "createdAt", "updatedAt") VALUES (gen_random_uuid()::text, $1, $2, $3, NOW(), NOW()) RETURNING *',
+      'INSERT INTO "Session" (id, "userId", expires, "sessionToken") VALUES (gen_random_uuid()::text, $1, $2, $3) RETURNING *',
       [session.userId, session.expires, session.sessionToken]
     )
     console.log('✅ Custom adapter: createSession result:', result[0]?.id)
@@ -140,7 +140,7 @@ const customAdapter = {
   async updateSession(session: any) {
     console.log('🔧 Custom adapter: updateSession called')
     const result = await directQuery(
-      'UPDATE "Session" SET expires = $1, "updatedAt" = NOW() WHERE "sessionToken" = $2 RETURNING *',
+      'UPDATE "Session" SET expires = $1 WHERE "sessionToken" = $2 RETURNING *',
       [session.expires, session.sessionToken]
     )
     console.log('✅ Custom adapter: updateSession result:', result[0]?.id)
@@ -155,7 +155,7 @@ const customAdapter = {
   async createVerificationToken(verificationToken: any) {
     console.log('🔧 Custom adapter: createVerificationToken called')
     const result = await directQuery(
-      'INSERT INTO "VerificationToken" (identifier, token, expires, "createdAt", "updatedAt") VALUES ($1, $2, $3, NOW(), NOW()) RETURNING *',
+      'INSERT INTO "VerificationToken" (identifier, token, expires) VALUES ($1, $2, $3) RETURNING *',
       [verificationToken.identifier, verificationToken.token, verificationToken.expires]
     )
     console.log('✅ Custom adapter: createVerificationToken result:', result[0]?.id)
