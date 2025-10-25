@@ -65,9 +65,9 @@ export default function ChatPage() {
     }
   }, [session, status, isInitialized, isLoading, initializeChat, router])
 
-  const handleSendMessage = async (message: string) => {
+  const handleSendMessage = async (message: string, displayMessage?: string) => {
     try {
-      await sendMessage(message)
+      await sendMessage(message, displayMessage)
     } catch (err) {
       console.error('Failed to send message:', err)
     }

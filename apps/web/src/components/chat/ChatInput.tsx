@@ -6,7 +6,7 @@ import { SavedMealsModal } from './SavedMealsModal'
 import { SavedMeal } from '@/types/coach'
 
 interface ChatInputProps {
-  onSend: (message: string) => void
+  onSend: (message: string, displayMessage?: string) => void
   disabled?: boolean
   userId?: string
 }
@@ -30,11 +30,15 @@ export function ChatInput({ onSend, disabled = false, userId }: ChatInputProps) 
   const handleSend = () => {
     if (message.trim() && !disabled) {
       let messageToSend = message.trim()
+      let displayMessage = message.trim()
       
-      // If a meal is attached, prepend it to the message
+      // If a meal is attached, create clean display for user but full context for AI
       if (attachedMeal) {
-        // Create a natural meal context for the AI (hidden from user)
-        const mealContext = `
+        // Create clean message for user display
+        displayMessage = `${attachedMeal.name} pasted\n${message.trim()}`
+        
+        // Create full context for AI (hidden from user)
+        const aiContext = `
 [MEAL_CONTEXT: ${attachedMeal.name}]
 Type: ${attachedMeal.type}
 Calories: ${attachedMeal.totalCalories}
@@ -48,14 +52,14 @@ Ingredients: ${attachedMeal.ingredients.map(ing => `${ing.item} (${ing.qty})`).j
 Steps: ${attachedMeal.steps.join(' | ')}
 [END_MEAL_CONTEXT]
 
-User message: ${messageToSend}
+User message: ${message.trim()}
         `.trim()
         
-        messageToSend = mealContext
+        messageToSend = aiContext
         setAttachedMeal(null) // Clear attached meal after sending
       }
       
-      onSend(messageToSend)
+      onSend(messageToSend, displayMessage)
       setMessage('')
     }
   }

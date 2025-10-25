@@ -166,7 +166,7 @@ How are you feeling today? What's on your mind when it comes to your nutrition a
         }
       },
 
-      sendMessage: async (content: string) => {
+      sendMessage: async (content: string, displayContent?: string) => {
         const { addMessage, setLoading, setError, setIsTyping, userProfile } = get()
         
         if (!userProfile) {
@@ -175,10 +175,10 @@ How are you feeling today? What's on your mind when it comes to your nutrition a
         }
         
         try {
-          // Add user message
+          // Add user message (use display content if provided, otherwise use original content)
           addMessage({
             role: 'user',
-            content,
+            content: displayContent || content,
             type: 'text',
           })
           
@@ -186,7 +186,7 @@ How are you feeling today? What's on your mind when it comes to your nutrition a
           setIsTyping(true)
           setError(undefined)
           
-          // Send to API
+          // Send original content to API (with full context)
           const response = await fetch('/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
