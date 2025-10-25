@@ -425,6 +425,8 @@ export async function POST(request: NextRequest) {
     const workerUrl = process.env.WORKER_URL || 'http://localhost:8420'
     
     let mealPlanData
+    let requestBody
+    
     try {
       // Check if this is a family plan
       const isFamilyPlan = body.isFamilyPlan === true
@@ -433,7 +435,7 @@ export async function POST(request: NextRequest) {
         ...preferences,
         recentMeals,
       }
-      const requestBody = isFamilyPlan ? {
+      requestBody = isFamilyPlan ? {
         ...workerPreferences,
         isFamilyPlan: true,
         familyMembers: familyMembers
