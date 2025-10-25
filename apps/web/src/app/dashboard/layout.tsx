@@ -60,6 +60,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [user, setUser] = useState<{ email: string; token: string } | null>(null)
   const [userPlan, setUserPlan] = useState<PlanTier>('FREE')
   const [plansUsedThisMonth, setPlansUsedThisMonth] = useState(0)
+  const [bonusGenerations, setBonusGenerations] = useState(0)
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false)
   const router = useRouter()
   const authProcessed = useRef(false)
@@ -166,6 +167,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         const resolvedPlan = applyDemoOverride(planFromDb)
         setUserPlan(resolvedPlan)
         setPlansUsedThisMonth(data.mealPlans?.length || 0)
+        setBonusGenerations(data.bonus?.remainingGenerations ?? 0)
         
         // Update localStorage with the correct plan from database
         try {
@@ -219,6 +221,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   if (!isAuthenticated) return null
+
+  // Calculate total generations including bonus
+  const totalGenerations = userPlan === 'FREE' ? 3 + bonusGenerations : 999
+  const displayUsed = userPlan === 'FREE' ? plansUsedThisMonth : 0
+  const displayTotal = userPlan === 'FREE' ? totalGenerations : '∞'
 
   return (
     <AuthContext.Provider value={{ user }}>
@@ -284,7 +291,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             {userPlan === 'FREE' ? 'FREE' : userPlan === 'FAMILY_MONTHLY' ? 'FAMILY' : 'PRO'}
                           </div>
                           <div className="text-[9px] text-purple-600 leading-none mt-0.5">
-                            {userPlan === 'FREE' ? `${plansUsedThisMonth}/3` : 'Unlimited'}
+                            {userPlan === 'FREE' ? `${displayUsed}/${displayTotal}` : 'Unlimited'}
+                            {bonusGenerations > 0 && (
+                              <span className="text-emerald-600 ml-1">+{bonusGenerations}</span>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -308,16 +318,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   <div className="mt-2.5">
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-[10px] font-medium text-purple-700">Usage</span>
-                      <span className="text-[10px] text-purple-600">{plansUsedThisMonth}/3</span>
+                      <span className="text-[10px] text-purple-600">
+                        {displayUsed}/{displayTotal}
+                        {bonusGenerations > 0 && (
+                          <span className="text-emerald-600 ml-1">(+{bonusGenerations} bonus)</span>
+                        )}
+                      </span>
                     </div>
                     <div className="w-full bg-purple-100 rounded-full h-1.5">
                       <div 
                         className={`h-1.5 rounded-full transition-all ${
-                          plansUsedThisMonth >= 3 ? 'bg-red-500' :
-                          plansUsedThisMonth >= 2 ? 'bg-yellow-500' :
+                          displayUsed >= totalGenerations ? 'bg-red-500' :
+                          displayUsed >= totalGenerations * 0.8 ? 'bg-yellow-500' :
                           'bg-emerald-500'
                         }`}
-                        style={{ width: `${Math.min((plansUsedThisMonth / 3) * 100, 100)}%` }}
+                        style={{ width: `${Math.min((displayUsed / totalGenerations) * 100, 100)}%` }}
                       />
                     </div>
                   </div>
