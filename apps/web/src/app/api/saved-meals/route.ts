@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { directQuery } from '@/lib/supabase'
+import { SavedMeal } from '@/types/coach'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,7 +25,7 @@ export async function GET(request: NextRequest) {
       [userId]
     )
 
-    const convertedMeals = []
+    const convertedMeals: SavedMeal[] = []
     
     // Convert MealPlan meals to SavedMeal format
     for (const mealPlan of mealPlans) {
@@ -38,7 +39,7 @@ export async function GET(request: NextRequest) {
             if (day.meals && Array.isArray(day.meals)) {
               day.meals.forEach((meal: any, mealIndex: number) => {
                 // Determine meal type based on name or position
-                let mealType = 'lunch' // default
+                let mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack' = 'lunch' // default
                 const mealName = meal.name?.toLowerCase() || ''
                 
                 if (mealName.includes('breakfast') || mealName.includes('morning') || mealIndex === 0) {
@@ -79,12 +80,12 @@ export async function GET(request: NextRequest) {
                   prepTime: 15, // Default estimate
                   cookTime: 20, // Default estimate
                   servings: 1,
-                  difficulty: 'easy',
+                  difficulty: 'easy' as const,
                   steps: meal.steps || [],
                   originalMealPlanId: mealPlan.id,
                   tags: meal.labels || [],
-                  createdAt: mealPlan.createdAt,
-                  updatedAt: mealPlan.createdAt
+                  createdAt: new Date(mealPlan.createdAt),
+                  updatedAt: new Date(mealPlan.createdAt)
                 })
               })
             }
