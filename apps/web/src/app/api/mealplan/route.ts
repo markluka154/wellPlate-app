@@ -460,77 +460,149 @@ export async function POST(request: NextRequest) {
       console.log('✅ Worker service response received')
     } catch (workerError) {
       console.error('❌ Worker service connection failed:', workerError)
-      // Return mock data for now
+      console.error('❌ Worker URL:', workerUrl)
+      console.error('❌ Request body:', JSON.stringify(requestBody, null, 2))
+      
+      // Create dynamic mock data based on user preferences
+      const mealsPerDay = preferences.mealsPerDay || 3
+      const meals = []
+      
+      // Always include breakfast, lunch, dinner
+      meals.push({
+        name: "Breakfast: Oatmeal with Berries",
+        kcal: 350,
+        protein_g: 12,
+        carbs_g: 65,
+        fat_g: 8,
+        ingredients: [
+          { item: "Rolled oats", qty: "1/2 cup" },
+          { item: "Mixed berries", qty: "1/2 cup" },
+          { item: "Almond milk", qty: "1 cup" }
+        ],
+        steps: [
+          "Cook oats with almond milk for 5 minutes",
+          "Top with fresh berries",
+          "Serve warm"
+        ]
+      })
+      
+      meals.push({
+        name: "Lunch: Grilled Chicken Salad",
+        kcal: 450,
+        protein_g: 35,
+        carbs_g: 25,
+        fat_g: 20,
+        ingredients: [
+          { item: "Chicken breast", qty: "150g" },
+          { item: "Mixed greens", qty: "2 cups" },
+          { item: "Olive oil", qty: "1 tbsp" }
+        ],
+        steps: [
+          "Grill chicken breast until cooked through",
+          "Toss greens with olive oil",
+          "Slice chicken and serve over salad"
+        ]
+      })
+      
+      meals.push({
+        name: "Dinner: Salmon with Quinoa",
+        kcal: 550,
+        protein_g: 40,
+        carbs_g: 45,
+        fat_g: 25,
+        ingredients: [
+          { item: "Salmon fillet", qty: "150g" },
+          { item: "Quinoa", qty: "1/2 cup" },
+          { item: "Broccoli", qty: "1 cup" }
+        ],
+        steps: [
+          "Cook quinoa according to package directions",
+          "Pan-sear salmon for 4-5 minutes per side",
+          "Steam broccoli until tender",
+          "Serve salmon over quinoa with broccoli"
+        ]
+      })
+      
+      // Add snacks for 4+ meals
+      if (mealsPerDay >= 4) {
+        meals.push({
+          name: "Afternoon Snack: Greek Yogurt with Nuts",
+          kcal: 200,
+          protein_g: 15,
+          carbs_g: 12,
+          fat_g: 8,
+          ingredients: [
+            { item: "Greek yogurt", qty: "1 cup" },
+            { item: "Mixed nuts", qty: "1 oz" },
+            { item: "Honey", qty: "1 tsp" }
+          ],
+          steps: [
+            "Mix Greek yogurt with honey",
+            "Top with mixed nuts",
+            "Enjoy as afternoon snack"
+          ]
+        })
+      }
+      
+      if (mealsPerDay >= 5) {
+        meals.push({
+          name: "Evening Snack: Apple with Almond Butter",
+          kcal: 180,
+          protein_g: 6,
+          carbs_g: 20,
+          fat_g: 10,
+          ingredients: [
+            { item: "Apple", qty: "1 medium" },
+            { item: "Almond butter", qty: "1 tbsp" }
+          ],
+          steps: [
+            "Slice apple into wedges",
+            "Serve with almond butter for dipping",
+            "Enjoy as evening snack"
+          ]
+        })
+      }
+      
+      if (mealsPerDay >= 6) {
+        meals.push({
+          name: "Morning Snack: Protein Smoothie",
+          kcal: 220,
+          protein_g: 20,
+          carbs_g: 15,
+          fat_g: 5,
+          ingredients: [
+            { item: "Protein powder", qty: "1 scoop" },
+            { item: "Banana", qty: "1/2 medium" },
+            { item: "Almond milk", qty: "1 cup" }
+          ],
+          steps: [
+            "Blend protein powder with banana and almond milk",
+            "Add ice if desired",
+            "Enjoy as morning snack"
+          ]
+        })
+      }
+      
+      // Calculate totals
+      const totals = meals.reduce((acc, meal) => ({
+        kcal: acc.kcal + meal.kcal,
+        protein_g: acc.protein_g + meal.protein_g,
+        carbs_g: acc.carbs_g + meal.carbs_g,
+        fat_g: acc.fat_g + meal.fat_g
+      }), { kcal: 0, protein_g: 0, carbs_g: 0, fat_g: 0 })
+      
       mealPlanData = {
         plan: [
           {
             day: 1,
-            meals: [
-              {
-                name: "Breakfast: Oatmeal with Berries",
-                kcal: 350,
-                protein_g: 12,
-                carbs_g: 65,
-                fat_g: 8,
-                ingredients: [
-                  { item: "Rolled oats", qty: "1/2 cup" },
-                  { item: "Mixed berries", qty: "1/2 cup" },
-                  { item: "Almond milk", qty: "1 cup" }
-                ],
-                steps: [
-                  "Cook oats with almond milk for 5 minutes",
-                  "Top with fresh berries",
-                  "Serve warm"
-                ]
-              },
-              {
-                name: "Lunch: Grilled Chicken Salad",
-                kcal: 450,
-                protein_g: 35,
-                carbs_g: 25,
-                fat_g: 20,
-                ingredients: [
-                  { item: "Chicken breast", qty: "150g" },
-                  { item: "Mixed greens", qty: "2 cups" },
-                  { item: "Olive oil", qty: "1 tbsp" }
-                ],
-                steps: [
-                  "Grill chicken breast until cooked through",
-                  "Toss greens with olive oil",
-                  "Slice chicken and serve over salad"
-                ]
-              },
-              {
-                name: "Dinner: Salmon with Quinoa",
-                kcal: 550,
-                protein_g: 40,
-                carbs_g: 45,
-                fat_g: 25,
-                ingredients: [
-                  { item: "Salmon fillet", qty: "150g" },
-                  { item: "Quinoa", qty: "1/2 cup" },
-                  { item: "Broccoli", qty: "1 cup" }
-                ],
-                steps: [
-                  "Cook quinoa according to package directions",
-                  "Pan-sear salmon for 4-5 minutes per side",
-                  "Steam broccoli until tender",
-                  "Serve salmon over quinoa with broccoli"
-                ]
-              }
-            ]
+            meals: meals
           }
         ],
-        totals: {
-          kcal: 1350,
-          protein_g: 87,
-          carbs_g: 135,
-          fat_g: 53
-        },
+        totals: totals,
         groceries: [
           {
             category: "Proteins",
-            items: ["Chicken breast", "Salmon fillet"]
+            items: ["Chicken breast", "Salmon fillet", "Greek yogurt", "Protein powder"]
           },
           {
             category: "Grains",
@@ -546,11 +618,15 @@ export async function POST(request: NextRequest) {
           },
           {
             category: "Pantry",
-            items: ["Olive oil"]
+            items: ["Olive oil", "Mixed nuts", "Honey", "Almond butter"]
+          },
+          {
+            category: "Fruits",
+            items: ["Apple", "Banana"]
           }
         ]
       }
-      console.log('✅ Using mock meal plan data')
+      console.log(`✅ Using mock meal plan data with ${mealsPerDay} meals`)
     }
     
     // Normalize around the requested calorie target before validation
