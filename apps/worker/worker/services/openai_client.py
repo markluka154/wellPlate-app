@@ -40,6 +40,13 @@ class OpenAIClient:
             content = response.choices[0].message.content
             meal_plan_data = json.loads(content)
             
+            # Log what AI returned before validation
+            logger.info(f"🔍 AI returned data with {len(meal_plan_data.get('plan', []))} days")
+            if meal_plan_data.get('plan') and len(meal_plan_data['plan']) > 0:
+                logger.info(f"🔍 First day has {len(meal_plan_data['plan'][0].get('meals', []))} meals")
+                meal_names = [meal.get('name', 'unnamed') for meal in meal_plan_data['plan'][0].get('meals', [])]
+                logger.info(f"🔍 Meal names from AI: {meal_names}")
+            
             # Validate and clean the data
             return self._validate_and_clean_response(meal_plan_data, preferences)
             
@@ -151,6 +158,7 @@ CRITICAL: Double-check that you have created EXACTLY {meals_per_day} meals per d
         
         logger.info(f"🔍 Generated prompt for {meals_per_day} meals per day")
         logger.info(f"🔍 Meal names: {meal_names}")
+        logger.info(f"🔍 CRITICAL: AI must generate EXACTLY {meals_per_day} meals per day")
         return prompt
     
     def _calculate_calorie_target(self, preferences: MealPreference) -> int:
