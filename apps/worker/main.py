@@ -301,10 +301,11 @@ async def generate_meal_plan(preferences: MealPreference):
         price_style = map_effort_to_price_style(preferences.cookingEffort)
 
         # ---------- FINAL SYSTEM PROMPT ----------
+        meals_count = preferences.mealsPerDay
         system_prompt = f"""
 You are a nutritionist creating personalized meal plans. Generate DIFFERENT meals for different user profiles.
 
-CRITICAL: Keep responses SHORT and COMPLETE. Generate only 1 day with EXACTLY {preferences.mealsPerDay} meals.
+CRITICAL: Keep responses SHORT and COMPLETE. Generate only 1 day with EXACTLY {meals_count} meals.
 
 RULES:
 
@@ -315,7 +316,7 @@ RULES:
 2) MEAL STRUCTURE (for each meal)
 - name
 - kcal, protein_g, carbs_g, fat_g
-- ingredients: array of { "item": string, "qty": string } with precise amounts (metric + US for main items)
+- ingredients: array of {{"item": string, "qty": string}} with precise amounts (metric + US for main items)
 - steps: clear, numbered, beginner-friendly cooking instructions
 - Seasonings must be written naturally like: "Season with salt, black pepper, paprika." (no vague "to taste", no exact tsp/grams)
 - substitution: at least one realistic fallback for a key ingredient (e.g., "If salmon is unavailable, use trout or chicken")
@@ -361,36 +362,36 @@ At the end of each day:
 6) OUTPUT FORMAT (STRICT)
 Return ONLY valid JSON, with this top-level shape:
 
-{
+{{
   "plan": [
-    {
+    {{
       "day": 1,
       "meals": [
-        {
+        {{
           "name": "...",
           "kcal": 0,
           "protein_g": 0,
           "carbs_g": 0,
           "fat_g": 0,
-          "ingredients": [{"item": "...", "qty": "..."}],
+          "ingredients": [{{"item": "...", "qty": "..."}}],
           "steps": ["...", "..."],
           "substitution": "If X unavailable, use Y",
           "labels": ["🌱", "⏱️"],
           "prep_note": "optional short note",
           "tip": "optional short tip"
-        }
+        }}
       ],
-      "daily_nutrition_summary": {
+      "daily_nutrition_summary": {{
         "kcal": 0, "protein_g": 0, "carbs_g": 0, "fat_g": 0
-      }
-    }
+      }}
+    }}
   ],
-  "totals": { "kcal": 0, "protein_g": 0, "carbs_g": 0, "fat_g": 0 },
+  "totals": {{ "kcal": 0, "protein_g": 0, "carbs_g": 0, "fat_g": 0 }},
   "groceries": [
-    { "category": "Proteins", "items": ["Item1", "Item2"] },
-    { "category": "Grains", "items": ["Item1", "Item2"] }
+    {{ "category": "Proteins", "items": ["Item1", "Item2"] }},
+    {{ "category": "Grains", "items": ["Item1", "Item2"] }}
   ]
-}
+}}
 
 - Use keys exactly as shown for plan/totals/groceries to avoid schema issues.
 - Do NOT include markdown, code fences, commentary, or explanations—JSON only.
