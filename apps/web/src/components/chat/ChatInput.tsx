@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { Send, Paperclip, Mic } from 'lucide-react'
+import { Send } from 'lucide-react'
 
 interface ChatInputProps {
   onSend: (message: string) => void
@@ -71,42 +71,21 @@ export function ChatInput({ onSend, disabled = false }: ChatInputProps) {
         />
         
         {/* Bottom Action Bar */}
-        <div className="absolute bottom-2 left-4 right-4 flex items-center justify-between">
-          {/* Left Actions */}
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              className="p-1.5 hover:bg-gray-200 rounded-full transition-colors hover:scale-105"
-              disabled={disabled}
-            >
-              <Paperclip className="w-4 h-4 text-gray-500" />
-            </button>
-            <button
-              type="button"
-              className="p-1.5 hover:bg-gray-200 rounded-full transition-colors hover:scale-105"
-              disabled={disabled}
-            >
-              <Mic className="w-4 h-4 text-gray-500" />
-            </button>
-          </div>
+        <div className="absolute bottom-2 right-4 flex items-center gap-2">
+          {/* Character Counter */}
+          <span className="text-xs text-gray-400">
+            {message.length}/{maxLength}
+          </span>
           
-          {/* Right Actions */}
-          <div className="flex items-center gap-2">
-            {/* Character Counter */}
-            <span className="text-xs text-gray-400">
-              {message.length}/{maxLength}
-            </span>
-            
-            {/* Send Button */}
-            <button
-              type="button"
-              onClick={handleSend}
-              disabled={!message.trim() || disabled}
-              className="w-8 h-8 bg-emerald-500 hover:bg-emerald-600 disabled:bg-gray-300 rounded-full flex items-center justify-center transition-colors hover:scale-105"
-            >
-              <Send className="w-4 h-4 text-white" />
-            </button>
-          </div>
+          {/* Send Button */}
+          <button
+            type="button"
+            onClick={handleSend}
+            disabled={!message.trim() || disabled}
+            className="w-8 h-8 bg-emerald-500 hover:bg-emerald-600 disabled:bg-gray-300 rounded-full flex items-center justify-center transition-colors hover:scale-105"
+          >
+            <Send className="w-4 h-4 text-white" />
+          </button>
         </div>
         </div>
       </div>
