@@ -72,8 +72,9 @@ User message: ${message.trim()}
   }
 
   const handleAttachMeal = () => {
+    console.log('🔍 Attach meal clicked, userId:', userId)
     if (!userId) {
-      console.log('No user ID available for saved meals')
+      console.log('❌ No user ID available for saved meals')
       return
     }
     setShowSavedMeals(true)

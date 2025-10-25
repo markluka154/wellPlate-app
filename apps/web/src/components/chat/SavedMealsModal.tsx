@@ -25,13 +25,21 @@ export function SavedMealsModal({ isOpen, onClose, onSelectMeal, userId }: Saved
   const fetchSavedMeals = async () => {
     setLoading(true)
     try {
+      console.log('🔍 Fetching saved meals for userId:', userId)
       const response = await fetch(`/api/saved-meals?userId=${userId}`)
+      console.log('🔍 Response status:', response.status)
+      
       if (response.ok) {
         const data = await response.json()
+        console.log('🔍 Fetched meals data:', data)
         setMeals(data.meals || [])
+      } else {
+        console.error('❌ Failed to fetch saved meals:', response.status, response.statusText)
+        const errorText = await response.text()
+        console.error('❌ Error response:', errorText)
       }
     } catch (error) {
-      console.error('Failed to fetch saved meals:', error)
+      console.error('❌ Failed to fetch saved meals:', error)
     } finally {
       setLoading(false)
     }
@@ -52,13 +60,13 @@ export function SavedMealsModal({ isOpen, onClose, onSelectMeal, userId }: Saved
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[80vh] flex flex-col">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] sm:max-h-[80vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-100">
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-100">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">Your Saved Meals</h2>
-            <p className="text-sm text-gray-500 mt-1">Select a meal to modify with substitutions</p>
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Your Saved Meals</h2>
+            <p className="text-xs sm:text-sm text-gray-500 mt-1">Select a meal to modify with substitutions</p>
           </div>
           <button
             onClick={onClose}
@@ -69,7 +77,7 @@ export function SavedMealsModal({ isOpen, onClose, onSelectMeal, userId }: Saved
         </div>
 
         {/* Filter Tabs */}
-        <div className="px-6 py-4 border-b border-gray-100">
+        <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100">
           <div className="flex gap-2 overflow-x-auto">
             {mealTypes.map((type) => (
               <button
@@ -88,7 +96,7 @@ export function SavedMealsModal({ isOpen, onClose, onSelectMeal, userId }: Saved
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6">
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
@@ -110,7 +118,7 @@ export function SavedMealsModal({ isOpen, onClose, onSelectMeal, userId }: Saved
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               {filteredMeals.map((meal) => (
                 <MealCard
                   key={meal.id}
