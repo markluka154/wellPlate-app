@@ -39,7 +39,8 @@ export function ChatInput({ onSend, disabled = false }: ChatInputProps) {
   return (
     <div className="p-4 bg-white border-t border-gray-200">
       {/* Main Input Container */}
-      <div className="relative bg-gray-50 border border-gray-200 rounded-[24px] shadow-lg focus-within:ring-2 focus-within:ring-emerald-500/20 focus-within:border-emerald-500 transition-all duration-200">
+      <div className="max-w-2xl mx-auto">
+        <div className="relative bg-gray-50 border border-gray-200 rounded-[24px] shadow-lg focus-within:ring-2 focus-within:ring-emerald-500/20 focus-within:border-emerald-500 transition-all duration-200">
         {/* Textarea */}
         <textarea
           ref={textareaRef}
@@ -106,6 +107,7 @@ export function ChatInput({ onSend, disabled = false }: ChatInputProps) {
               <Send className="w-4 h-4 text-white" />
             </button>
           </div>
+        </div>
         </div>
       </div>
       
