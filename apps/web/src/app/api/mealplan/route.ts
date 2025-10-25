@@ -466,7 +466,7 @@ export async function POST(request: NextRequest) {
       console.error('❌ Request body:', JSON.stringify(requestBody, null, 2))
       
       // Create dynamic mock data based on user preferences
-      const mealsPerDay = preferences.mealsPerDay || 3
+      const mealsPerDay = body.mealsPerDay || 3
       const meals = []
       
       // Always include breakfast, lunch, dinner
