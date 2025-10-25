@@ -12,22 +12,109 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 })
     }
 
-    // Fetch saved meals for the user
-    const meals = await directQuery(
+    // First, try to get meals from SavedMeal table
+    const savedMeals = await directQuery(
       'SELECT * FROM "SavedMeal" WHERE "userId" = $1 ORDER BY "createdAt" DESC',
       [userId]
     )
 
-    return NextResponse.json({
-      success: true,
-      meals: meals.map(meal => ({
+    // Also get meals from existing MealPlan table and convert them
+    const mealPlans = await directQuery(
+      'SELECT * FROM "MealPlan" WHERE "userId" = $1 ORDER BY "createdAt" DESC LIMIT 10',
+      [userId]
+    )
+
+    const convertedMeals = []
+    
+    // Convert MealPlan meals to SavedMeal format
+    for (const mealPlan of mealPlans) {
+      try {
+        const jsonData = typeof mealPlan.jsonData === 'string' 
+          ? JSON.parse(mealPlan.jsonData) 
+          : mealPlan.jsonData
+
+        if (jsonData?.plan && Array.isArray(jsonData.plan)) {
+          jsonData.plan.forEach((day: any, dayIndex: number) => {
+            if (day.meals && Array.isArray(day.meals)) {
+              day.meals.forEach((meal: any, mealIndex: number) => {
+                // Determine meal type based on name or position
+                let mealType = 'lunch' // default
+                const mealName = meal.name?.toLowerCase() || ''
+                
+                if (mealName.includes('breakfast') || mealName.includes('morning') || mealIndex === 0) {
+                  mealType = 'breakfast'
+                } else if (mealName.includes('lunch') || mealName.includes('midday') || mealIndex === 1) {
+                  mealType = 'lunch'
+                } else if (mealName.includes('dinner') || mealName.includes('evening') || mealIndex === 2) {
+                  mealType = 'dinner'
+                } else if (mealName.includes('snack') || mealIndex > 2) {
+                  mealType = 'snack'
+                }
+
+                // Convert ingredients to our format
+                const ingredients = meal.ingredients?.map((ing: any) => ({
+                  item: ing.item || '',
+                  qty: ing.qty || '',
+                  calories: Math.round((meal.kcal || 0) / (meal.ingredients?.length || 1)),
+                  protein: Math.round((meal.protein_g || 0) / (meal.ingredients?.length || 1)),
+                  carbs: Math.round((meal.carbs_g || 0) / (meal.ingredients?.length || 1)),
+                  fat: Math.round((meal.fat_g || 0) / (meal.ingredients?.length || 1)),
+                  fiber: 0, // Not available in original data
+                  sodium: 0 // Not available in original data
+                })) || []
+
+                convertedMeals.push({
+                  id: `converted-${mealPlan.id}-${dayIndex}-${mealIndex}`,
+                  userId: userId,
+                  name: meal.name || `Meal ${mealIndex + 1}`,
+                  type: mealType,
+                  description: meal.tip || meal.substitution || '',
+                  ingredients: ingredients,
+                  totalCalories: meal.kcal || 0,
+                  totalProtein: meal.protein_g || 0,
+                  totalCarbs: meal.carbs_g || 0,
+                  totalFat: meal.fat_g || 0,
+                  totalFiber: 0,
+                  totalSodium: 0,
+                  prepTime: 15, // Default estimate
+                  cookTime: 20, // Default estimate
+                  servings: 1,
+                  difficulty: 'easy',
+                  steps: meal.steps || [],
+                  originalMealPlanId: mealPlan.id,
+                  tags: meal.labels || [],
+                  createdAt: mealPlan.createdAt,
+                  updatedAt: mealPlan.createdAt
+                })
+              })
+            }
+          })
+        }
+      } catch (error) {
+        console.error('Error parsing meal plan JSON:', error)
+        continue
+      }
+    }
+
+    // Combine saved meals and converted meals
+    const allMeals = [
+      ...savedMeals.map(meal => ({
         ...meal,
         ingredients: typeof meal.ingredients === 'string' 
           ? JSON.parse(meal.ingredients) 
           : meal.ingredients,
         steps: Array.isArray(meal.steps) ? meal.steps : [],
         tags: Array.isArray(meal.tags) ? meal.tags : []
-      }))
+      })),
+      ...convertedMeals
+    ]
+
+    // Sort by creation date (newest first)
+    allMeals.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+
+    return NextResponse.json({
+      success: true,
+      meals: allMeals
     })
 
   } catch (error) {

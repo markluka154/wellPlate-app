@@ -623,49 +623,118 @@ async function executeFunction(functionName: string, args: any, userId: string) 
       try {
         const { mealId, originalIngredient, reason, userPreferences, context } = args
         
-        // Fetch the saved meal
-        const mealResult = await directQuery(
-          'SELECT * FROM "SavedMeal" WHERE id = $1 AND "userId" = $2',
-          [mealId, userId]
-        )
-        
-        if (mealResult.length === 0) {
-          return {
-            success: false,
-            message: "I couldn't find that saved meal. Please try selecting a different meal."
+        // Check if this is a converted meal ID
+        if (mealId.startsWith('converted-')) {
+          // Extract meal plan info from converted ID
+          const parts = mealId.split('-')
+          const mealPlanId = parts[1]
+          const dayIndex = parseInt(parts[2])
+          const mealIndex = parseInt(parts[3])
+          
+          // Fetch the original meal plan
+          const mealPlanResult = await directQuery(
+            'SELECT * FROM "MealPlan" WHERE id = $1 AND "userId" = $2',
+            [mealPlanId, userId]
+          )
+          
+          if (mealPlanResult.length === 0) {
+            return {
+              success: false,
+              message: "I couldn't find that saved meal. Please try selecting a different meal."
+            }
           }
-        }
-        
-        const meal = mealResult[0]
-        const ingredients = typeof meal.ingredients === 'string' 
-          ? JSON.parse(meal.ingredients) 
-          : meal.ingredients
-        
-        // Find the ingredient to substitute
-        const ingredientToReplace = ingredients.find((ing: any) => 
-          ing.item.toLowerCase().includes(originalIngredient.toLowerCase())
-        )
-        
-        if (!ingredientToReplace) {
-          return {
-            success: false,
-            message: `I couldn't find "${originalIngredient}" in that meal. Please check the ingredient name and try again.`
+          
+          const mealPlan = mealPlanResult[0]
+          const jsonData = typeof mealPlan.jsonData === 'string' 
+            ? JSON.parse(mealPlan.jsonData) 
+            : mealPlan.jsonData
+          
+          const day = jsonData.plan[dayIndex]
+          const meal = day.meals[mealIndex]
+          
+          if (!meal) {
+            return {
+              success: false,
+              message: "I couldn't find that specific meal. Please try selecting a different meal."
+            }
           }
-        }
-        
-        return {
-          success: true,
-          message: `I found "${ingredientToReplace.item}" in your ${meal.name}. Let me suggest some great substitutions based on your preferences!`,
-          meal: {
-            id: meal.id,
-            name: meal.name,
-            type: meal.type,
-            ingredients: ingredients
-          },
-          ingredientToReplace: ingredientToReplace,
-          reason: reason,
-          userPreferences: userPreferences || [],
-          context: context || ''
+          
+          // Find the ingredient to substitute
+          const ingredientToReplace = meal.ingredients?.find((ing: any) => 
+            ing.item.toLowerCase().includes(originalIngredient.toLowerCase())
+          )
+          
+          if (!ingredientToReplace) {
+            return {
+              success: false,
+              message: `I couldn't find "${originalIngredient}" in that meal. Please check the ingredient name and try again.`
+            }
+          }
+          
+          return {
+            success: true,
+            message: `I found "${ingredientToReplace.item}" in your ${meal.name}. Let me suggest some great substitutions based on your preferences!`,
+            meal: {
+              id: mealId,
+              name: meal.name,
+              type: mealIndex === 0 ? 'breakfast' : mealIndex === 1 ? 'lunch' : mealIndex === 2 ? 'dinner' : 'snack',
+              ingredients: meal.ingredients || []
+            },
+            ingredientToReplace: ingredientToReplace,
+            reason: reason,
+            userPreferences: userPreferences || [],
+            context: context || '',
+            isConvertedMeal: true,
+            mealPlanId: mealPlanId,
+            dayIndex: dayIndex,
+            mealIndex: mealIndex
+          }
+        } else {
+          // Handle regular SavedMeal
+          const mealResult = await directQuery(
+            'SELECT * FROM "SavedMeal" WHERE id = $1 AND "userId" = $2',
+            [mealId, userId]
+          )
+          
+          if (mealResult.length === 0) {
+            return {
+              success: false,
+              message: "I couldn't find that saved meal. Please try selecting a different meal."
+            }
+          }
+          
+          const meal = mealResult[0]
+          const ingredients = typeof meal.ingredients === 'string' 
+            ? JSON.parse(meal.ingredients) 
+            : meal.ingredients
+          
+          // Find the ingredient to substitute
+          const ingredientToReplace = ingredients.find((ing: any) => 
+            ing.item.toLowerCase().includes(originalIngredient.toLowerCase())
+          )
+          
+          if (!ingredientToReplace) {
+            return {
+              success: false,
+              message: `I couldn't find "${originalIngredient}" in that meal. Please check the ingredient name and try again.`
+            }
+          }
+          
+          return {
+            success: true,
+            message: `I found "${ingredientToReplace.item}" in your ${meal.name}. Let me suggest some great substitutions based on your preferences!`,
+            meal: {
+              id: meal.id,
+              name: meal.name,
+              type: meal.type,
+              ingredients: ingredients
+            },
+            ingredientToReplace: ingredientToReplace,
+            reason: reason,
+            userPreferences: userPreferences || [],
+            context: context || '',
+            isConvertedMeal: false
+          }
         }
         
       } catch (error) {
@@ -681,80 +750,184 @@ async function executeFunction(functionName: string, args: any, userId: string) 
       try {
         const { mealId, substitution, nutritionChange, explanation } = args
         
-        // Fetch the current meal
-        const mealResult = await directQuery(
-          'SELECT * FROM "SavedMeal" WHERE id = $1 AND "userId" = $2',
-          [mealId, userId]
-        )
-        
-        if (mealResult.length === 0) {
+        // Check if this is a converted meal ID
+        if (mealId.startsWith('converted-')) {
+          // For converted meals, we'll create a new SavedMeal entry with the substitution
+          const parts = mealId.split('-')
+          const mealPlanId = parts[1]
+          const dayIndex = parseInt(parts[2])
+          const mealIndex = parseInt(parts[3])
+          
+          // Fetch the original meal plan
+          const mealPlanResult = await directQuery(
+            'SELECT * FROM "MealPlan" WHERE id = $1 AND "userId" = $2',
+            [mealPlanId, userId]
+          )
+          
+          if (mealPlanResult.length === 0) {
+            return {
+              success: false,
+              message: "I couldn't find that saved meal to update."
+            }
+          }
+          
+          const mealPlan = mealPlanResult[0]
+          const jsonData = typeof mealPlan.jsonData === 'string' 
+            ? JSON.parse(mealPlan.jsonData) 
+            : mealPlan.jsonData
+          
+          const day = jsonData.plan[dayIndex]
+          const meal = day.meals[mealIndex]
+          
+          if (!meal) {
+            return {
+              success: false,
+              message: "I couldn't find that specific meal to update."
+            }
+          }
+          
+          // Update the ingredients array with the substitution
+          const updatedIngredients = meal.ingredients?.map((ing: any) => {
+            if (ing.item === substitution.original.item) {
+              return substitution.substitute
+            }
+            return ing
+          }) || []
+          
+          // Calculate new totals
+          const newTotals = {
+            totalCalories: meal.kcal + nutritionChange.calories,
+            totalProtein: meal.protein_g + nutritionChange.protein,
+            totalCarbs: meal.carbs_g + nutritionChange.carbs,
+            totalFat: meal.fat_g + nutritionChange.fat,
+            totalFiber: 0 + nutritionChange.fiber,
+            totalSodium: 0 + nutritionChange.sodium
+          }
+          
+          // Create a new SavedMeal entry with the substitution
+          const newSavedMeal = await directQuery(
+            `INSERT INTO "SavedMeal" (
+              "userId", name, type, description, ingredients,
+              "totalCalories", "totalProtein", "totalCarbs", "totalFat", 
+              "totalFiber", "totalSodium", "prepTime", "cookTime", 
+              servings, difficulty, steps, "originalMealPlanId", tags
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+            RETURNING *`,
+            [
+              userId, 
+              `${meal.name} (Modified)`, 
+              mealIndex === 0 ? 'breakfast' : mealIndex === 1 ? 'lunch' : mealIndex === 2 ? 'dinner' : 'snack',
+              `Modified version of ${meal.name} with ${substitution.substitute.item} instead of ${substitution.original.item}`,
+              JSON.stringify(updatedIngredients),
+              newTotals.totalCalories,
+              newTotals.totalProtein,
+              newTotals.totalCarbs,
+              newTotals.totalFat,
+              newTotals.totalFiber,
+              newTotals.totalSodium,
+              15, // Default prep time
+              20, // Default cook time
+              1, // servings
+              'easy', // difficulty
+              meal.steps || [],
+              mealPlanId,
+              meal.labels || []
+            ]
+          )
+          
+          const savedMeal = newSavedMeal[0]
+          
           return {
-            success: false,
-            message: "I couldn't find that saved meal to update."
+            success: true,
+            message: `Perfect! I've created a modified version of your ${meal.name} with the substitution and saved it to your collection.`,
+            updatedMeal: {
+              id: savedMeal.id,
+              name: savedMeal.name,
+              type: savedMeal.type,
+              ingredients: updatedIngredients,
+              nutrition: newTotals,
+              substitution: substitution,
+              explanation: explanation
+            },
+            nutritionChange: nutritionChange,
+            isNewSavedMeal: true
           }
-        }
-        
-        const meal = mealResult[0]
-        const ingredients = typeof meal.ingredients === 'string' 
-          ? JSON.parse(meal.ingredients) 
-          : meal.ingredients
-        
-        // Update the ingredients array with the substitution
-        const updatedIngredients = ingredients.map((ing: any) => {
-          if (ing.item === substitution.original.item) {
-            return substitution.substitute
+        } else {
+          // Handle regular SavedMeal
+          const mealResult = await directQuery(
+            'SELECT * FROM "SavedMeal" WHERE id = $1 AND "userId" = $2',
+            [mealId, userId]
+          )
+          
+          if (mealResult.length === 0) {
+            return {
+              success: false,
+              message: "I couldn't find that saved meal to update."
+            }
           }
-          return ing
-        })
-        
-        // Calculate new totals
-        const newTotals = {
-          totalCalories: meal.totalCalories + nutritionChange.calories,
-          totalProtein: meal.totalProtein + nutritionChange.protein,
-          totalCarbs: meal.totalCarbs + nutritionChange.carbs,
-          totalFat: meal.totalFat + nutritionChange.fat,
-          totalFiber: meal.totalFiber + nutritionChange.fiber,
-          totalSodium: meal.totalSodium + nutritionChange.sodium
-        }
-        
-        // Update the meal in the database
-        await directQuery(
-          `UPDATE "SavedMeal" SET 
-            ingredients = $1,
-            "totalCalories" = $2,
-            "totalProtein" = $3,
-            "totalCarbs" = $4,
-            "totalFat" = $5,
-            "totalFiber" = $6,
-            "totalSodium" = $7,
-            "updatedAt" = NOW()
-          WHERE id = $8 AND "userId" = $9`,
-          [
-            JSON.stringify(updatedIngredients),
-            newTotals.totalCalories,
-            newTotals.totalProtein,
-            newTotals.totalCarbs,
-            newTotals.totalFat,
-            newTotals.totalFiber,
-            newTotals.totalSodium,
-            mealId,
-            userId
-          ]
-        )
-        
-        return {
-          success: true,
-          message: `Perfect! I've updated your ${meal.name} with the substitution.`,
-          updatedMeal: {
-            id: meal.id,
-            name: meal.name,
-            type: meal.type,
-            ingredients: updatedIngredients,
-            nutrition: newTotals,
-            substitution: substitution,
-            explanation: explanation
-          },
-          nutritionChange: nutritionChange
+          
+          const meal = mealResult[0]
+          const ingredients = typeof meal.ingredients === 'string' 
+            ? JSON.parse(meal.ingredients) 
+            : meal.ingredients
+          
+          // Update the ingredients array with the substitution
+          const updatedIngredients = ingredients.map((ing: any) => {
+            if (ing.item === substitution.original.item) {
+              return substitution.substitute
+            }
+            return ing
+          })
+          
+          // Calculate new totals
+          const newTotals = {
+            totalCalories: meal.totalCalories + nutritionChange.calories,
+            totalProtein: meal.totalProtein + nutritionChange.protein,
+            totalCarbs: meal.totalCarbs + nutritionChange.carbs,
+            totalFat: meal.totalFat + nutritionChange.fat,
+            totalFiber: meal.totalFiber + nutritionChange.fiber,
+            totalSodium: meal.totalSodium + nutritionChange.sodium
+          }
+          
+          // Update the meal in the database
+          await directQuery(
+            `UPDATE "SavedMeal" SET 
+              ingredients = $1,
+              "totalCalories" = $2,
+              "totalProtein" = $3,
+              "totalCarbs" = $4,
+              "totalFat" = $5,
+              "totalFiber" = $6,
+              "totalSodium" = $7,
+              "updatedAt" = NOW()
+            WHERE id = $8 AND "userId" = $9`,
+            [
+              JSON.stringify(updatedIngredients),
+              newTotals.totalCalories,
+              newTotals.totalProtein,
+              newTotals.totalCarbs,
+              newTotals.totalFat,
+              newTotals.totalFiber,
+              newTotals.totalSodium,
+              mealId,
+              userId
+            ]
+          )
+          
+          return {
+            success: true,
+            message: `Perfect! I've updated your ${meal.name} with the substitution.`,
+            updatedMeal: {
+              id: meal.id,
+              name: meal.name,
+              type: meal.type,
+              ingredients: updatedIngredients,
+              nutrition: newTotals,
+              substitution: substitution,
+              explanation: explanation
+            },
+            nutritionChange: nutritionChange
+          }
         }
         
       } catch (error) {
