@@ -57,6 +57,8 @@ class MealPreference(BaseModel):
     dislikes: List[str]
     cookingEffort: str  # "quick and easy" | "gourmet" | "budget friendly"
     caloriesTarget: Optional[int] = None  # optional in UI
+    mealsPerDay: int = 3  # number of meals per day
+    includeProteinShakes: bool = False  # whether to include protein shakes
     recentMeals: Optional[List[str]] = None  # injected server-side to avoid repeats
 
 class Meal(BaseModel):
@@ -297,16 +299,7 @@ async def generate_meal_plan(preferences: MealPreference):
     """Generate a personalized meal plan using GPT-4.1"""
     try:
         print(f"🤖 Generating meal plan for: {preferences.age}yo {preferences.sex}, {preferences.goal} goal")
-        print(f"🔍 Preferences object attributes: {dir(preferences)}")
-        print(f"🔍 Preferences object: {preferences}")
-        
-        # Check if mealsPerDay exists
-        if hasattr(preferences, 'mealsPerDay'):
-            print(f"✅ mealsPerDay found: {preferences.mealsPerDay}")
-        else:
-            print("❌ mealsPerDay attribute not found!")
-            print(f"Available attributes: {[attr for attr in dir(preferences) if not attr.startswith('_')]}")
-            raise HTTPException(status_code=400, detail="mealsPerDay attribute missing from preferences")
+        print(f"🔍 Requesting {preferences.mealsPerDay} meals per day")
 
         # ---------- FINAL SYSTEM PROMPT ----------
         meals_count = preferences.mealsPerDay
