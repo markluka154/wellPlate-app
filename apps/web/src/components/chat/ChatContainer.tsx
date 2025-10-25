@@ -23,7 +23,7 @@ export function ChatContainer({ messages, isTyping }: ChatContainerProps) {
   }, [messages, isTyping])
   
   return (
-    <div className="flex-1 overflow-y-auto bg-gray-50 px-4 py-6 space-y-4 scrollbar-thin">
+    <div className="flex-1 overflow-y-auto bg-transparent px-4 py-6 space-y-4 scrollbar-thin">
       {messages.map((message, index) => (
         <ChatMessage key={message.id} message={message} index={index} />
       ))}
