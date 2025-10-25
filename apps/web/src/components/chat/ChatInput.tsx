@@ -33,28 +33,22 @@ export function ChatInput({ onSend, disabled = false, userId }: ChatInputProps) 
       
       // If a meal is attached, prepend it to the message
       if (attachedMeal) {
-        // Create a detailed meal context for the AI
+        // Create a natural meal context for the AI (hidden from user)
         const mealContext = `
-[ATTACHED MEAL DETAILS]
-Meal Name: ${attachedMeal.name}
+[MEAL_CONTEXT: ${attachedMeal.name}]
 Type: ${attachedMeal.type}
-Total Calories: ${attachedMeal.totalCalories}
+Calories: ${attachedMeal.totalCalories}
 Protein: ${attachedMeal.totalProtein}g
 Carbs: ${attachedMeal.totalCarbs}g
 Fat: ${attachedMeal.totalFat}g
-Prep Time: ${attachedMeal.prepTime} minutes
-Cook Time: ${attachedMeal.cookTime} minutes
+Prep: ${attachedMeal.prepTime}min
+Cook: ${attachedMeal.cookTime}min
 Difficulty: ${attachedMeal.difficulty}
+Ingredients: ${attachedMeal.ingredients.map(ing => `${ing.item} (${ing.qty})`).join(', ')}
+Steps: ${attachedMeal.steps.join(' | ')}
+[END_MEAL_CONTEXT]
 
-INGREDIENTS:
-${attachedMeal.ingredients.map(ing => `- ${ing.item} (${ing.qty})`).join('\n')}
-
-COOKING STEPS:
-${attachedMeal.steps.map((step, index) => `${index + 1}. ${step}`).join('\n')}
-
-[END ATTACHED MEAL DETAILS]
-
-User Question: ${messageToSend}
+User message: ${messageToSend}
         `.trim()
         
         messageToSend = mealContext
