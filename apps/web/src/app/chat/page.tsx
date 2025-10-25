@@ -7,6 +7,7 @@ import { useChatStore } from '@/store/coachStore'
 import { ChatHeader } from '@/components/chat/ChatHeader'
 import { ChatContainer } from '@/components/chat/ChatContainer'
 import { ChatInput } from '@/components/chat/ChatInput'
+import { QuickActions } from '@/components/chat/QuickActions'
 import { Button } from '@/components/ui/button'
 import { Loader2, ArrowLeft } from 'lucide-react'
 import type { Session } from 'next-auth'
@@ -69,6 +70,14 @@ export default function ChatPage() {
       await sendMessage(message)
     } catch (err) {
       console.error('Failed to send message:', err)
+    }
+  }
+
+  const handleQuickAction = async (action: string) => {
+    try {
+      await sendMessage(action)
+    } catch (err) {
+      console.error('Failed to send quick action:', err)
     }
   }
 
@@ -150,6 +159,14 @@ export default function ChatPage() {
     <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-emerald-100 via-emerald-50/80 to-blue-100/60 flex flex-col">
       {/* Top Gradient Header */}
       <ChatHeader />
+      
+      {/* Quick Actions - Show when there are few messages */}
+      {messages.length <= 2 && (
+        <QuickActions 
+          onActionClick={handleQuickAction}
+          disabled={isLoading}
+        />
+      )}
       
       {/* Chat Messages Container */}
       <ChatContainer 

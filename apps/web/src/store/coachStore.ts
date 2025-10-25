@@ -143,7 +143,11 @@ export const useChatStore = create<ChatStore>()(
             const welcomeMessage: ChatMessage = {
               id: crypto.randomUUID(),
               role: 'assistant',
-              content: `Hi ${data.userProfile.name || 'there'}! I'm Lina, your AI nutrition coach. I'm here to help you reach your ${data.userProfile.goal} goals through personalized nutrition, exercise, and lifestyle guidance. How can I assist you today? 🌱`,
+              content: `Hey ${data.userProfile.name || 'there'}! 🌱 I'm Lina, your AI nutrition coach. I'm genuinely excited to be part of your health journey! 
+
+I noticed you're working toward ${data.userProfile.goal} goals - that's fantastic! 💪 I'm here to help you reach those goals through personalized nutrition, smart meal planning, and lifestyle guidance that actually works.
+
+How are you feeling today? What's on your mind when it comes to your nutrition and health goals? I'd love to hear about your current challenges or what you're most excited about! ✨`,
               timestamp: new Date(),
               type: 'text',
             }

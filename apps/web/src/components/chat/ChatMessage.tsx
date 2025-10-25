@@ -2,6 +2,8 @@
 
 import { cn } from '@/lib/utils'
 import ReactMarkdown from 'react-markdown'
+import { ProgressVisualization } from './ProgressVisualization'
+import { MoodTracker } from './MoodTracker'
 
 interface ChatMessageProps {
   message: {
@@ -9,12 +11,65 @@ interface ChatMessageProps {
     role: 'user' | 'assistant'
     content: string
     timestamp?: string
+    type?: string
+    data?: any
   }
   index: number
 }
 
 export function ChatMessage({ message, index }: ChatMessageProps) {
   const isUser = message.role === 'user'
+  
+  // Handle special message types
+  if (message.type === 'progress_chart' && message.data) {
+    return (
+      <div className={cn(
+        "flex gap-3 animate-fadeIn",
+        isUser && "justify-end"
+      )}>
+        {/* AI Avatar (left side) */}
+        {!isUser && (
+          <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center shadow-sm flex-shrink-0 ring-2 ring-white">
+            <span className="text-white font-semibold text-sm">L</span>
+          </div>
+        )}
+        
+        {/* Progress Chart */}
+        <div className="max-w-[85%] sm:max-w-[75%] md:max-w-[65%]">
+          <ProgressVisualization 
+            progressData={message.data.progressData || []} 
+            goal={message.data.goal}
+          />
+        </div>
+      </div>
+    )
+  }
+
+  if (message.type === 'mood_tracker') {
+    return (
+      <div className={cn(
+        "flex gap-3 animate-fadeIn",
+        isUser && "justify-end"
+      )}>
+        {/* AI Avatar (left side) */}
+        {!isUser && (
+          <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center shadow-sm flex-shrink-0 ring-2 ring-white">
+            <span className="text-white font-semibold text-sm">L</span>
+          </div>
+        )}
+        
+        {/* Mood Tracker */}
+        <div className="max-w-[85%] sm:max-w-[75%] md:max-w-[65%]">
+          <MoodTracker 
+            onMoodSelect={(mood, description) => {
+              // This would trigger a message to be sent
+              console.log('Mood selected:', mood, description)
+            }}
+          />
+        </div>
+      </div>
+    )
+  }
   
   return (
     <div className={cn(
