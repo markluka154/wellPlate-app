@@ -21,18 +21,19 @@ class OpenAIClient:
         
         try:
             response = await self.client.chat.completions.create(
-                model="gpt-3.5-turbo",
+                model="gpt-4o",
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are a professional nutritionist and meal planning expert. Create detailed, personalized meal plans that are nutritionally balanced and practical to prepare."
+                        "content": f"You are a professional nutritionist and meal planning expert. CRITICAL: You MUST generate EXACTLY {preferences.mealsPerDay} meals per day. This is NON-NEGOTIABLE. Count your meals before responding. Create detailed, personalized meal plans that are nutritionally balanced and practical to prepare."
                     },
                     {
                         "role": "user",
                         "content": prompt
                     }
                 ],
-                temperature=0.4,
+                response_format={"type": "json_object"},
+                temperature=0.3,
                 max_tokens=4000
             )
             
@@ -127,14 +128,16 @@ MEAL TIMING ENFORCEMENT:
 - Dinner meals should be the heartiest and most satisfying
 - Snacks should be light and portable, not full meals
 
-Return the response as a JSON object with this exact structure:
+🚨 CRITICAL JSON STRUCTURE - FOLLOW EXACTLY:
+You MUST create a JSON with EXACTLY {meals_per_day} meals in the "meals" array:
+
 {{
   "plan": [
     {{
       "day": 1,
       "meals": [
         {{
-          "name": "Meal Name",
+          "name": "Breakfast: [meal name]",
           "kcal": 450,
           "protein_g": 25.5,
           "carbs_g": 35.2,
@@ -143,7 +146,51 @@ Return the response as a JSON object with this exact structure:
             {{"item": "ingredient name", "qty": "amount"}}
           ],
           "steps": ["Step 1", "Step 2", "Step 3"]
-        }}
+        }},
+        {{
+          "name": "Lunch: [meal name]",
+          "kcal": 500,
+          "protein_g": 30.0,
+          "carbs_g": 40.0,
+          "fat_g": 20.0,
+          "ingredients": [
+            {{"item": "ingredient name", "qty": "amount"}}
+          ],
+          "steps": ["Step 1", "Step 2", "Step 3"]
+        }},
+        {{
+          "name": "Dinner: [meal name]",
+          "kcal": 600,
+          "protein_g": 35.0,
+          "carbs_g": 45.0,
+          "fat_g": 25.0,
+          "ingredients": [
+            {{"item": "ingredient name", "qty": "amount"}}
+          ],
+          "steps": ["Step 1", "Step 2", "Step 3"]
+        }}{',' if meals_per_day >= 4 else ''}
+        {{
+          "name": "Snack: [meal name]",
+          "kcal": 200,
+          "protein_g": 10.0,
+          "carbs_g": 20.0,
+          "fat_g": 8.0,
+          "ingredients": [
+            {{"item": "ingredient name", "qty": "amount"}}
+          ],
+          "steps": ["Step 1", "Step 2"]
+        }}{',' if meals_per_day >= 5 else ''}
+        {{
+          "name": "Evening Snack: [meal name]",
+          "kcal": 150,
+          "protein_g": 8.0,
+          "carbs_g": 15.0,
+          "fat_g": 6.0,
+          "ingredients": [
+            {{"item": "ingredient name", "qty": "amount"}}
+          ],
+          "steps": ["Step 1"]
+        }}{',' if meals_per_day >= 6 else ''}
       ]
     }}
   ],
@@ -158,6 +205,8 @@ Return the response as a JSON object with this exact structure:
     {{"category": "Dairy", "items": ["item 1", "item 2"]}}
   ]
 }}
+
+🚨 COUNT VERIFICATION: The "meals" array above shows EXACTLY {meals_per_day} meals. Copy this structure and fill in your actual meals.
 
 Ensure all nutritional values are realistic and the total daily calories are close to {calorie_target}.
 🚨 CRITICAL FINAL CHECK: Count your meals - you MUST have EXACTLY {meals_per_day} meals per day for all 7 days.
