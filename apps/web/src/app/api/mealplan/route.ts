@@ -423,6 +423,8 @@ export async function POST(request: NextRequest) {
     console.log('🔍 Calling worker service...')
     // Call worker service
     const workerUrl = process.env.WORKER_URL || 'http://localhost:8420'
+    console.log('🔍 Worker URL being used:', workerUrl)
+    console.log('🔍 WORKER_URL env var:', process.env.WORKER_URL || 'NOT SET')
     
     let mealPlanData
     let requestBody
