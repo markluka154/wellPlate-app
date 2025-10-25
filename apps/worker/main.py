@@ -509,6 +509,10 @@ Return ONLY valid JSON, with this top-level shape:
 
     except Exception as e:
         print(f"❌ Meal plan generation error: {e}")
+        print(f"❌ Error type: {type(e).__name__}")
+        print(f"❌ Error details: {str(e)}")
+        import traceback
+        print(f"❌ Full traceback: {traceback.format_exc()}")
         # Keep your mock so the app never hard-fails in front of users
         print("🔄 Returning mock response due to error")
         mock_response = {
