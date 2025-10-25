@@ -467,6 +467,14 @@ export async function POST(request: NextRequest) {
         mealPlanData = JSON.parse(responseText)
         console.log('✅ Worker service response received')
         console.log('🔍 Worker response data:', JSON.stringify(mealPlanData, null, 2))
+        
+        // Check meal count in response
+        if (mealPlanData.plan && mealPlanData.plan[0] && mealPlanData.plan[0].meals) {
+          console.log('🔍 Number of meals in worker response:', mealPlanData.plan[0].meals.length)
+          console.log('🔍 Meal names:', mealPlanData.plan[0].meals.map((m: any) => m.name))
+        } else {
+          console.log('❌ No meals found in worker response structure')
+        }
       } catch (parseError) {
         console.error('❌ Failed to parse worker response as JSON:', parseError)
         console.error('❌ Raw response was:', responseText)
