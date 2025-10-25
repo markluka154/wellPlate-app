@@ -247,7 +247,7 @@ How are you feeling today? What's on your mind when it comes to your nutrition a
             messages: state.messages.slice(0, -1),
           }))
           
-          await sendMessage(lastUserMessage.content)
+          await sendMessage(lastUserMessage.content, lastUserMessage.content)
         }
       },
     }),
