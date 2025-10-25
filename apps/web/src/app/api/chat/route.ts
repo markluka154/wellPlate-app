@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { directQuery } from '@/lib/supabase'
 import { createChatCompletion, extractInsights } from '@/lib/ai/openai'
+import { SmartContextAnalyzer } from '@/lib/ai/smartContextAnalyzer'
 import { CoachContext } from '@/types/coach'
 import type { Session } from 'next-auth'
 
@@ -409,6 +410,210 @@ async function executeFunction(functionName: string, args: any, userId: string) 
           message: `Thank you for reporting this issue! We've noted your feedback.`,
           issueType: args.issueType,
           severity: args.severity
+        }
+      }
+    },
+
+    // Smart Context Awareness Functions
+    analyzePatterns: async (args, userId) => {
+      try {
+        // Load user data for analysis
+        const [memories, progressLogs, userProfile] = await Promise.all([
+          directQuery('SELECT * FROM "CoachMemory" WHERE "userId" = $1 ORDER BY "timestamp" DESC LIMIT 50', [userId]),
+          directQuery('SELECT * FROM "ProgressLog" WHERE "userId" = $1 ORDER BY "date" DESC LIMIT 30', [userId]),
+          directQuery('SELECT * FROM "UserProfile" WHERE "userId" = $1', [userId])
+        ])
+
+        if (memories.length === 0 && progressLogs.length === 0) {
+          return {
+            success: true,
+            message: "I'd love to analyze your patterns! Let's start by logging some data - your meals, mood, sleep, and energy levels. The more data I have, the better insights I can provide! 📊",
+            patterns: [],
+            suggestions: ["Log your daily mood", "Track your meals", "Record your sleep hours", "Note your energy levels"]
+          }
+        }
+
+        const analyzer = new SmartContextAnalyzer(memories, progressLogs, userProfile[0])
+        const patterns = analyzer.analyzePatterns()
+        const predictions = analyzer.generatePredictiveInsights()
+
+        return {
+          success: true,
+          message: `I've analyzed your patterns and found ${patterns.length} insights! Here's what I discovered about your habits and cycles.`,
+          patterns: patterns.map(p => ({
+            type: p.type,
+            title: p.title,
+            description: p.description,
+            confidence: p.confidence,
+            suggestion: p.suggestion
+          })),
+          predictions: predictions.map(p => ({
+            type: p.type,
+            description: p.description,
+            probability: p.probability,
+            prevention: p.prevention
+          })),
+          actionable: patterns.filter(p => p.actionable).length
+        }
+      } catch (error) {
+        console.error('Error analyzing patterns:', error)
+        return {
+          success: true,
+          message: "I'd love to analyze your patterns! Let's start by logging some data - your meals, mood, sleep, and energy levels.",
+          patterns: [],
+          suggestions: ["Log your daily mood", "Track your meals", "Record your sleep hours", "Note your energy levels"]
+        }
+      }
+    },
+
+    predictiveInsight: async (args, userId) => {
+      try {
+        // Load user data for prediction
+        const [memories, progressLogs, userProfile] = await Promise.all([
+          directQuery('SELECT * FROM "CoachMemory" WHERE "userId" = $1 ORDER BY "timestamp" DESC LIMIT 50', [userId]),
+          directQuery('SELECT * FROM "ProgressLog" WHERE "userId" = $1 ORDER BY "date" DESC LIMIT 30', [userId]),
+          directQuery('SELECT * FROM "UserProfile" WHERE "userId" = $1', [userId])
+        ])
+
+        const analyzer = new SmartContextAnalyzer(memories, progressLogs, userProfile[0])
+        const predictions = analyzer.generatePredictiveInsights()
+        
+        const relevantPrediction = predictions.find(p => p.type === args.predictionType)
+        
+        if (relevantPrediction) {
+          return {
+            success: true,
+            message: `Based on your patterns, ${relevantPrediction.description}`,
+            prediction: {
+              type: relevantPrediction.type,
+              timeframe: args.timeframe,
+              probability: relevantPrediction.probability,
+              description: relevantPrediction.description,
+              prevention: relevantPrediction.prevention,
+              preparation: relevantPrediction.preparation
+            },
+            actionable: true
+          }
+        } else {
+          return {
+            success: true,
+            message: `I need more data to make accurate predictions about ${args.predictionType}. Let's start tracking your patterns!`,
+            prediction: null,
+            actionable: false,
+            suggestion: "Log your daily metrics to enable better predictions"
+          }
+        }
+      } catch (error) {
+        console.error('Error generating predictive insight:', error)
+        return {
+          success: true,
+          message: `I'd love to provide predictive insights! Let's start by tracking your daily patterns.`,
+          prediction: null,
+          actionable: false
+        }
+      }
+    },
+
+    contextualSuggestion: async (args, userId) => {
+      try {
+        const currentTime = new Date()
+        const timeOfDay = currentTime.getHours() < 12 ? 'morning' : 
+                         currentTime.getHours() < 17 ? 'afternoon' : 
+                         currentTime.getHours() < 21 ? 'evening' : 'night'
+        const dayOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][currentTime.getDay()]
+
+        // Load recent data for context
+        const [memories, progressLogs] = await Promise.all([
+          directQuery('SELECT * FROM "CoachMemory" WHERE "userId" = $1 ORDER BY "timestamp" DESC LIMIT 20', [userId]),
+          directQuery('SELECT * FROM "ProgressLog" WHERE "userId" = $1 ORDER BY "date" DESC LIMIT 10', [userId])
+        ])
+
+        // Generate contextual suggestions based on time, day, and recent patterns
+        const suggestions = []
+        
+        if (timeOfDay === 'morning') {
+          suggestions.push("Start your day with a protein-rich breakfast to maintain steady energy")
+          suggestions.push("Consider adding some healthy fats like avocado or nuts to your morning meal")
+        } else if (timeOfDay === 'afternoon') {
+          suggestions.push("This is a great time for a light, energizing snack to avoid the afternoon slump")
+          suggestions.push("Stay hydrated - aim for water or herbal tea instead of caffeine")
+        } else if (timeOfDay === 'evening') {
+          suggestions.push("Choose lighter, easily digestible foods for dinner")
+          suggestions.push("Consider foods that support sleep quality like magnesium-rich options")
+        }
+
+        if (dayOfWeek === 'monday') {
+          suggestions.push("Monday motivation! Plan your meals for the week to stay on track")
+        } else if (dayOfWeek === 'friday') {
+          suggestions.push("Weekend prep! Consider meal prepping for a healthy weekend")
+        }
+
+        return {
+          success: true,
+          message: `Based on your current situation and the time of day, here are some contextual suggestions:`,
+          suggestions: suggestions.slice(0, 3), // Limit to top 3 suggestions
+          context: {
+            timeOfDay,
+            dayOfWeek,
+            currentSituation: args.currentSituation,
+            recentActivity: args.recentActivity
+          },
+          actionable: true
+        }
+      } catch (error) {
+        console.error('Error generating contextual suggestion:', error)
+        return {
+          success: true,
+          message: "I'd love to provide contextual suggestions! Tell me more about your current situation.",
+          suggestions: [],
+          actionable: false
+        }
+      }
+    },
+
+    smartFollowUp: async (args, userId) => {
+      try {
+        // Load recent conversation context
+        const memories = await directQuery('SELECT * FROM "CoachMemory" WHERE "userId" = $1 ORDER BY "timestamp" DESC LIMIT 10', [userId])
+        
+        // Generate intelligent follow-up questions based on context
+        const followUps = []
+        
+        if (args.context.includes('tired') || args.context.includes('energy')) {
+          followUps.push("How has your sleep been lately? Sleep quality often affects energy levels")
+          followUps.push("What did you eat for breakfast today? Morning nutrition can impact all-day energy")
+        }
+        
+        if (args.context.includes('mood') || args.context.includes('feeling')) {
+          followUps.push("Have you noticed any patterns in your mood throughout the day?")
+          followUps.push("What activities or foods usually help improve your mood?")
+        }
+        
+        if (args.context.includes('meal') || args.context.includes('food')) {
+          followUps.push("How did that meal make you feel afterward?")
+          followUps.push("Would you like me to suggest some variations or alternatives?")
+        }
+
+        if (followUps.length === 0) {
+          followUps.push("What's been working well for you lately?")
+          followUps.push("Is there anything specific you'd like to focus on improving?")
+        }
+
+        return {
+          success: true,
+          message: "Great question! Let me ask you something to better understand your situation:",
+          followUpQuestion: followUps[0],
+          additionalQuestions: followUps.slice(1, 3),
+          context: args.context,
+          actionable: true
+        }
+      } catch (error) {
+        console.error('Error generating smart follow-up:', error)
+        return {
+          success: true,
+          message: "That's interesting! Tell me more about your experience.",
+          followUpQuestion: "What would you like to focus on next?",
+          actionable: true
         }
       }
     },

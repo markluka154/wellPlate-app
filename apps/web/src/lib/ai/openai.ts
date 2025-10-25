@@ -459,6 +459,104 @@ export const functionDefinitions = [
       },
       required: ['context']
     }
+  },
+  {
+    name: 'analyzePatterns',
+    description: 'Analyze user patterns and provide intelligent insights about their habits, mood cycles, and correlations',
+    parameters: {
+      type: 'object',
+      properties: {
+        focusArea: {
+          type: 'string',
+          enum: ['eating_patterns', 'mood_cycles', 'energy_patterns', 'sleep_patterns', 'correlations', 'all'],
+          description: 'Specific area to analyze or all patterns'
+        },
+        timeframe: {
+          type: 'string',
+          enum: ['week', 'month', 'quarter'],
+          description: 'Time period to analyze'
+        }
+      },
+      required: ['focusArea']
+    }
+  },
+  {
+    name: 'predictiveInsight',
+    description: 'Provide predictive insights based on user patterns to anticipate needs and challenges',
+    parameters: {
+      type: 'object',
+      properties: {
+        predictionType: {
+          type: 'string',
+          enum: ['energy_dip', 'mood_change', 'meal_timing', 'sleep_quality', 'stress_trigger'],
+          description: 'Type of prediction to make'
+        },
+        timeframe: {
+          type: 'string',
+          enum: ['today', 'tomorrow', 'this_week', 'next_week'],
+          description: 'Timeframe for the prediction'
+        },
+        context: {
+          type: 'string',
+          description: 'Additional context for the prediction'
+        }
+      },
+      required: ['predictionType', 'timeframe']
+    }
+  },
+  {
+    name: 'contextualSuggestion',
+    description: 'Provide contextual suggestions based on user patterns, current situation, and historical data',
+    parameters: {
+      type: 'object',
+      properties: {
+        currentSituation: {
+          type: 'string',
+          description: 'User current situation or state'
+        },
+        timeOfDay: {
+          type: 'string',
+          enum: ['morning', 'afternoon', 'evening', 'night'],
+          description: 'Current time of day'
+        },
+        dayOfWeek: {
+          type: 'string',
+          enum: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'],
+          description: 'Current day of week'
+        },
+        weather: {
+          type: 'string',
+          description: 'Current weather conditions'
+        },
+        recentActivity: {
+          type: 'string',
+          description: 'Recent physical activity or events'
+        }
+      },
+      required: ['currentSituation']
+    }
+  },
+  {
+    name: 'smartFollowUp',
+    description: 'Ask intelligent follow-up questions based on user history and patterns',
+    parameters: {
+      type: 'object',
+      properties: {
+        context: {
+          type: 'string',
+          description: 'Context of the current conversation'
+        },
+        userResponse: {
+          type: 'string',
+          description: 'User response to analyze for follow-up'
+        },
+        patternMatch: {
+          type: 'string',
+          description: 'Specific pattern or insight to follow up on'
+        }
+      },
+      required: ['context', 'userResponse']
+    }
   }
 ]
 
@@ -555,6 +653,14 @@ const SYSTEM_PROMPT = `You are **Lina** 🌱, the WellPlate AI Nutrition Coach -
 - **Provide cooking alternatives** for time constraints or equipment limitations
 - **Explain nutritional benefits** of suggested changes
 
+**Smart Context Awareness:**
+- **Use pattern analysis** to understand user habits and cycles
+- **Reference past conversations** naturally ("Last time you mentioned...")
+- **Predict user needs** based on their patterns and current context
+- **Ask intelligent follow-ups** that show you're learning about them
+- **Provide contextual suggestions** based on time, day, weather, and recent activity
+- **Celebrate pattern recognition** ("I've noticed you've been consistent with...")
+
 **Celebrating Progress:**
 - **Acknowledge small wins** ("Even choosing water over soda is progress! 💧")
 - **Connect progress to their goals** ("This weight loss shows your metabolism is responding beautifully!")
@@ -631,6 +737,12 @@ const DEVELOPER_PROMPT = `**Available Functions**:
 - \`showMoodTracker(context, followUp)\` - Show interactive mood tracker for user engagement
 - \`suggestQuickMeal(timeAvailable, mealType, mood, energyLevel)\` - Quick meal suggestions based on constraints
 - \`provideMotivation(context, recentProgress, goal)\` - Personalized motivation and encouragement
+
+### **Smart Context Awareness & Intelligence**
+- \`analyzePatterns(focusArea, timeframe)\` - Analyze user patterns for eating, mood, energy, sleep cycles
+- \`predictiveInsight(predictionType, timeframe, context)\` - Predict future needs based on patterns
+- \`contextualSuggestion(currentSituation, timeOfDay, dayOfWeek, weather, recentActivity)\` - Context-aware suggestions
+- \`smartFollowUp(context, userResponse, patternMatch)\` - Intelligent follow-up questions based on history
 
 ### **Feedback & Rating System**
 - \`rateMealPlan(mealPlanId, rating, feedback, mealType, issues)\` - Rate meal plans and provide detailed feedback
