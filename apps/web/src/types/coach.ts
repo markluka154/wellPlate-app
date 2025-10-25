@@ -57,6 +57,55 @@ export interface ChatSession {
   updatedAt: Date
 }
 
+export interface SavedMealIngredient {
+  item: string
+  qty: string
+  calories: number
+  protein: number
+  carbs: number
+  fat: number
+  fiber: number
+  sodium: number
+}
+
+export interface SavedMeal {
+  id: string
+  userId: string
+  name: string
+  type: 'breakfast' | 'lunch' | 'dinner' | 'snack'
+  description?: string
+  ingredients: SavedMealIngredient[]
+  totalCalories: number
+  totalProtein: number
+  totalCarbs: number
+  totalFat: number
+  totalFiber: number
+  totalSodium: number
+  prepTime: number
+  cookTime: number
+  servings: number
+  difficulty: 'easy' | 'medium' | 'hard'
+  steps: string[]
+  originalMealPlanId?: string
+  tags: string[]
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface IngredientSubstitution {
+  original: SavedMealIngredient
+  substitute: SavedMealIngredient
+  reason: string
+  nutritionChange: {
+    calories: number
+    protein: number
+    carbs: number
+    fat: number
+    fiber: number
+    sodium: number
+  }
+}
+
 // AI Function Types
 export interface GenerateMealPlanParams {
   goal: string

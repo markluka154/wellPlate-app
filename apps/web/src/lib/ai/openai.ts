@@ -179,10 +179,14 @@ export const functionDefinitions = [
   },
   {
     name: 'suggestIngredientSubstitution',
-    description: 'Suggest alternative ingredients for dietary restrictions, allergies, or preferences',
+    description: 'Suggest ingredient substitutions for user\'s saved meals based on preferences, allergies, or dietary restrictions',
     parameters: {
       type: 'object',
       properties: {
+        mealId: {
+          type: 'string',
+          description: 'ID of the saved meal to modify'
+        },
         originalIngredient: {
           type: 'string',
           description: 'The ingredient to replace'
@@ -192,42 +196,77 @@ export const functionDefinitions = [
           enum: ['allergy', 'dislike', 'unavailable', 'dietary_restriction', 'budget', 'preference'],
           description: 'Reason for substitution'
         },
-        dietaryRestrictions: {
+        userPreferences: {
           type: 'array',
           items: { type: 'string' },
-          description: 'User dietary restrictions (vegan, gluten-free, etc.)'
+          description: 'User\'s taste preferences and dietary requirements'
         },
-        mealType: {
+        context: {
           type: 'string',
-          enum: ['breakfast', 'lunch', 'dinner', 'snack'],
-          description: 'Type of meal being modified'
+          description: 'Additional context about the substitution request'
         }
       },
-      required: ['originalIngredient', 'reason']
+      required: ['mealId', 'originalIngredient', 'reason']
     }
   },
   {
     name: 'modifyMealNutrition',
-    description: 'Adjust meal nutritional content based on user goals',
+    description: 'Update the nutritional content of a saved meal after ingredient substitution',
     parameters: {
       type: 'object',
       properties: {
-        meal: {
+        mealId: {
           type: 'string',
-          description: 'Description of the current meal'
+          description: 'ID of the saved meal to update'
         },
-        goal: {
-          type: 'string',
-          enum: ['increase_protein', 'reduce_carbs', 'add_fiber', 'reduce_fat', 'increase_vegetables', 'reduce_sodium'],
-          description: 'Nutritional adjustment goal'
+        substitution: {
+          type: 'object',
+          properties: {
+            original: {
+              type: 'object',
+              properties: {
+                item: { type: 'string' },
+                qty: { type: 'string' },
+                calories: { type: 'number' },
+                protein: { type: 'number' },
+                carbs: { type: 'number' },
+                fat: { type: 'number' },
+                fiber: { type: 'number' },
+                sodium: { type: 'number' }
+              }
+            },
+            substitute: {
+              type: 'object',
+              properties: {
+                item: { type: 'string' },
+                qty: { type: 'string' },
+                calories: { type: 'number' },
+                protein: { type: 'number' },
+                carbs: { type: 'number' },
+                fat: { type: 'number' },
+                fiber: { type: 'number' },
+                sodium: { type: 'number' }
+              }
+            }
+          }
         },
-        intensity: {
+        nutritionChange: {
+          type: 'object',
+          properties: {
+            calories: { type: 'number' },
+            protein: { type: 'number' },
+            carbs: { type: 'number' },
+            fat: { type: 'number' },
+            fiber: { type: 'number' },
+            sodium: { type: 'number' }
+          }
+        },
+        explanation: {
           type: 'string',
-          enum: ['subtle', 'moderate', 'significant'],
-          description: 'Level of modification'
+          description: 'Explanation of why this substitution was chosen and its nutritional impact'
         }
       },
-      required: ['meal', 'goal']
+      required: ['mealId', 'substitution', 'nutritionChange', 'explanation']
     }
   },
   {

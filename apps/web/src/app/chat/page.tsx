@@ -185,11 +185,12 @@ export default function ChatPage() {
         isTyping={isTyping}
       />
       
-      {/* Floating Input Area */}
-      <ChatInput 
-        onSend={handleSendMessage}
-        disabled={isLoading}
-      />
+            {/* Floating Input Area */}
+            <ChatInput 
+              onSend={handleSendMessage}
+              disabled={isLoading}
+              userId={session?.user?.id}
+            />
     </div>
   )
 }

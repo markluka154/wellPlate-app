@@ -617,6 +617,154 @@ async function executeFunction(functionName: string, args: any, userId: string) 
         }
       }
     },
+
+    // Meal Modification Functions
+    suggestIngredientSubstitution: async (args, userId) => {
+      try {
+        const { mealId, originalIngredient, reason, userPreferences, context } = args
+        
+        // Fetch the saved meal
+        const mealResult = await directQuery(
+          'SELECT * FROM "SavedMeal" WHERE id = $1 AND "userId" = $2',
+          [mealId, userId]
+        )
+        
+        if (mealResult.length === 0) {
+          return {
+            success: false,
+            message: "I couldn't find that saved meal. Please try selecting a different meal."
+          }
+        }
+        
+        const meal = mealResult[0]
+        const ingredients = typeof meal.ingredients === 'string' 
+          ? JSON.parse(meal.ingredients) 
+          : meal.ingredients
+        
+        // Find the ingredient to substitute
+        const ingredientToReplace = ingredients.find((ing: any) => 
+          ing.item.toLowerCase().includes(originalIngredient.toLowerCase())
+        )
+        
+        if (!ingredientToReplace) {
+          return {
+            success: false,
+            message: `I couldn't find "${originalIngredient}" in that meal. Please check the ingredient name and try again.`
+          }
+        }
+        
+        return {
+          success: true,
+          message: `I found "${ingredientToReplace.item}" in your ${meal.name}. Let me suggest some great substitutions based on your preferences!`,
+          meal: {
+            id: meal.id,
+            name: meal.name,
+            type: meal.type,
+            ingredients: ingredients
+          },
+          ingredientToReplace: ingredientToReplace,
+          reason: reason,
+          userPreferences: userPreferences || [],
+          context: context || ''
+        }
+        
+      } catch (error) {
+        console.error('Error suggesting ingredient substitution:', error)
+        return {
+          success: false,
+          message: "I had trouble accessing your saved meal. Please try again."
+        }
+      }
+    },
+    
+    modifyMealNutrition: async (args, userId) => {
+      try {
+        const { mealId, substitution, nutritionChange, explanation } = args
+        
+        // Fetch the current meal
+        const mealResult = await directQuery(
+          'SELECT * FROM "SavedMeal" WHERE id = $1 AND "userId" = $2',
+          [mealId, userId]
+        )
+        
+        if (mealResult.length === 0) {
+          return {
+            success: false,
+            message: "I couldn't find that saved meal to update."
+          }
+        }
+        
+        const meal = mealResult[0]
+        const ingredients = typeof meal.ingredients === 'string' 
+          ? JSON.parse(meal.ingredients) 
+          : meal.ingredients
+        
+        // Update the ingredients array with the substitution
+        const updatedIngredients = ingredients.map((ing: any) => {
+          if (ing.item === substitution.original.item) {
+            return substitution.substitute
+          }
+          return ing
+        })
+        
+        // Calculate new totals
+        const newTotals = {
+          totalCalories: meal.totalCalories + nutritionChange.calories,
+          totalProtein: meal.totalProtein + nutritionChange.protein,
+          totalCarbs: meal.totalCarbs + nutritionChange.carbs,
+          totalFat: meal.totalFat + nutritionChange.fat,
+          totalFiber: meal.totalFiber + nutritionChange.fiber,
+          totalSodium: meal.totalSodium + nutritionChange.sodium
+        }
+        
+        // Update the meal in the database
+        await directQuery(
+          `UPDATE "SavedMeal" SET 
+            ingredients = $1,
+            "totalCalories" = $2,
+            "totalProtein" = $3,
+            "totalCarbs" = $4,
+            "totalFat" = $5,
+            "totalFiber" = $6,
+            "totalSodium" = $7,
+            "updatedAt" = NOW()
+          WHERE id = $8 AND "userId" = $9`,
+          [
+            JSON.stringify(updatedIngredients),
+            newTotals.totalCalories,
+            newTotals.totalProtein,
+            newTotals.totalCarbs,
+            newTotals.totalFat,
+            newTotals.totalFiber,
+            newTotals.totalSodium,
+            mealId,
+            userId
+          ]
+        )
+        
+        return {
+          success: true,
+          message: `Perfect! I've updated your ${meal.name} with the substitution.`,
+          updatedMeal: {
+            id: meal.id,
+            name: meal.name,
+            type: meal.type,
+            ingredients: updatedIngredients,
+            nutrition: newTotals,
+            substitution: substitution,
+            explanation: explanation
+          },
+          nutritionChange: nutritionChange
+        }
+        
+      } catch (error) {
+        console.error('Error modifying meal nutrition:', error)
+        return {
+          success: false,
+          message: "I had trouble updating your meal. Please try again."
+        }
+      }
+    },
   }
 
   const functionHandler = functionMap[functionName]
