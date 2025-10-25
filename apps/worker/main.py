@@ -297,8 +297,16 @@ async def generate_meal_plan(preferences: MealPreference):
     """Generate a personalized meal plan using GPT-4.1"""
     try:
         print(f"🤖 Generating meal plan for: {preferences.age}yo {preferences.sex}, {preferences.goal} goal")
-
-        price_style = map_effort_to_price_style(preferences.cookingEffort)
+        print(f"🔍 Preferences object attributes: {dir(preferences)}")
+        print(f"🔍 Preferences object: {preferences}")
+        
+        # Check if mealsPerDay exists
+        if hasattr(preferences, 'mealsPerDay'):
+            print(f"✅ mealsPerDay found: {preferences.mealsPerDay}")
+        else:
+            print("❌ mealsPerDay attribute not found!")
+            print(f"Available attributes: {[attr for attr in dir(preferences) if not attr.startswith('_')]}")
+            raise HTTPException(status_code=400, detail="mealsPerDay attribute missing from preferences")
 
         # ---------- FINAL SYSTEM PROMPT ----------
         meals_count = preferences.mealsPerDay
