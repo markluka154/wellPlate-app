@@ -17,7 +17,8 @@ import {
   ChefHat,
   ShoppingCart,
   X,
-  Loader2
+  Loader2,
+  Timer
 } from 'lucide-react'
 import Link from 'next/link'
 import { UpgradePrompt } from '@/components/dashboard/UpgradePrompt'
@@ -276,6 +277,77 @@ export default function FamilyDashboard() {
           </div>
         </div>
         
+        {/* Today's Dinner Command Center - THE NEW FEATURE */}
+        <div className="mb-8 bg-white rounded-3xl shadow-xl border-2 border-orange-200 overflow-hidden">
+          <div className="bg-gradient-to-r from-orange-500 to-red-600 p-6 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold flex items-center gap-3">
+                  <ChefHat className="h-8 w-8" />
+                  Today's Dinner Command Center
+                </h2>
+                <p className="text-orange-100 mt-1">Track your meal progress in real-time</p>
+              </div>
+              <div className="px-4 py-2 rounded-full bg-orange-400 text-white flex items-center gap-2">
+                <Clock className="h-4 w-4" />
+                <span className="font-semibold">Shopping</span>
+              </div>
+            </div>
+          </div>
+          <div className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Grilled Chicken with Vegetables</h3>
+                  <div className="flex items-center gap-4 text-gray-600">
+                    <Clock className="h-4 w-4" />
+                    <span>Scheduled: 18:00</span>
+                    <Timer className="h-4 w-4 ml-4" />
+                    <span>Prep: 45 min</span>
+                  </div>
+                </div>
+                <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Clock className="h-5 w-5 text-yellow-600" />
+                    <span className="font-semibold text-yellow-800">Missing Ingredients</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <span className="bg-white px-3 py-1 rounded-full text-sm text-yellow-800 border border-yellow-300">Chicken breast</span>
+                    <span className="bg-white px-3 py-1 rounded-full text-sm text-yellow-800 border border-yellow-300">Bell peppers</span>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <button className="flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-3 rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all font-medium">
+                    <Clock className="h-4 w-4" />
+                    Swap Meal
+                  </button>
+                  <button className="flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-red-600 text-white px-4 py-3 rounded-xl hover:from-orange-600 hover:to-red-700 transition-all font-medium">
+                    <Clock className="h-4 w-4" />
+                    Emergency Mode
+                  </button>
+                </div>
+              </div>
+              <div className="bg-gray-50 rounded-xl p-4">
+                <h4 className="font-semibold text-gray-700 mb-3">Progress Status</h4>
+                <div className="space-y-3">
+                  {['Shopping', 'Prepping', 'Cooking', 'Served'].map((stage, idx) => (
+                    <div key={stage} className="flex items-center gap-3">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                        idx === 0 ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-400'
+                      }`}>
+                        {idx === 0 ? '✓' : idx + 1}
+                      </div>
+                      <span className={`font-medium ${idx === 0 ? 'text-gray-900' : 'text-gray-400'}`}>
+                        {stage}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Upgrade Banner */}
         {userPlan !== 'FAMILY_MONTHLY' && (
           <div className="mb-8">
