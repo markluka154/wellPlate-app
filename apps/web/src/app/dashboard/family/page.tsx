@@ -89,51 +89,52 @@ export default function FamilyDashboard() {
   const [weekMeals, setWeekMeals] = useState<any[]>([])
   const { showNotification, NotificationComponent } = useNotification()
 
+  // Define loader functions at component level so they can be called elsewhere
+  const loadFamilyMembers = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch('/api/family/members')
+      if (response.ok) {
+        const data = await response.json()
+        setFamilyMembers(data.members || [])
+      } else {
+        console.error('Failed to load family members')
+        setFamilyMembers([])
+      }
+    } catch (error) {
+      console.error('Error loading family members:', error)
+      setFamilyMembers([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const loadTodayMeal = async () => {
+    try {
+      const response = await fetch('/api/family/today-meal')
+      if (response.ok) {
+        const data = await response.json()
+        setTodayMeal(data.meal)
+      }
+    } catch (error) {
+      console.error('Error loading today meal:', error)
+    }
+  }
+
+  const loadWeekMeals = async () => {
+    try {
+      const response = await fetch('/api/family/week-meals')
+      if (response.ok) {
+        const data = await response.json()
+        setWeekMeals(data.meals || [])
+      }
+    } catch (error) {
+      console.error('Error loading week meals:', error)
+    }
+  }
+
   // Load family members and today's meal from API
   useEffect(() => {
-    const loadFamilyMembers = async () => {
-      try {
-        setLoading(true)
-        const response = await fetch('/api/family/members')
-        if (response.ok) {
-          const data = await response.json()
-          setFamilyMembers(data.members || [])
-        } else {
-          console.error('Failed to load family members')
-          setFamilyMembers([])
-        }
-      } catch (error) {
-        console.error('Error loading family members:', error)
-        setFamilyMembers([])
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    const loadTodayMeal = async () => {
-      try {
-        const response = await fetch('/api/family/today-meal')
-        if (response.ok) {
-          const data = await response.json()
-          setTodayMeal(data.meal)
-        }
-      } catch (error) {
-        console.error('Error loading today meal:', error)
-      }
-    }
-
-    const loadWeekMeals = async () => {
-      try {
-        const response = await fetch('/api/family/week-meals')
-        if (response.ok) {
-          const data = await response.json()
-          setWeekMeals(data.meals || [])
-        }
-      } catch (error) {
-        console.error('Error loading week meals:', error)
-      }
-    }
-
     loadFamilyMembers()
     loadTodayMeal()
     loadWeekMeals()
