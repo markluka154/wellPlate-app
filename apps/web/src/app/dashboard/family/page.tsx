@@ -26,6 +26,7 @@ import { useNotification } from '@/components/ui/Notification'
 import FamilyMemberModal from '@/components/dashboard/FamilyMemberModal'
 import MealSwapModal from '@/components/family/MealSwapModal'
 import EmergencyModeModal from '@/components/family/EmergencyModeModal'
+import MealReactionModal from '@/components/family/MealReactionModal'
 import WeekCalendar from '@/components/family/WeekCalendar'
 
 // Updated interfaces based on Prisma schema
@@ -85,6 +86,7 @@ export default function FamilyDashboard() {
   }>({ title: '', message: '' })
   const [showSwapModal, setShowSwapModal] = useState(false)
   const [showEmergencyModal, setShowEmergencyModal] = useState(false)
+  const [showReactionModal, setShowReactionModal] = useState(false)
   const [todayMeal, setTodayMeal] = useState<any>(null)
   const [weekMeals, setWeekMeals] = useState<any[]>([])
   const [selectedDayForSwap, setSelectedDayForSwap] = useState<string | null>(null)
@@ -101,8 +103,8 @@ export default function FamilyDashboard() {
       } else {
         console.error('Failed to load family members')
         setFamilyMembers([])
-      }
-    } catch (error) {
+        }
+      } catch (error) {
       console.error('Error loading family members:', error)
       setFamilyMembers([])
     } finally {
@@ -179,7 +181,7 @@ export default function FamilyDashboard() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(memberData)
         })
-      } else {
+        } else {
         // Create new member
         response = await fetch('/api/family/members', {
           method: 'POST',
@@ -203,8 +205,8 @@ export default function FamilyDashboard() {
         showNotification('success', 'Success', editingMember ? 'Member updated successfully!' : 'Member added successfully!')
       } else {
         throw new Error('Failed to save member')
-      }
-    } catch (error) {
+        }
+      } catch (error) {
       console.error('Error saving family member:', error)
       showNotification('error', 'Error', 'Failed to save member. Please try again.')
     }
@@ -315,6 +317,11 @@ export default function FamilyDashboard() {
         // Reload today's meal to get updated progress
         await loadTodayMeal()
         showNotification('success', 'Progress Updated', `Meal is now ${newStatus}`)
+        
+        // If moved to "Served", show reaction modal
+        if (newStatus === 'served') {
+          setShowReactionModal(true)
+        }
       }
     } catch (error) {
       console.error('Error updating progress:', error)
@@ -568,7 +575,7 @@ export default function FamilyDashboard() {
             }}
           />
         </div>
-
+        
         {/* Upgrade Banner */}
         {userPlan !== 'FAMILY_MONTHLY' && (
           <div className="mb-8">
@@ -676,8 +683,8 @@ export default function FamilyDashboard() {
                             <span className="text-gray-400 text-xs">+{member.healthGoals.length - 2} more</span>
                           )}
                         </div>
-                      </div>
-                    </div>
+          </div>
+        </div>
 
                     {/* Action Buttons */}
                     <div className="mt-4 flex gap-2">
@@ -688,13 +695,13 @@ export default function FamilyDashboard() {
                         <User className="h-4 w-4" />
                         View Profile
                       </button>
+            </div>
+          </div>
+                      ))}
+                    </div>
+            )}
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
 
         {/* Quick Actions Section */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -709,8 +716,8 @@ export default function FamilyDashboard() {
                 <div>
                   <h3 className="font-bold text-gray-900">Generate Meal Plan</h3>
                   <p className="text-gray-600 text-sm">Create a personalized plan</p>
-                </div>
               </div>
+          </div>
             </Link>
 
             <Link
@@ -720,11 +727,11 @@ export default function FamilyDashboard() {
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-600 rounded-xl flex items-center justify-center">
                   <ShoppingCart className="h-6 w-6 text-white" />
-                </div>
+              </div>
                 <div>
                   <h3 className="font-bold text-gray-900">Shopping List</h3>
                   <p className="text-gray-600 text-sm">View your groceries</p>
-                </div>
+              </div>
               </div>
             </Link>
 
@@ -735,12 +742,12 @@ export default function FamilyDashboard() {
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-12 h-12 bg-gradient-to-r from-pink-500 to-rose-600 rounded-xl flex items-center justify-center">
                   <Heart className="h-6 w-6 text-white" />
-                </div>
+              </div>
                 <div>
                   <h3 className="font-bold text-gray-900">Favorites</h3>
                   <p className="text-gray-600 text-sm">Saved recipes</p>
-                </div>
-              </div>
+          </div>
+        </div>
             </Link>
         </div>
 
@@ -793,6 +800,25 @@ export default function FamilyDashboard() {
         onClose={() => setShowEmergencyModal(false)}
         onSelect={handleEmergencySelect}
       />
+
+      {/* Meal Reaction Modal */}
+      {todayMeal && (
+        <MealReactionModal
+          isOpen={showReactionModal}
+          onClose={() => setShowReactionModal(false)}
+          mealName={todayMeal.name}
+          mealIngredients={
+            Array.isArray(todayMeal.ingredients)
+              ? todayMeal.ingredients.map((ing: any) => ing.name || ing.toString())
+              : []
+          }
+          familyMembers={familyMembers.map(m => ({ id: m.id, name: m.name, avatar: m.avatar }))}
+          onReactionRecorded={async () => {
+            await loadTodayMeal()
+            showNotification('success', 'Reactions Saved', 'Thank you for helping us learn your preferences!')
+          }}
+        />
+      )}
     </div>
   )
 }

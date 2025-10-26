@@ -94,6 +94,7 @@ export async function GET(request: NextRequest) {
         type: todayMeal.type,
         status: mealStatus,
         progressStatus: mealStatus, // Add progress status
+        ingredients: todayMeal.ingredients || [], // Include ingredients for reaction tracking
         missingIngredients: [], // Empty for emergency meals (you chose them because you have ingredients)
         assignedCook: undefined
       }
