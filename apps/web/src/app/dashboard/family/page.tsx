@@ -244,10 +244,44 @@ export default function FamilyDashboard() {
     setShowEmergencyModal(true)
   }
 
-  const handleEmergencySelect = (option: any) => {
-    showNotification('success', 'Emergency Solution', `Switched to ${option.name} (${option.time})`)
-    setShowEmergencyModal(false)
-    // TODO: Update meal in database
+  const handleEmergencySelect = async (option: any) => {
+    try {
+      // Update the meal in the database
+      const response = await fetch('/api/family/today-meal', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: option.name,
+          description: option.description,
+          time: option.time,
+          type: option.type
+        })
+      })
+
+      if (response.ok) {
+        // Update local state
+        setTodayMeal({
+          ...todayMeal,
+          name: option.name,
+          scheduledTime: new Date(Date.now() + parseInt(option.time) * 60000).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+        })
+        
+        showNotification('success', 'Meal Updated!', `Switched to ${option.name} (${option.time})`)
+        setShowEmergencyModal(false)
+        
+        // Reload today's meal to show updated status
+        const reloadResponse = await fetch('/api/family/today-meal')
+        if (reloadResponse.ok) {
+          const data = await reloadResponse.json()
+          setTodayMeal(data.meal)
+        }
+      } else {
+        throw new Error('Failed to update meal')
+      }
+    } catch (error) {
+      console.error('Error updating meal:', error)
+      showNotification('error', 'Update Failed', 'Could not update meal. Please try again.')
+    }
   }
 
   const handleSwapConfirmed = async (alternative: any, reason: string) => {
@@ -340,12 +374,12 @@ export default function FamilyDashboard() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">Grilled Chicken with Vegetables</h3>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">{todayMeal?.name || 'Grilled Chicken with Vegetables'}</h3>
                   <div className="flex items-center gap-4 text-gray-600">
                     <Clock className="h-4 w-4" />
-                    <span>Scheduled: 18:00</span>
+                    <span>Scheduled: {todayMeal?.scheduledTime || '18:00'}</span>
                     <Timer className="h-4 w-4 ml-4" />
-                    <span>Prep: 45 min</span>
+                    <span>Prep: {todayMeal?.estimatedPrepTime || 45} min</span>
                   </div>
                 </div>
                 <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
