@@ -8,7 +8,7 @@ generator client {
 
 datasource db {
   provider  = "postgresql"
-  url       = env("DIRECT_URL")    // Use direct connection to avoid prepared statement conflicts
+  url       = env("DATABASE_URL")  // Connection pooler for queries
   directUrl = env("DIRECT_URL")    // Direct connection for migrations
 }
 
