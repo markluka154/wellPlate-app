@@ -191,6 +191,12 @@ export default function ChatPage() {
               disabled={isLoading}
               userId={session?.user?.id}
             />
+            {/* Debug info on mobile */}
+            {typeof window !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(window.navigator.userAgent) && (
+              <div className="fixed bottom-20 left-2 bg-black/80 text-white text-xs p-2 rounded z-50">
+                Mobile Debug: {session?.user?.id ? '✅ has userId' : '❌ no userId'}
+              </div>
+            )}
     </div>
   )
 }

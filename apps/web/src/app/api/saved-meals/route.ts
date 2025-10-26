@@ -8,8 +8,13 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get('userId')
+    
+    console.log('🔍 GET /api/saved-meals called with userId:', userId)
+    console.log('🔍 Request URL:', request.url)
+    console.log('🔍 User agent:', request.headers.get('user-agent'))
 
     if (!userId) {
+      console.error('❌ No userId provided')
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 })
     }
 
@@ -18,12 +23,16 @@ export async function GET(request: NextRequest) {
       'SELECT * FROM "SavedMeal" WHERE "userId" = $1 ORDER BY "createdAt" DESC',
       [userId]
     )
+    
+    console.log('🔍 SavedMeal table results:', savedMeals.length, 'meals')
 
     // Also get meals from existing MealPlan table and convert them
     const mealPlans = await directQuery(
       'SELECT * FROM "MealPlan" WHERE "userId" = $1 ORDER BY "createdAt" DESC LIMIT 10',
       [userId]
     )
+    
+    console.log('🔍 MealPlan table results:', mealPlans.length, 'plans')
 
     const convertedMeals: SavedMeal[] = []
     
@@ -112,6 +121,8 @@ export async function GET(request: NextRequest) {
 
     // Sort by creation date (newest first)
     allMeals.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+
+    console.log('🔍 Total meals to return:', allMeals.length)
 
     return NextResponse.json({
       success: true,
