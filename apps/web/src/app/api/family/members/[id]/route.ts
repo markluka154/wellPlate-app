@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { PrismaClient, MemberRole, ActivityLevel, MemberPhase } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { MemberRole, ActivityLevel, MemberPhase } from '@prisma/client'
+import prisma from '@/lib/prisma'
 
 // PUT /api/family/members/[id] - Update family member
 export async function PUT(

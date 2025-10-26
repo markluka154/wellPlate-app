@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { PrismaClient, Reaction } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { Reaction } from '@prisma/client'
+import prisma from '@/lib/prisma'
 
 // POST /api/family/preferences/learn - Update food preferences based on meal reaction
 export async function POST(request: NextRequest) {
