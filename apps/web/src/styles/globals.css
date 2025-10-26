@@ -316,18 +316,58 @@ html {
 
 .macro-row {
   display: flex;
-  gap: 16px;
+  gap: 12px;
   flex-wrap: wrap;
   margin-bottom: 8px;
 }
 
 .macro-value {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   color: #374151;
   background: #f3f4f6;
   padding: 6px 12px;
   border-radius: 6px;
+  white-space: nowrap;
+}
+
+/* Mobile optimization */
+@media (max-width: 640px) {
+  .macro-row {
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .macro-value {
+    font-size: 12px;
+    padding: 5px 10px;
+    flex: 1 1 calc(50% - 4px);
+    min-width: 0;
+    text-align: center;
+  }
+
+  .meal-title {
+    font-size: 18px;
+    margin: 0 0 10px 0;
+  }
+
+  .meal-head {
+    margin-bottom: 16px;
+  }
+
+  .macro-details {
+    margin-bottom: 12px;
+  }
+
+  .meta-inline {
+    gap: 8px;
+    font-size: 12px;
+  }
+
+  .meta-inline span {
+    padding: 3px 8px;
+    font-size: 12px;
+  }
 }
 
 .block-title {
