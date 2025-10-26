@@ -18,7 +18,8 @@ import {
   ShoppingCart,
   X,
   Loader2,
-  Timer
+  Timer,
+  Package
 } from 'lucide-react'
 import Link from 'next/link'
 import { UpgradePrompt } from '@/components/dashboard/UpgradePrompt'
