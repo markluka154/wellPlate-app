@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { MemberRole, ActivityLevel, MemberPhase } from '@prisma/client'
 import { getPrismaClient } from '@/lib/prisma'
+import { checkFamilyAccess } from '@/lib/subscription-utils'
 
 // GET /api/family/members - Get all family members
 export async function GET(request: NextRequest) {
@@ -11,6 +12,21 @@ export async function GET(request: NextRequest) {
     
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Check if user has Family Pack access
+    const { hasAccess, plan, needsUpgrade } = await checkFamilyAccess(session.user.id)
+    
+    if (!hasAccess) {
+      return NextResponse.json(
+        { 
+          error: 'FAMILY_PACK_REQUIRED',
+          message: 'Family Pack subscription required',
+          currentPlan: plan,
+          needsUpgrade
+        },
+        { status: 403 }
+      )
     }
 
     const prisma = getPrismaClient()
