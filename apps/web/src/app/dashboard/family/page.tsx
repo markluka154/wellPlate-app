@@ -87,6 +87,7 @@ export default function FamilyDashboard() {
   const [showEmergencyModal, setShowEmergencyModal] = useState(false)
   const [todayMeal, setTodayMeal] = useState<any>(null)
   const [weekMeals, setWeekMeals] = useState<any[]>([])
+  const [selectedDayForSwap, setSelectedDayForSwap] = useState<string | null>(null)
   const { showNotification, NotificationComponent } = useNotification()
 
   // Define loader functions at component level so they can be called elsewhere
@@ -346,9 +347,11 @@ export default function FamilyDashboard() {
         
         showNotification('success', 'Meal Swapped', `Swapped to ${alternative.name}`)
         setShowSwapModal(false)
+        setSelectedDayForSwap(null)
         
-        // Reload today's meal
+        // Reload today's meal and week meals
         await loadTodayMeal()
+        await loadWeekMeals()
       } else {
         throw new Error('Failed to swap meal')
       }
@@ -527,10 +530,40 @@ export default function FamilyDashboard() {
 
         {/* Week Calendar */}
         <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-2xl font-bold text-gray-900">Weekly Meal Plan</h3>
+            <button
+              onClick={async () => {
+                try {
+                  showNotification('info', 'Generating...', 'Creating your family meal plan')
+                  const response = await fetch('/api/family/generate-week', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                  })
+                  
+                  if (response.ok) {
+                    await loadWeekMeals()
+                    await loadTodayMeal()
+                    showNotification('success', 'Plan Generated!', 'Your family meal plan is ready!')
+                  } else {
+                    throw new Error('Failed to generate plan')
+                  }
+                } catch (error) {
+                  console.error('Error generating plan:', error)
+                  showNotification('error', 'Generation Failed', 'Could not generate meal plan. Please try again.')
+                }
+              }}
+              className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all font-medium shadow-lg"
+            >
+              <ChefHat className="h-5 w-5" />
+              Generate Week Plan
+            </button>
+          </div>
           <WeekCalendar 
             meals={weekMeals}
             onSwapMeal={(date) => {
               // Open swap modal for specific day
+              setSelectedDayForSwap(date)
               setShowSwapModal(true)
             }}
           />
@@ -739,7 +772,10 @@ export default function FamilyDashboard() {
       {todayMeal && (
         <MealSwapModal
           isOpen={showSwapModal}
-          onClose={() => setShowSwapModal(false)}
+          onClose={() => {
+            setShowSwapModal(false)
+            setSelectedDayForSwap(null)
+          }}
           onSwap={handleSwapConfirmed}
           currentMeal={{
             name: todayMeal.name || 'Today Meal',

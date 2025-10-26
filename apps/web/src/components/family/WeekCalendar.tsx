@@ -152,12 +152,12 @@ export default function WeekCalendar({ meals, onDayClick, onSwapMeal }: WeekCale
               )}
 
               {/* Actions */}
-              {meal && !isPast && (
+              {!isPast && (
                 <button
-                  onClick={() => onSwapMeal?.(meal.date)}
-                  className="mt-2 w-full text-xs text-blue-600 hover:text-blue-700 font-medium"
+                  onClick={() => onSwapMeal?.(date.toISOString().split('T')[0])}
+                  className="mt-2 w-full text-xs text-blue-600 hover:text-blue-700 font-medium border border-blue-200 hover:bg-blue-50 py-1 rounded-lg transition-colors"
                 >
-                  Swap →
+                  {meal ? 'Swap Meal →' : 'Add Meal →'}
                 </button>
               )}
             </div>
