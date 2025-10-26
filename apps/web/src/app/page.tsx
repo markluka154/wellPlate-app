@@ -4,6 +4,7 @@ import { PricingTables } from '@/components/marketing/PricingTables'
 import { CTASection } from '@/components/marketing/CTASection'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
+import { AICoach } from '@/components/marketing/AICoach'
 
 // New components
 import StatBar from '@/components/marketing/StatBar'
@@ -21,6 +22,9 @@ export default function HomePage() {
       <main>
         {/* Existing Hero */}
         <Hero />
+        
+        {/* AI Coach Section */}
+        <AICoach />
         
         {/* Existing Features */}
         <FeatureGrid />
