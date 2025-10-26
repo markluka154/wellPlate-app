@@ -73,11 +73,10 @@ export const PRICING_PLANS: PricingPlan[] = [
     price: 0,
     features: [
       '3 meal plans per month',
-      'PDF download with recipes',
       'Email delivery',
+      'Basic preferences only',
       'Basic macro tracking',
-      'AI nutrition coach (3 messages)',
-      'All diet types'
+      'AI nutrition coach (3 messages)'
     ]
   },
   {
@@ -112,7 +111,7 @@ export const PRICING_PLANS: PricingPlan[] = [
   {
     id: 'FAMILY_MONTHLY',
     name: 'Family Pack',
-    price: 29.99,
+    price: 24.99,
     features: [
       'Everything in Pro',
       'Up to 6 family members',
