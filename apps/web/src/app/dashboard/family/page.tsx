@@ -385,12 +385,73 @@ export default function FamilyDashboard() {
                         </div>
                       </div>
                     </div>
+
+                    {/* Action Buttons */}
+                    <div className="mt-4 flex gap-2">
+                      <button
+                        onClick={() => router.push(`/dashboard/family/members/${member.id}`)}
+                        className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-3 py-2 rounded-lg text-sm font-medium hover:from-blue-700 hover:to-purple-700 transition-all duration-200"
+                      >
+                        <User className="h-4 w-4" />
+                        View Profile
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
             )}
           </div>
         </div>
+
+        {/* Quick Actions Section */}
+        {familyMembers.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <Link
+              href="/dashboard/family/generate"
+              className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 hover:shadow-md transition-all duration-200"
+            >
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl flex items-center justify-center">
+                  <ChefHat className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900">Generate Meal Plan</h3>
+                  <p className="text-gray-600 text-sm">Create a personalized plan</p>
+                </div>
+              </div>
+            </Link>
+
+            <Link
+              href="/dashboard/family/shopping"
+              className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 hover:shadow-md transition-all duration-200"
+            >
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-600 rounded-xl flex items-center justify-center">
+                  <ShoppingCart className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900">Shopping List</h3>
+                  <p className="text-gray-600 text-sm">View your groceries</p>
+                </div>
+              </div>
+            </Link>
+
+            <Link
+              href="/dashboard/family/favorites"
+              className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 hover:shadow-md transition-all duration-200"
+            >
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-12 h-12 bg-gradient-to-r from-pink-500 to-rose-600 rounded-xl flex items-center justify-center">
+                  <Heart className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900">Favorites</h3>
+                  <p className="text-gray-600 text-sm">Saved recipes</p>
+                </div>
+              </div>
+            </Link>
+          </div>
+        )}
 
         {/* Upgrade Prompt Modal */}
         <UpgradePrompt
