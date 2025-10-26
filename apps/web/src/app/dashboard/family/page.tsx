@@ -25,6 +25,7 @@ import { UpgradePrompt } from '@/components/dashboard/UpgradePrompt'
 import { useNotification } from '@/components/ui/Notification'
 import FamilyMemberModal from '@/components/dashboard/FamilyMemberModal'
 import MealSwapModal from '@/components/family/MealSwapModal'
+import EmergencyModeModal from '@/components/family/EmergencyModeModal'
 
 // Updated interfaces based on Prisma schema
 interface FamilyMember {
@@ -82,6 +83,7 @@ export default function FamilyDashboard() {
     feature?: string
   }>({ title: '', message: '' })
   const [showSwapModal, setShowSwapModal] = useState(false)
+  const [showEmergencyModal, setShowEmergencyModal] = useState(false)
   const [todayMeal, setTodayMeal] = useState<any>(null)
   const { showNotification, NotificationComponent } = useNotification()
 
@@ -239,7 +241,13 @@ export default function FamilyDashboard() {
   }
 
   const handleEmergencyMode = () => {
-    showNotification('info', 'Emergency Mode', 'Emergency mode features coming soon!')
+    setShowEmergencyModal(true)
+  }
+
+  const handleEmergencySelect = (option: any) => {
+    showNotification('success', 'Emergency Solution', `Switched to ${option.name} (${option.time})`)
+    setShowEmergencyModal(false)
+    // TODO: Update meal in database
   }
 
   const handleSwapConfirmed = async (alternative: any, reason: string) => {
@@ -596,6 +604,13 @@ export default function FamilyDashboard() {
           mealIndex={0}
         />
       )}
+
+      {/* Emergency Mode Modal */}
+      <EmergencyModeModal
+        isOpen={showEmergencyModal}
+        onClose={() => setShowEmergencyModal(false)}
+        onSelect={handleEmergencySelect}
+      />
     </div>
   )
 }
