@@ -63,16 +63,20 @@ export default function MemberProfile() {
   const [preferences, setPreferences] = useState<FoodPreference[]>([])
   const [loading, setLoading] = useState(true)
 
+  const memberId = Array.isArray(params.id) ? params.id[0] : params.id
+
   useEffect(() => {
     loadMemberData()
-  }, [params.id])
+  }, [memberId])
 
   const loadMemberData = async () => {
+    if (!memberId) return
+    
     try {
       setLoading(true)
       
       // Load member details
-      const response = await fetch(`/api/family/members/${params.id}`)
+      const response = await fetch(`/api/family/members/${memberId}`)
       if (response.ok) {
         const data = await response.json()
         setMember(data.member)
