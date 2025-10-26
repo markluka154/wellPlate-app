@@ -26,6 +26,7 @@ import { useNotification } from '@/components/ui/Notification'
 import FamilyMemberModal from '@/components/dashboard/FamilyMemberModal'
 import MealSwapModal from '@/components/family/MealSwapModal'
 import EmergencyModeModal from '@/components/family/EmergencyModeModal'
+import WeekCalendar from '@/components/family/WeekCalendar'
 
 // Updated interfaces based on Prisma schema
 interface FamilyMember {
@@ -85,6 +86,7 @@ export default function FamilyDashboard() {
   const [showSwapModal, setShowSwapModal] = useState(false)
   const [showEmergencyModal, setShowEmergencyModal] = useState(false)
   const [todayMeal, setTodayMeal] = useState<any>(null)
+  const [weekMeals, setWeekMeals] = useState<any[]>([])
   const { showNotification, NotificationComponent } = useNotification()
 
   // Load family members and today's meal from API
@@ -120,8 +122,21 @@ export default function FamilyDashboard() {
       }
     }
 
+    const loadWeekMeals = async () => {
+      try {
+        const response = await fetch('/api/family/week-meals')
+        if (response.ok) {
+          const data = await response.json()
+          setWeekMeals(data.meals || [])
+        }
+      } catch (error) {
+        console.error('Error loading week meals:', error)
+      }
+    }
+
     loadFamilyMembers()
     loadTodayMeal()
+    loadWeekMeals()
   }, [])
 
   // Load user plan from localStorage
@@ -284,12 +299,60 @@ export default function FamilyDashboard() {
     }
   }
 
+  const advanceProgressStatus = async (newStatus: string) => {
+    try {
+      const response = await fetch('/api/family/today-meal', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          progressStatus: newStatus
+        })
+      })
+
+      if (response.ok) {
+        // Reload today's meal to get updated progress
+        await loadTodayMeal()
+        showNotification('success', 'Progress Updated', `Meal is now ${newStatus}`)
+      }
+    } catch (error) {
+      console.error('Error updating progress:', error)
+      showNotification('error', 'Error', 'Failed to update progress')
+    }
+  }
+
   const handleSwapConfirmed = async (alternative: any, reason: string) => {
     try {
-      // TODO: Implement actual swap logic
-      showNotification('success', 'Meal Swapped', `Swapped to ${alternative.name}`)
-      setShowSwapModal(false)
+      // Actually swap the meal by calling the PUT endpoint
+      const response = await fetch('/api/family/today-meal', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: alternative.name,
+          description: alternative.reason,
+          time: alternative.time,
+          type: 'swapped'
+        })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        // Update local state
+        setTodayMeal({
+          ...todayMeal,
+          name: alternative.name,
+          description: alternative.reason
+        })
+        
+        showNotification('success', 'Meal Swapped', `Swapped to ${alternative.name}`)
+        setShowSwapModal(false)
+        
+        // Reload today's meal
+        await loadTodayMeal()
+      } else {
+        throw new Error('Failed to swap meal')
+      }
     } catch (error) {
+      console.error('Error swapping meal:', error)
       showNotification('error', 'Error', 'Failed to swap meal')
     }
   }
@@ -382,16 +445,28 @@ export default function FamilyDashboard() {
                     <span>Prep: {todayMeal?.estimatedPrepTime || 45} min</span>
                   </div>
                 </div>
-                <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Clock className="h-5 w-5 text-yellow-600" />
-                    <span className="font-semibold text-yellow-800">Missing Ingredients</span>
+                {todayMeal?.missingIngredients && todayMeal.missingIngredients.length > 0 ? (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Clock className="h-5 w-5 text-yellow-600" />
+                      <span className="font-semibold text-yellow-800">Missing Ingredients</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {todayMeal.missingIngredients.map((ingredient, idx) => (
+                        <span key={idx} className="bg-white px-3 py-1 rounded-full text-sm text-yellow-800 border border-yellow-300">
+                          {ingredient}
+                        </span>
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    <span className="bg-white px-3 py-1 rounded-full text-sm text-yellow-800 border border-yellow-300">Chicken breast</span>
-                    <span className="bg-white px-3 py-1 rounded-full text-sm text-yellow-800 border border-yellow-300">Bell peppers</span>
+                ) : (
+                  <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-5 w-5 text-green-600" />
+                      <span className="font-semibold text-green-800">All ingredients ready!</span>
+                    </div>
                   </div>
-                </div>
+                )}
                 <div className="grid grid-cols-2 gap-3">
                   <button onClick={handleSwapMeal} className="flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-3 rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all font-medium">
                     <Clock className="h-4 w-4" />
@@ -410,20 +485,36 @@ export default function FamilyDashboard() {
                     // Determine which stage is active based on meal progress
                     const stages = ['shopping', 'prepping', 'cooking', 'served']
                     const currentStatus = todayMeal?.progressStatus || 'shopping'
-                    const isCompleted = stages.indexOf(currentStatus) > idx
-                    const isActive = stages.indexOf(currentStatus) === idx
-                    const statusIndex = stages.indexOf(currentStatus)
+                    const currentIndex = stages.indexOf(currentStatus)
+                    const isCompleted = currentIndex > idx
+                    const isActive = currentIndex === idx
+                    const isNextUp = currentIndex + 1 === idx
+                    
+                    const handleClick = () => {
+                      if (isNextUp && todayMeal) {
+                        // User clicked the next stage, advance progress
+                        const nextStatus = stages[idx]
+                        advanceProgressStatus(nextStatus)
+                      }
+                    }
                     
                     return (
-                      <div key={stage} className="flex items-center gap-3">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                      <div 
+                        key={stage} 
+                        className={`flex items-center gap-3 ${isNextUp ? 'cursor-pointer hover:opacity-70' : 'cursor-default'}`}
+                        onClick={handleClick}
+                      >
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
                           isCompleted || isActive ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-400'
-                        }`}>
+                        } ${isNextUp ? 'hover:bg-green-400' : ''}`}>
                           {(isCompleted || isActive) ? '✓' : idx + 1}
                         </div>
                         <span className={`font-medium ${isCompleted || isActive ? 'text-gray-900' : 'text-gray-400'}`}>
                           {stage}
                         </span>
+                        {isNextUp && (
+                          <span className="ml-auto text-xs text-blue-600">Click to advance →</span>
+                        )}
                       </div>
                     )
                   })}
@@ -431,6 +522,17 @@ export default function FamilyDashboard() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Week Calendar */}
+        <div className="mb-8">
+          <WeekCalendar 
+            meals={weekMeals}
+            onSwapMeal={(date) => {
+              // Open swap modal for specific day
+              setShowSwapModal(true)
+            }}
+          />
         </div>
 
         {/* Upgrade Banner */}
