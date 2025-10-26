@@ -3,16 +3,18 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { getPrismaClient } from '@/lib/prisma'
 
-// GET /api/family/leftovers - Get all leftovers for family
+// GET /api/family/leftovers - Get all leftovers for the family
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    
+
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const prisma = getPrismaClient()
+
+    // Get family profile
     const familyProfile = await prisma.familyProfile.findUnique({
       where: { userId: session.user.id },
       select: { id: true }
@@ -23,27 +25,26 @@ export async function GET(request: NextRequest) {
     }
 
     // Get active meal plan
-    const activeMealPlan = await prisma.familyMealPlan.findFirst({
+    const mealPlan = await prisma.familyMealPlan.findFirst({
       where: {
         familyProfileId: familyProfile.id,
         isActive: true
+      },
+      include: {
+        leftovers: {
+          orderBy: { storedDate: 'desc' }
+        }
       }
     })
 
-    if (!activeMealPlan) {
+    if (!mealPlan) {
       return NextResponse.json({ leftovers: [] })
     }
 
-    // Get leftovers
-    const leftovers = await prisma.leftover.findMany({
-      where: {
-        familyMealPlanId: activeMealPlan.id,
-        isUsed: false
-      },
-      orderBy: { expiresAt: 'asc' }
+    return NextResponse.json({
+      leftovers: mealPlan.leftovers || [],
+      mealPlanId: mealPlan.id
     })
-
-    return NextResponse.json({ leftovers })
   } catch (error) {
     console.error('Error fetching leftovers:', error)
     return NextResponse.json(
@@ -53,27 +54,27 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/family/leftovers - Create leftover
+// POST /api/family/leftovers - Create a new leftover
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    
+
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const prisma = getPrismaClient()
     const body = await request.json()
-    const { mealPlanId, originalMealName, originalMealDate, quantity, unit, expiresAt, canBeUsedIn, transformRecipes } = body
+    const { originalMealName, originalMealDate, quantity, unit, expiresAt } = body
 
-    if (!mealPlanId || !originalMealName || !quantity || !unit || !expiresAt) {
+    if (!originalMealName || !quantity || !expiresAt) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Missing required fields: originalMealName, quantity, expiresAt' },
         { status: 400 }
       )
     }
 
-    // Verify meal plan belongs to user's family
+    // Get family profile
     const familyProfile = await prisma.familyProfile.findUnique({
       where: { userId: session.user.id },
       select: { id: true }
@@ -83,29 +84,42 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Family profile not found' }, { status: 404 })
     }
 
-    const mealPlan = await prisma.familyMealPlan.findUnique({
-      where: { id: mealPlanId }
+    // Get active meal plan
+    const mealPlan = await prisma.familyMealPlan.findFirst({
+      where: {
+        familyProfileId: familyProfile.id,
+        isActive: true
+      }
     })
 
-    if (!mealPlan || mealPlan.familyProfileId !== familyProfile.id) {
-      return NextResponse.json({ error: 'Meal plan not found or unauthorized' }, { status: 404 })
+    if (!mealPlan) {
+      return NextResponse.json(
+        { error: 'No active meal plan found. Please generate a meal plan first.' },
+        { status: 404 }
+      )
     }
 
+    // Create leftover
     const leftover = await prisma.leftover.create({
       data: {
-        familyMealPlanId: mealPlanId,
+        familyMealPlanId: mealPlan.id,
         originalMealName,
-        originalMealDate: new Date(originalMealDate),
-        quantity: parseFloat(quantity),
-        unit,
+        originalMealDate: originalMealDate ? new Date(originalMealDate) : new Date(),
+        quantity: parseFloat(quantity.toString()),
+        unit: unit || 'servings',
+        storedDate: new Date(),
         expiresAt: new Date(expiresAt),
-        canBeUsedIn: canBeUsedIn || [],
-        transformRecipes: transformRecipes || {},
+        canBeUsedIn: [],
+        transformRecipes: {},
         isUsed: false
       }
     })
 
-    return NextResponse.json({ leftover })
+    return NextResponse.json({
+      success: true,
+      leftover,
+      message: 'Leftover tracked successfully'
+    })
   } catch (error) {
     console.error('Error creating leftover:', error)
     return NextResponse.json(
@@ -114,65 +128,3 @@ export async function POST(request: NextRequest) {
     )
   }
 }
-
-// PUT /api/family/leftovers/[id] - Mark leftover as used
-export async function PUT(request: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions)
-    
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const prisma = getPrismaClient()
-    const body = await request.json()
-    const { leftoverId, usedInMeal } = body
-
-    if (!leftoverId) {
-      return NextResponse.json(
-        { error: 'Missing required field: leftoverId' },
-        { status: 400 }
-      )
-    }
-
-    // Get leftover
-    const leftover = await prisma.leftover.findUnique({
-      where: { id: leftoverId },
-      include: {
-        familyMealPlan: {
-          include: {
-            familyProfile: {
-              select: { userId: true }
-            }
-          }
-        }
-      }
-    })
-
-    if (!leftover) {
-      return NextResponse.json({ error: 'Leftover not found' }, { status: 404 })
-    }
-
-    if (leftover.familyMealPlan.familyProfile.userId !== session.user.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
-    }
-
-    const updated = await prisma.leftover.update({
-      where: { id: leftoverId },
-      data: {
-        isUsed: true,
-        usedInMeal: usedInMeal || '',
-        usedAt: new Date()
-      }
-    })
-
-    return NextResponse.json({ leftover: updated })
-  } catch (error) {
-    console.error('Error updating leftover:', error)
-    return NextResponse.json(
-      { error: 'Failed to update leftover' },
-      { status: 500 }
-    )
-  }
-}
-
