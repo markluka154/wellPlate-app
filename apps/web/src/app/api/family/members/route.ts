@@ -22,8 +22,10 @@ export async function GET(request: NextRequest) {
       })
     } catch (prismaError: any) {
       if (prismaError?.message?.includes('prepared statement')) {
-        console.log('⚠️ Prepared statement error, retrying...')
-        await new Promise(resolve => setTimeout(resolve, 200))
+        console.log('⚠️ Prepared statement error, disconnecting and retrying...')
+        // Disconnect to force fresh connection
+        await prisma.$disconnect().catch(() => {})
+        await new Promise(resolve => setTimeout(resolve, 300))
         try {
           familyProfile = await prisma.familyProfile.findUnique({
             where: { userId: session.user.id },
