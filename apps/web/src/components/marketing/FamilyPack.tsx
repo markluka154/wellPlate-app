@@ -135,24 +135,14 @@ export function FamilyPack() {
             </div>
           </div>
 
-          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <div className="mt-8 flex justify-center">
             <Button
               asChild
               size="lg"
-              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold shadow-lg shadow-purple-600/25 hover:shadow-xl transition-all duration-200 px-8 py-6"
+              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold shadow-lg shadow-purple-600/25 hover:shadow-xl transition-all duration-200 px-12 py-6"
             >
               <Link href="/pricing">
                 Get Family Pack
-              </Link>
-            </Button>
-            <Button
-              asChild
-              variant="outline"
-              size="lg"
-              className="border-2 border-gray-300 hover:border-gray-400 px-8 py-6"
-            >
-              <Link href="/signin">
-                Try Free for 3 Days
               </Link>
             </Button>
           </div>
