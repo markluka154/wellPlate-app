@@ -72,10 +72,12 @@ export const PRICING_PLANS: PricingPlan[] = [
     name: 'Free',
     price: 0,
     features: [
-      '3 plans per month',
+      '3 meal plans per month',
+      'PDF download with recipes',
       'Email delivery',
-      'PDF download',
-      'Basic macros'
+      'Basic macro tracking',
+      'AI nutrition coach (3 messages)',
+      'All diet types'
     ]
   },
   {
@@ -83,28 +85,14 @@ export const PRICING_PLANS: PricingPlan[] = [
     name: 'Pro Monthly',
     price: 14.99,
     features: [
-      'Unlimited plans',
-      'Custom macros target',
+      'Everything in Free',
+      'Unlimited meal plans',
+      'Custom macro targets',
       'Priority generation',
-      'Save history & favorites',
-      'Email delivery',
-      'PDF download'
-    ]
-  },
-  {
-    id: 'FAMILY_MONTHLY',
-    name: 'Family Monthly',
-    price: 24.99,
-    features: [
-      'Everything in Pro',
-      'Up to 6 family members',
-      'Age-appropriate meal plans',
-      'Family shopping lists',
-      'Kid-friendly recipes',
-      'Family favorites',
-      'Dietary restrictions per member',
-      'Allergy management',
-      'Family analytics'
+      'Save meal history',
+      'Favorites collection',
+      'Unlimited AI chat',
+      'PDF downloads'
     ],
     popular: true
   },
@@ -113,14 +101,29 @@ export const PRICING_PLANS: PricingPlan[] = [
     name: 'Pro Annual',
     price: 119.99,
     features: [
-      'Unlimited plans',
-      'Custom macros target',
-      'Priority generation',
-      'Save history & favorites',
-      'Email delivery',
-      'PDF download',
+      'Everything in Pro',
+      'Save 33% ($60/year)',
       'Seasonal recipe packs',
-      'Best value - 33% off'
+      'Early access to features',
+      'Best value for annual planning',
+      'Unlimited everything'
+    ]
+  },
+  {
+    id: 'FAMILY_MONTHLY',
+    name: 'Family Pack',
+    price: 29.99,
+    features: [
+      'Everything in Pro',
+      'Up to 6 family members',
+      'Per-member dietary needs',
+      'Allergy & preference tracking',
+      'Family shopping lists',
+      'Meal reaction learning',
+      'Family budget tracking',
+      'Leftover management',
+      'Age-appropriate meals',
+      'Weekly meal calendar'
     ]
   }
 ];
