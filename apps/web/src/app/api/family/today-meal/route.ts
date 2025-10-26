@@ -48,19 +48,48 @@ export async function GET(request: NextRequest) {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
     
-    // TODO: Parse the meals JSON and return today's meal
-    // For now, return mock data
-    const todayMeal = {
-      id: '1',
-      name: 'Grilled Chicken with Vegetables',
-      scheduledTime: '18:00',
-      estimatedPrepTime: 45,
-      status: 'shopping' as const,
-      missingIngredients: ['Chicken breast', 'Bell peppers'],
-      assignedCook: undefined
+    // Parse the meals JSON and find today's meal
+    let meals: any[] = []
+    
+    if (typeof mealPlan.meals === 'string') {
+      try {
+        const parsed = JSON.parse(mealPlan.meals)
+        meals = Array.isArray(parsed) ? parsed : []
+      } catch (e) {
+        meals = []
+      }
+    } else if (Array.isArray(mealPlan.meals)) {
+      meals = mealPlan.meals
+    }
+    
+    // Find today's meal
+    const todayMeal = meals.find((m: any) => {
+      const mealDate = new Date(m.date || m.dateString)
+      mealDate.setHours(0, 0, 0, 0)
+      return mealDate.getTime() === today.getTime()
+    })
+
+    if (!todayMeal) {
+      return NextResponse.json({ 
+        meal: null,
+        message: 'No meal scheduled for today'
+      })
     }
 
-    return NextResponse.json({ meal: todayMeal })
+    // Return the actual meal data
+    return NextResponse.json({ 
+      meal: {
+        id: todayMeal.id || '1',
+        name: todayMeal.name || 'No meal name',
+        description: todayMeal.description,
+        scheduledTime: todayMeal.time || '18:00',
+        estimatedPrepTime: todayMeal.time || '45',
+        type: todayMeal.type,
+        status: 'planned' as const,
+        missingIngredients: [],
+        assignedCook: undefined
+      }
+    })
   } catch (error) {
     console.error('Error fetching today meal:', error)
     return NextResponse.json(
