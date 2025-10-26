@@ -120,11 +120,21 @@ export async function PUT(request: NextRequest) {
       })
     } else {
       // Update existing meal plan with new meal
-      const meals = (mealPlan.meals as any[]) || []
+      // Parse the meals JSON string if it's a string
+      let meals = mealPlan.meals
+      if (typeof meals === 'string') {
+        try {
+          meals = JSON.parse(meals)
+        } catch (e) {
+          meals = []
+        }
+      }
+      meals = meals || []
+      
       const today = new Date()
       today.setHours(0, 0, 0, 0)
       
-      const updatedMeals = meals.map(m => {
+      const updatedMeals = meals.map((m: any) => {
         const mealDate = new Date(m.date || m.dateString)
         mealDate.setHours(0, 0, 0, 0)
         
@@ -135,13 +145,13 @@ export async function PUT(request: NextRequest) {
       })
       
       // If today's meal doesn't exist in the array, add it
-      if (!updatedMeals.some(m => new Date(m.date || m.dateString).getDate() === today.getDate())) {
+      if (!updatedMeals.some((m: any) => new Date(m.date || m.dateString).getDate() === today.getDate())) {
         updatedMeals.push({ name, description, time, type, date: today.toISOString(), dateString: today.toISOString() })
       }
 
       await prisma.familyMealPlan.update({
         where: { id: mealPlan.id },
-        data: { meals: updatedMeals }
+        data: { meals: JSON.stringify(updatedMeals) }
       })
     }
 
