@@ -30,6 +30,7 @@ import MealSwapModal from '@/components/family/MealSwapModal'
 import EmergencyModeModal from '@/components/family/EmergencyModeModal'
 import MealReactionModal from '@/components/family/MealReactionModal'
 import WeekCalendar from '@/components/family/WeekCalendar'
+import { FamilyLockedComponent } from '@/components/family/FamilyLockedComponent'
 
 // Updated interfaces based on Prisma schema
 interface FamilyMember {
@@ -381,6 +382,16 @@ export default function FamilyDashboard() {
     )
   }
 
+  // Check if user has Family Pack access
+  if (userPlan !== 'FAMILY_MONTHLY') {
+    return (
+      <>
+        <FamilyLockedComponent currentPlan={userPlan} />
+        <NotificationComponent />
+      </>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -685,7 +696,7 @@ export default function FamilyDashboard() {
                             <span className="text-gray-400 text-xs">+{member.healthGoals.length - 2} more</span>
                           )}
                         </div>
-          </div>
+                      </div>
         </div>
 
                     {/* Action Buttons */}
@@ -697,13 +708,13 @@ export default function FamilyDashboard() {
                         <User className="h-4 w-4" />
                         View Profile
                       </button>
-            </div>
-          </div>
-                      ))}
-                    </div>
-            )}
                     </div>
                   </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* Quick Actions Section */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -714,12 +725,12 @@ export default function FamilyDashboard() {
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl flex items-center justify-center">
                   <ChefHat className="h-6 w-6 text-white" />
-                </div>
+            </div>
                 <div>
                   <h3 className="font-bold text-gray-900">Generate Meal Plan</h3>
                   <p className="text-gray-600 text-sm">Create a personalized plan</p>
-              </div>
           </div>
+                    </div>
             </Link>
 
             <Link
@@ -729,12 +740,12 @@ export default function FamilyDashboard() {
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-600 rounded-xl flex items-center justify-center">
                   <ShoppingCart className="h-6 w-6 text-white" />
-              </div>
+                    </div>
                 <div>
                   <h3 className="font-bold text-gray-900">Shopping List</h3>
                   <p className="text-gray-600 text-sm">View your groceries</p>
-              </div>
-              </div>
+                  </div>
+                    </div>
             </Link>
 
             <Link
@@ -744,12 +755,12 @@ export default function FamilyDashboard() {
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-12 h-12 bg-gradient-to-r from-amber-500 to-orange-600 rounded-xl flex items-center justify-center">
                   <Package className="h-6 w-6 text-white" />
-              </div>
+                          </div>
                 <div>
                   <h3 className="font-bold text-gray-900">Leftovers</h3>
                   <p className="text-gray-600 text-sm">Manage food waste</p>
-          </div>
-        </div>
+                        </div>
+                    </div>
             </Link>
 
             <Link
@@ -759,12 +770,12 @@ export default function FamilyDashboard() {
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl flex items-center justify-center">
                   <TrendingUp className="h-6 w-6 text-white" />
-              </div>
+                </div>
                 <div>
                   <h3 className="font-bold text-gray-900">Budget</h3>
                   <p className="text-gray-600 text-sm">Track spending</p>
+              </div>
           </div>
-        </div>
             </Link>
         </div>
 
