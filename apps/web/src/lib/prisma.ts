@@ -5,7 +5,19 @@ const globalForPrisma = global as unknown as {
 }
 
 function createPrismaClient() {
+  // In production (Vercel serverless), append ?pgbouncer=true to force session mode
+  // This disables prepared statements and resolves conflicts with Supabase PgBouncer
+  const databaseUrl = process.env.DATABASE_URL
+  const urlWithPgBouncer = databaseUrl && !databaseUrl.includes('pgbouncer=true') 
+    ? databaseUrl + (databaseUrl.includes('?') ? '&' : '?') + 'pgbouncer=true'
+    : databaseUrl
+
   return new PrismaClient({
+    datasources: {
+      db: {
+        url: urlWithPgBouncer,
+      },
+    },
     log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error', 'warn'],
   })
 }
