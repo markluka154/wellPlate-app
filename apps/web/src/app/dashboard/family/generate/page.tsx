@@ -6,6 +6,17 @@ import { useRouter } from 'next/navigation'
 import { useNotification } from '@/components/ui/Notification'
 import Link from 'next/link'
 
+interface FamilyMember {
+  id: string
+  name: string
+  age: number
+  role: 'adult' | 'child' | 'teen' | 'senior'
+  dietaryRestrictions: string[]
+  allergies: string[]
+  activityLevel: number
+  healthGoals: string[]
+}
+
 interface Portion {
   memberId: string
   memberName: string
