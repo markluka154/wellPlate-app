@@ -5,8 +5,8 @@ const globalForPrisma = global as unknown as {
 }
 
 function createPrismaClient() {
-  // In production (Vercel serverless), append ?pgbouncer=true to force session mode
-  // This disables prepared statements and resolves conflicts with Supabase PgBouncer
+  // Append ?pgbouncer=true to force session mode and disable prepared statements
+  // This resolves conflicts with Supabase PgBouncer in both dev and production
   const databaseUrl = process.env.DATABASE_URL
   const urlWithPgBouncer = databaseUrl && !databaseUrl.includes('pgbouncer=true') 
     ? databaseUrl + (databaseUrl.includes('?') ? '&' : '?') + 'pgbouncer=true'
