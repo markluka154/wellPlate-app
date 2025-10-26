@@ -173,9 +173,17 @@ export default function MealPlanPremium({ data, onClose }: { data: any, onClose?
               <div key={i} className="meal-card">
                 <div className="meal-head">
                   <h3 className="meal-title">{m.name}</h3>
+                </div>
+
+                <div className="macro-details">
+                  <div className="macro-row">
+                    <span className="macro-value">{m.kcal} kcal</span>
+                    <span className="macro-value">{m.protein_g}g protein</span>
+                    <span className="macro-value">{m.carbs_g}g carbs</span>
+                    <span className="macro-value">{m.fat_g}g fat</span>
+                  </div>
                   <div className="meta-inline">
                     {m.time_min ? <span>Prep {m.time_min} min</span> : null}
-                    <span>{m.kcal} kcal</span>
                     {(m.labels ?? []).map((x: any, j: number) => <span key={j}>{x}</span>)}
                   </div>
                 </div>
