@@ -23,44 +23,41 @@ export default function EmergencyModeModal({
 }: EmergencyModeModalProps) {
   const [selectedType, setSelectedType] = useState<'time-crunch' | 'missing-ingredient' | 'unexpected-guests' | null>(null)
 
-  const emergencyOptions: EmergencyOption[] = [
-    {
-      name: 'Quick Chicken Stir-Fry',
-      time: '15 min',
-      description: 'Uses pantry staples, minimal prep',
-      type: 'pantry'
-    },
-    {
-      name: 'Pasta with Butter & Garlic',
-      time: '10 min',
-      description: 'Ultra simple, 4 ingredients only',
-      type: 'simple'
-    },
-    {
-      name: 'Grilled Cheese & Tomato Soup',
-      time: '12 min',
-      description: 'Comforting and quick',
-      type: 'quick'
-    },
-    {
-      name: 'Scrambled Eggs & Toast',
-      time: '8 min',
-      description: 'Fastest option, kid-friendly',
-      type: 'quick'
-    },
-    {
-      name: 'Order Pizza',
-      time: '30 min',
-      description: 'When all else fails',
-      type: 'delivery'
-    },
-    {
-      name: 'Sandwiches & Salad',
-      time: '10 min',
-      description: 'No cooking required',
-      type: 'simple'
+  // Define solutions for each emergency type
+  const getSolutions = (): EmergencyOption[] => {
+    if (!selectedType) return []
+
+    const solutions: Record<string, EmergencyOption[]> = {
+      'time-crunch': [
+        { name: 'Scrambled Eggs & Toast', time: '8 min', description: 'Fastest option, kid-friendly', type: 'quick' },
+        { name: 'Pasta with Butter & Garlic', time: '10 min', description: 'Ultra simple, 4 ingredients only', type: 'simple' },
+        { name: 'Sandwiches & Salad', time: '10 min', description: 'No cooking required', type: 'simple' },
+        { name: 'Grilled Cheese & Tomato Soup', time: '12 min', description: 'Comforting and quick', type: 'quick' },
+        { name: 'Quick Chicken Stir-Fry', time: '15 min', description: 'Uses pantry staples, minimal prep', type: 'pantry' },
+        { name: 'Quesadillas', time: '8 min', description: 'Cheese, tortillas, done', type: 'quick' }
+      ],
+      'missing-ingredient': [
+        { name: 'Pasta with Butter & Garlic', time: '10 min', description: 'Ultra simple, 4 ingredients only', type: 'simple' },
+        { name: 'Grilled Cheese & Tomato Soup', time: '12 min', description: 'Mostly pantry items', type: 'quick' },
+        { name: 'Quick Chicken Stir-Fry', time: '15 min', description: 'Uses pantry staples, minimal prep', type: 'pantry' },
+        { name: 'Tuna Melts', time: '12 min', description: 'Canned tuna, cheese, bread', type: 'pantry' },
+        { name: 'Spaghetti Aglio e Olio', time: '10 min', description: 'Just pasta, garlic, olive oil', type: 'simple' },
+        { name: 'Order Pizza', time: '30 min', description: 'When ingredients are truly missing', type: 'delivery' }
+      ],
+      'unexpected-guests': [
+        { name: 'Build-Your-Own Taco Bar', time: '20 min', description: 'Scales easily, interactive', type: 'quick' },
+        { name: 'Pasta & Meat Sauce', time: '25 min', description: 'Make extra servings easily', type: 'quick' },
+        { name: 'Pulled Pork Sandwiches', time: '30 min', description: 'Cook once, feed many', type: 'quick' },
+        { name: 'Sheet Pan Chicken & Vegetables', time: '30 min', description: 'Easy to multiply portions', type: 'pantry' },
+        { name: 'Pizza Party', time: '15 min', description: 'Order pizzas, add salad', type: 'delivery' },
+        { name: 'Meatballs & Pasta', time: '25 min', description: 'Make extra meatballs for guests', type: 'quick' }
+      ]
     }
-  ]
+
+    return solutions[selectedType] || []
+  }
+
+  const emergencyOptions = getSolutions()
 
   if (!isOpen) return null
 
