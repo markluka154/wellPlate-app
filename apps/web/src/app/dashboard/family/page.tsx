@@ -404,8 +404,7 @@ export default function FamilyDashboard() {
         </div>
 
         {/* Quick Actions Section */}
-        {familyMembers.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <Link
               href="/dashboard/family/generate"
               className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 hover:shadow-md transition-all duration-200"
@@ -450,8 +449,7 @@ export default function FamilyDashboard() {
                 </div>
               </div>
             </Link>
-          </div>
-        )}
+        </div>
 
         {/* Upgrade Prompt Modal */}
         <UpgradePrompt
