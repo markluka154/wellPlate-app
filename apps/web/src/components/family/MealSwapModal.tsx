@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { X, Search, Clock, DollarSign, Users, Loader2, SwapCw } from 'lucide-react'
+import { X, Search, Clock, DollarSign, Users, Loader2, Shuffle } from 'lucide-react'
 
 interface Meal {
   name: string
@@ -93,7 +93,7 @@ export default function MealSwapModal({
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
-              <SwapCw className="h-6 w-6 text-blue-600" />
+              <Shuffle className="h-6 w-6 text-blue-600" />
             </div>
             <div>
               <h2 className="text-xl font-bold text-gray-900">Swap Meal</h2>
@@ -220,7 +220,7 @@ export default function MealSwapModal({
               </>
             ) : (
               <>
-                <SwapCw className="h-4 w-4" />
+                <Shuffle className="h-4 w-4" />
                 Swap Meal
               </>
             )}
