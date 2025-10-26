@@ -300,7 +300,7 @@ USING (
   EXISTS (
     SELECT 1 FROM "FamilyCalendar"
     JOIN "FamilyProfile" ON "FamilyCalendar"."familyProfileId" = "FamilyProfile".id
-    WHERE "CalendarEvent"."calendarId" = "FamilyCalendar".id 
+    WHERE "CalendarEvent"."familyCalendarId" = "FamilyCalendar".id 
     AND "FamilyProfile"."userId" = auth.uid()::text
   )
 );
@@ -311,7 +311,7 @@ WITH CHECK (
   EXISTS (
     SELECT 1 FROM "FamilyCalendar"
     JOIN "FamilyProfile" ON "FamilyCalendar"."familyProfileId" = "FamilyProfile".id
-    WHERE "CalendarEvent"."calendarId" = "FamilyCalendar".id 
+    WHERE "CalendarEvent"."familyCalendarId" = "FamilyCalendar".id 
     AND "FamilyProfile"."userId" = auth.uid()::text
   )
 );
@@ -322,7 +322,7 @@ USING (
   EXISTS (
     SELECT 1 FROM "FamilyCalendar"
     JOIN "FamilyProfile" ON "FamilyCalendar"."familyProfileId" = "FamilyProfile".id
-    WHERE "CalendarEvent"."calendarId" = "FamilyCalendar".id 
+    WHERE "CalendarEvent"."familyCalendarId" = "FamilyCalendar".id 
     AND "FamilyProfile"."userId" = auth.uid()::text
   )
 );
@@ -333,7 +333,7 @@ USING (
   EXISTS (
     SELECT 1 FROM "FamilyCalendar"
     JOIN "FamilyProfile" ON "FamilyCalendar"."familyProfileId" = "FamilyProfile".id
-    WHERE "CalendarEvent"."calendarId" = "FamilyCalendar".id 
+    WHERE "CalendarEvent"."familyCalendarId" = "FamilyCalendar".id 
     AND "FamilyProfile"."userId" = auth.uid()::text
   )
 );
