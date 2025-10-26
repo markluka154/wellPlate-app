@@ -13,20 +13,49 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    let familyProfile = await prisma.familyProfile.findUnique({
-      where: { userId: session.user.id },
-      select: { id: true }
-    })
+    // Retry logic for prepared statement errors
+    let familyProfile
+    try {
+      familyProfile = await prisma.familyProfile.findUnique({
+        where: { userId: session.user.id },
+        select: { id: true }
+      })
+    } catch (prismaError: any) {
+      if (prismaError?.message?.includes('prepared statement')) {
+        await new Promise(resolve => setTimeout(resolve, 100))
+        familyProfile = await prisma.familyProfile.findUnique({
+          where: { userId: session.user.id },
+          select: { id: true }
+        })
+      } else {
+        throw prismaError
+      }
+    }
 
     if (!familyProfile) {
       // Create family profile if it doesn't exist
-      familyProfile = await prisma.familyProfile.create({
-        data: {
-          userId: session.user.id,
-          name: `${session.user.name || 'My Family'}'s Family`,
-        },
-        select: { id: true }
-      })
+      try {
+        familyProfile = await prisma.familyProfile.create({
+          data: {
+            userId: session.user.id,
+            name: `${session.user.name || 'My Family'}'s Family`,
+          },
+          select: { id: true }
+        })
+      } catch (createError: any) {
+        if (createError?.message?.includes('prepared statement')) {
+          await new Promise(resolve => setTimeout(resolve, 100))
+          familyProfile = await prisma.familyProfile.create({
+            data: {
+              userId: session.user.id,
+              name: `${session.user.name || 'My Family'}'s Family`,
+            },
+            select: { id: true }
+          })
+        } else {
+          throw createError
+        }
+      }
     }
 
     const members = await prisma.familyMember.findMany({

@@ -12,10 +12,25 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const familyProfile = await prisma.familyProfile.findUnique({
-      where: { userId: session.user.id },
-      select: { id: true }
-    })
+    // Retry logic for prepared statement errors
+    let familyProfile
+    try {
+      familyProfile = await prisma.familyProfile.findUnique({
+        where: { userId: session.user.id },
+        select: { id: true }
+      })
+    } catch (prismaError: any) {
+      if (prismaError?.message?.includes('prepared statement')) {
+        // Wait a bit and retry with fresh connection
+        await new Promise(resolve => setTimeout(resolve, 100))
+        familyProfile = await prisma.familyProfile.findUnique({
+          where: { userId: session.user.id },
+          select: { id: true }
+        })
+      } else {
+        throw prismaError
+      }
+    }
 
     if (!familyProfile) {
       return NextResponse.json({ error: 'Family profile not found' }, { status: 404 })
