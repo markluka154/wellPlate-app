@@ -1840,16 +1840,12 @@ export default function DashboardPage() {
                       <div className="space-y-6">
                         {day.meals.map((meal: any, mealIndex: number) => (
                           <div key={mealIndex} className="bg-gray-50 rounded-lg p-4">
-                            <div className="flex items-center justify-between mb-4">
-                              <h4 className="text-lg font-semibold text-gray-900">{meal.name}</h4>
-                              <div className="flex items-center gap-4">
-                                <div className="flex gap-4 text-sm text-gray-600">
-                                  <span>{meal.kcal} kcal</span>
-                                  <span>{meal.protein_g}g protein</span>
-                                  <span>{meal.carbs_g}g carbs</span>
-                                  <span>{meal.fat_g}g fat</span>
-                                </div>
-                              </div>
+                            <h4 className="text-lg font-semibold text-gray-900 mb-3">{meal.name}</h4>
+                            <div className="flex flex-wrap gap-3 mb-4">
+                              <span className="bg-white px-3 py-1.5 rounded-md text-sm font-medium text-gray-700 border border-gray-200">{meal.kcal} kcal</span>
+                              <span className="bg-white px-3 py-1.5 rounded-md text-sm font-medium text-gray-700 border border-gray-200">{meal.protein_g}g protein</span>
+                              <span className="bg-white px-3 py-1.5 rounded-md text-sm font-medium text-gray-700 border border-gray-200">{meal.carbs_g}g carbs</span>
+                              <span className="bg-white px-3 py-1.5 rounded-md text-sm font-medium text-gray-700 border border-gray-200">{meal.fat_g}g fat</span>
                             </div>
                             
                             <div className="grid md:grid-cols-2 gap-6">

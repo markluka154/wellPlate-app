@@ -1029,11 +1029,11 @@ export default function PlansPage() {
                                 </button>
                               </div>
                               {/* Macros - Full Width on Mobile */}
-                              <div className="flex flex-wrap gap-1.5 text-[10px] sm:text-xs">
-                                <span className="bg-white px-2 py-1 rounded border border-gray-200 text-gray-700">{meal.kcal} kcal</span>
-                                <span className="bg-white px-2 py-1 rounded border border-gray-200 text-gray-700">{meal.protein_g}g protein</span>
-                                <span className="bg-white px-2 py-1 rounded border border-gray-200 text-gray-700">{meal.carbs_g}g carbs</span>
-                                <span className="bg-white px-2 py-1 rounded border border-gray-200 text-gray-700">{meal.fat_g}g fat</span>
+                              <div className="flex flex-wrap gap-2 sm:gap-2.5">
+                                <span className="bg-white px-2.5 py-1.5 rounded-md text-xs font-medium border border-gray-200 text-gray-700 flex-shrink-0">{meal.kcal} kcal</span>
+                                <span className="bg-white px-2.5 py-1.5 rounded-md text-xs font-medium border border-gray-200 text-gray-700 flex-shrink-0">{meal.protein_g}g protein</span>
+                                <span className="bg-white px-2.5 py-1.5 rounded-md text-xs font-medium border border-gray-200 text-gray-700 flex-shrink-0">{meal.carbs_g}g carbs</span>
+                                <span className="bg-white px-2.5 py-1.5 rounded-md text-xs font-medium border border-gray-200 text-gray-700 flex-shrink-0">{meal.fat_g}g fat</span>
                               </div>
                             </div>
                             
