@@ -38,6 +38,30 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Check message limits for FREE users
+    const subscriptionResult = await directQuery(
+      'SELECT * FROM "Subscription" WHERE "userId" = $1',
+      [userId]
+    )
+    
+    const subscription = subscriptionResult[0] || { plan: 'FREE', chatMessagesUsed: 0 }
+    const isFreeUser = subscription.plan === 'FREE'
+    const messagesUsed = subscription.chatMessagesUsed || 0
+    const FREE_MESSAGE_LIMIT = 3
+
+    if (isFreeUser && messagesUsed >= FREE_MESSAGE_LIMIT) {
+      return NextResponse.json(
+        { 
+          error: 'MESSAGE_LIMIT_REACHED',
+          message: `You've reached your limit of ${FREE_MESSAGE_LIMIT} messages on the FREE plan. Upgrade to Pro for unlimited AI coaching.`,
+          limitReached: true,
+          messagesUsed,
+          limit: FREE_MESSAGE_LIMIT
+        },
+        { status: 403 }
+      )
+    }
+
     // Load user context
     const context = await loadUserContext(userId)
     
@@ -74,12 +98,23 @@ export async function POST(request: NextRequest) {
     // Save chat message
     await saveChatMessage(userId, message, response.message, response.type, response.data)
 
+    // Update message count for FREE users
+    if (isFreeUser) {
+      const newCount = messagesUsed + 1
+      await directQuery(
+        'UPDATE "Subscription" SET "chatMessagesUsed" = $1 WHERE "userId" = $2',
+        [newCount, userId]
+      )
+    }
+
     return NextResponse.json({
       message: response.message,
       type: response.type,
       data: response.data,
       memories: context.recentMemories,
       progress: context.recentProgress,
+      messagesRemaining: isFreeUser ? FREE_MESSAGE_LIMIT - (messagesUsed + 1) : null,
+      isFreeUser,
     })
 
   } catch (error) {

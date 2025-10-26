@@ -357,3 +357,4 @@ ALTER TABLE "Leftover" ADD CONSTRAINT "Leftover_familyMealPlanId_fkey" FOREIGN K
 
 ALTER TABLE "FamilyPreferences" ADD CONSTRAINT "FamilyPreferences_familyProfileId_fkey" FOREIGN KEY ("familyProfileId") REFERENCES "FamilyProfile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
+

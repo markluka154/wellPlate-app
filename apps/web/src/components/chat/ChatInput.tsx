@@ -1,9 +1,12 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { Send, Salad } from 'lucide-react'
+import { Send, Salad, Lock, ArrowUp } from 'lucide-react'
 import { SavedMealsModal } from './SavedMealsModal'
 import { SavedMeal } from '@/types/coach'
+import { useChatStore } from '@/store/coachStore'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 interface ChatInputProps {
   onSend: (message: string, displayMessage?: string) => void
@@ -12,6 +15,8 @@ interface ChatInputProps {
 }
 
 export function ChatInput({ onSend, disabled = false, userId }: ChatInputProps) {
+  const { messagesRemaining, isFreeUser } = useChatStore()
+  const isLimitReached = isFreeUser && messagesRemaining !== null && messagesRemaining === 0
   const [message, setMessage] = useState('')
   const [showSavedMeals, setShowSavedMeals] = useState(false)
   const [attachedMeal, setAttachedMeal] = useState<SavedMeal | null>(null)
@@ -153,8 +158,14 @@ User message: ${message.trim()}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={attachedMeal ? `Ask Lina about ${attachedMeal.name}...` : "Ask Lina anything about nutrition..."}
-            disabled={disabled}
+            placeholder={
+              isLimitReached
+                ? "Upgrade to Pro to continue chatting..."
+                : attachedMeal 
+                  ? `Ask Lina about ${attachedMeal.name}...` 
+                  : "Ask Lina anything about nutrition..."
+            }
+            disabled={disabled || isLimitReached}
             maxLength={maxLength}
             rows={1}
             className="
@@ -188,7 +199,7 @@ User message: ${message.trim()}
             <button
               type="button"
               onClick={handleSend}
-              disabled={!message.trim() || disabled}
+              disabled={!message.trim() || disabled || isLimitReached}
               className="w-8 h-8 bg-emerald-500 hover:bg-emerald-600 disabled:bg-gray-300 rounded-full flex items-center justify-center transition-colors hover:scale-105"
             >
               <Send className="w-4 h-4 text-white" />
@@ -202,6 +213,30 @@ User message: ${message.trim()}
           Lina can make mistakes. Check important info.
         </p>
       </div>
+
+      {/* Limit Reached Prompt */}
+      {isLimitReached && (
+        <div className="max-w-2xl mx-auto px-4 pb-4">
+          <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-300 rounded-xl p-4 flex items-center gap-3 shadow-sm">
+            <div className="flex-shrink-0 w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
+              <Lock className="w-5 h-5 text-amber-600" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-amber-900 mb-1">Message Limit Reached</h3>
+              <p className="text-sm text-amber-700 mb-3">
+                You've used all 3 free messages. Upgrade to Pro for unlimited AI coaching!
+              </p>
+              <Link 
+                href="/pricing"
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white font-semibold px-4 py-2 rounded-lg text-sm shadow-md hover:shadow-lg transition-all"
+              >
+                <ArrowUp className="w-4 h-4" />
+                Upgrade to Pro
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Saved Meals Modal */}
       {userId && (

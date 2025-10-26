@@ -73,6 +73,7 @@ model Subscription {
   stripeSubscriptionId String? @unique
   plan              String   @default("FREE") // FREE, PRO_MONTHLY, PRO_ANNUAL
   status            String   @default("active") // active, canceled, past_due, unpaid
+  chatMessagesUsed  Int      @default(0) // Track AI chat messages used in current period
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 

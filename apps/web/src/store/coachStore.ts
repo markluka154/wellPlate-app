@@ -8,6 +8,8 @@ interface ChatStore extends ChatState {
   error?: string
   isTyping: boolean
   currentUserId?: string
+  messagesRemaining?: number | null
+  isFreeUser?: boolean
   
   // Additional actions
   initializeChat: (userId: string) => Promise<void>
@@ -15,6 +17,8 @@ interface ChatStore extends ChatState {
   retryLastMessage: () => Promise<void>
   setIsTyping: (typing: boolean) => void
   clearForNewUser: (userId: string) => void
+  setMessagesRemaining: (count: number | null) => void
+  setIsFreeUser: (isFree: boolean) => void
 }
 
 export const useChatStore = create<ChatStore>()(
@@ -31,6 +35,8 @@ export const useChatStore = create<ChatStore>()(
       error: undefined,
       isTyping: false,
       currentUserId: undefined,
+      messagesRemaining: null,
+      isFreeUser: false,
 
       // Actions
       addMessage: (message: Omit<ChatMessage, 'id' | 'timestamp'>) => {
@@ -87,6 +93,14 @@ export const useChatStore = create<ChatStore>()(
 
       setIsTyping: (typing: boolean) => {
         set({ isTyping: typing })
+      },
+
+      setMessagesRemaining: (count: number | null) => {
+        set({ messagesRemaining: count })
+      },
+
+      setIsFreeUser: (isFree: boolean) => {
+        set({ isFreeUser: isFree })
       },
 
       clearForNewUser: (userId: string) => {
@@ -196,27 +210,42 @@ How are you feeling today? What's on your mind when it comes to your nutrition a
             }),
           })
           
-          if (!response.ok) {
-            throw new Error('Failed to send message')
-          }
+          const responseData = await response.json()
           
-          const data = await response.json()
+          if (!response.ok) {
+            // Handle message limit error
+            if (responseData.error === 'MESSAGE_LIMIT_REACHED') {
+              setError(responseData.message)
+              set({ messagesRemaining: 0 })
+              return
+            }
+            throw new Error(responseData.error || 'Failed to send message')
+          }
           
           // Add assistant response
           addMessage({
             role: 'assistant',
-            content: data.message,
-            type: data.type || 'text',
-            data: data.data,
+            content: responseData.message,
+            type: responseData.type || 'text',
+            data: responseData.data,
           })
           
           // Update memories and progress if provided
-          if (data.memories) {
-            set({ recentMemories: data.memories })
+          if (responseData.memories) {
+            set({ recentMemories: responseData.memories })
           }
           
-          if (data.progress) {
-            set({ recentProgress: data.progress })
+          if (responseData.progress) {
+            set({ recentProgress: responseData.progress })
+          }
+
+          // Update message count
+          if (responseData.messagesRemaining !== undefined) {
+            set({ messagesRemaining: responseData.messagesRemaining })
+          }
+
+          if (responseData.isFreeUser !== undefined) {
+            set({ isFreeUser: responseData.isFreeUser })
           }
           
         } catch (error) {

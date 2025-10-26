@@ -2,9 +2,11 @@
 
 import { MoreVertical, LayoutDashboard } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { useChatStore } from '@/store/coachStore'
 
 export function ChatHeader() {
   const router = useRouter()
+  const { messagesRemaining, isFreeUser } = useChatStore()
 
   return (
     <div className="h-[60px] bg-gradient-to-r from-emerald-50 via-blue-50 to-orange-50 border-b border-gray-200 flex items-center justify-between px-6 backdrop-blur-xl">
@@ -22,7 +24,11 @@ export function ChatHeader() {
         {/* Name & Status */}
         <div>
           <h1 className="font-display font-semibold text-gray-900 text-[16px]">Lina</h1>
-          <p className="text-[12px] text-gray-500">Your AI nutrition coach</p>
+          <p className="text-[12px] text-gray-500">
+            {isFreeUser && messagesRemaining !== null
+              ? `${messagesRemaining} messages left`
+              : 'Your AI nutrition coach'}
+          </p>
         </div>
       </div>
 
