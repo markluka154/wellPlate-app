@@ -24,6 +24,7 @@ import Link from 'next/link'
 import { UpgradePrompt } from '@/components/dashboard/UpgradePrompt'
 import { useNotification } from '@/components/ui/Notification'
 import FamilyMemberModal from '@/components/dashboard/FamilyMemberModal'
+import MealSwapModal from '@/components/family/MealSwapModal'
 
 // Updated interfaces based on Prisma schema
 interface FamilyMember {
@@ -80,9 +81,11 @@ export default function FamilyDashboard() {
     message: string
     feature?: string
   }>({ title: '', message: '' })
+  const [showSwapModal, setShowSwapModal] = useState(false)
+  const [todayMeal, setTodayMeal] = useState<any>(null)
   const { showNotification, NotificationComponent } = useNotification()
 
-  // Load family members from API
+  // Load family members and today's meal from API
   useEffect(() => {
     const loadFamilyMembers = async () => {
       try {
@@ -103,7 +106,20 @@ export default function FamilyDashboard() {
       }
     }
 
+    const loadTodayMeal = async () => {
+      try {
+        const response = await fetch('/api/family/today-meal')
+        if (response.ok) {
+          const data = await response.json()
+          setTodayMeal(data.meal)
+        }
+      } catch (error) {
+        console.error('Error loading today meal:', error)
+      }
+    }
+
     loadFamilyMembers()
+    loadTodayMeal()
   }, [])
 
   // Load user plan from localStorage
@@ -218,6 +234,24 @@ export default function FamilyDashboard() {
     setShowUpgradePrompt(true)
   }
 
+  const handleSwapMeal = () => {
+    setShowSwapModal(true)
+  }
+
+  const handleEmergencyMode = () => {
+    showNotification('info', 'Emergency Mode', 'Emergency mode features coming soon!')
+  }
+
+  const handleSwapConfirmed = async (alternative: any, reason: string) => {
+    try {
+      // TODO: Implement actual swap logic
+      showNotification('success', 'Meal Swapped', `Swapped to ${alternative.name}`)
+      setShowSwapModal(false)
+    } catch (error) {
+      showNotification('error', 'Error', 'Failed to swap meal')
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
@@ -317,11 +351,11 @@ export default function FamilyDashboard() {
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <button className="flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-3 rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all font-medium">
+                  <button onClick={handleSwapMeal} className="flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-3 rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all font-medium">
                     <Clock className="h-4 w-4" />
                     Swap Meal
                   </button>
-                  <button className="flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-red-600 text-white px-4 py-3 rounded-xl hover:from-orange-600 hover:to-red-700 transition-all font-medium">
+                  <button onClick={handleEmergencyMode} className="flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-red-600 text-white px-4 py-3 rounded-xl hover:from-orange-600 hover:to-red-700 transition-all font-medium">
                     <Clock className="h-4 w-4" />
                     Emergency Mode
                   </button>
@@ -546,6 +580,22 @@ export default function FamilyDashboard() {
         onSave={saveFamilyMember}
         editingMember={editingMember}
       />
+
+      {/* Meal Swap Modal */}
+      {todayMeal && (
+        <MealSwapModal
+          isOpen={showSwapModal}
+          onClose={() => setShowSwapModal(false)}
+          onSwap={handleSwapConfirmed}
+          currentMeal={{
+            name: todayMeal.name || 'Today Meal',
+            calories: 0,
+            time: '45 min'
+          }}
+          mealPlanId="1"
+          mealIndex={0}
+        />
+      )}
     </div>
   )
 }
