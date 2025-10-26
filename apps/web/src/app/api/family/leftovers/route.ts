@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import prisma from '@/lib/prisma'
+import { getPrismaClient } from '@/lib/prisma'
 
 // GET /api/family/leftovers - Get all leftovers for family
 export async function GET(request: NextRequest) {
@@ -12,6 +12,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const prisma = getPrismaClient()
     const familyProfile = await prisma.familyProfile.findUnique({
       where: { userId: session.user.id },
       select: { id: true }
@@ -61,6 +62,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const prisma = getPrismaClient()
     const body = await request.json()
     const { mealPlanId, originalMealName, originalMealDate, quantity, unit, expiresAt, canBeUsedIn, transformRecipes } = body
 
@@ -122,6 +124,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const prisma = getPrismaClient()
     const body = await request.json()
     const { leftoverId, usedInMeal } = body
 

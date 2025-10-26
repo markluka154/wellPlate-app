@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { Reaction } from '@prisma/client'
-import prisma from '@/lib/prisma'
+import { getPrismaClient } from '@/lib/prisma'
 
 // POST /api/family/preferences/learn - Update food preferences based on meal reaction
 export async function POST(request: NextRequest) {
@@ -13,6 +13,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const prisma = getPrismaClient()
     const body = await request.json()
     const { memberId, mealName, mealIngredients, reaction, portionEaten, mealPlanId, notes } = body
 
@@ -131,9 +132,10 @@ export async function GET(request: NextRequest) {
     const session = await getServerSession(authOptions)
     
     if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401       })
     }
 
+    const prisma = getPrismaClient()
     const { searchParams } = new URL(request.url)
     const memberId = searchParams.get('memberId')
 

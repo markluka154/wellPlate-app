@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import prisma from '@/lib/prisma'
+import { getPrismaClient } from '@/lib/prisma'
 
 // POST /api/family/meal-plan/swap - Swap a meal in family meal plan
 export async function POST(request: NextRequest) {
@@ -12,6 +12,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const prisma = getPrismaClient()
     const body = await request.json()
     const { mealPlanId, mealIndex, reason, alternativeMeal } = body
 
@@ -102,9 +103,10 @@ export async function GET(request: NextRequest) {
     const session = await getServerSession(authOptions)
     
     if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized' },       { status: 401 })
     }
 
+    const prisma = getPrismaClient()
     const { searchParams } = new URL(request.url)
     const mealPlanId = searchParams.get('mealPlanId')
     const mealIndex = searchParams.get('mealIndex')

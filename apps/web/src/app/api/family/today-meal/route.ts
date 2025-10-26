@@ -1,18 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { PrismaClient } from '@prisma/client'
-import prisma from '@/lib/prisma'
-import { Pool } from 'pg'
+import { getPrismaClient } from '@/lib/prisma'
 
-// Create a direct PostgreSQL connection to bypass prepared statements
-const getDirectPgClient = () => {
-  const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    max: 1, // Single connection to avoid pooling issues
-  })
-  return pool
-}
+// Removed direct pg client - now using getPrismaClient() pattern
 
 // GET /api/family/today-meal - Get today's meal for the family
 export async function GET(request: NextRequest) {
@@ -23,44 +14,19 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Retry logic for prepared statement errors - use raw SQL as last resort
-    let familyProfile
-    try {
-      familyProfile = await prisma.familyProfile.findUnique({
-        where: { userId: session.user.id },
-        select: { id: true }
-      })
-    } catch (prismaError: any) {
-      if (prismaError?.message?.includes('prepared statement')) {
-        console.log('⚠️ Prepared statement error, using direct PostgreSQL client...')
-        try {
-          // Use direct pg client to completely bypass Prisma
-          const pgClient = getDirectPgClient()
-          const result = await pgClient.query(
-            'SELECT id FROM "FamilyProfile" WHERE "userId" = $1',
-            [session.user.id]
-          )
-          await pgClient.end()
-          
-          if (result && result.rows && result.rows[0]) {
-            familyProfile = result.rows[0]
-          } else {
-            throw new Error('Family profile not found')
-          }
-        } catch (pgError) {
-          console.error('❌ Direct pg client also failed:', pgError)
-          throw pgError
-        }
-      } else {
-        throw prismaError
-      }
-    }
+    const prisma = getPrismaClient()
+    
+    // Get family profile
+    const familyProfile = await prisma.familyProfile.findUnique({
+      where: { userId: session.user.id },
+      select: { id: true }
+    })
 
     if (!familyProfile) {
       return NextResponse.json({ error: 'Family profile not found' }, { status: 404 })
     }
 
-    // Find active meal plan
+    // Use same prisma instance
     const mealPlan = await prisma.familyMealPlan.findFirst({
       where: {
         familyProfileId: familyProfile.id,

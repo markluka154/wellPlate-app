@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import prisma from '@/lib/prisma'
+import { getPrismaClient } from '@/lib/prisma'
 
 // GET /api/family/profile - Get or create family profile
 export async function GET(request: NextRequest) {
@@ -12,6 +12,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const prisma = getPrismaClient()
+    
     // Find existing family profile
     let familyProfile = await prisma.familyProfile.findUnique({
       where: { userId: session.user.id },
@@ -95,6 +97,7 @@ export async function PUT(request: NextRequest) {
     const body = await request.json()
     const { name } = body
 
+    const prisma = getPrismaClient()
     const familyProfile = await prisma.familyProfile.update({
       where: { userId: session.user.id },
       data: { name },

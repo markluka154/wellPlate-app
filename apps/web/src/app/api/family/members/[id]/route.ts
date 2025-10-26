@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { MemberRole, ActivityLevel, MemberPhase } from '@prisma/client'
-import prisma from '@/lib/prisma'
+import { getPrismaClient } from '@/lib/prisma'
 
 // PUT /api/family/members/[id] - Update family member
 export async function PUT(
@@ -10,12 +10,13 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    const       session = await getServerSession(authOptions)
     
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const prisma = getPrismaClient()
     const body = await request.json()
     const {
       name,
@@ -97,6 +98,8 @@ export async function DELETE(
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    const prisma = getPrismaClient()
 
     // Verify member belongs to user's family
     const member = await prisma.familyMember.findUnique({
