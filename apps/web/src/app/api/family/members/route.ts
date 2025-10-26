@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { MemberRole, ActivityLevel, MemberPhase } from '@prisma/client'
+import { MemberRole, ActivityLevel, MemberPhase, PrismaClient } from '@prisma/client'
 import prisma from '@/lib/prisma'
+
+// Create a function to get a fresh Prisma client
+const getFreshPrismaClient = () => new PrismaClient({ log: ['error', 'warn'] })
 
 // GET /api/family/members - Get all family members
 export async function GET(request: NextRequest) {
@@ -22,17 +25,19 @@ export async function GET(request: NextRequest) {
       })
     } catch (prismaError: any) {
       if (prismaError?.message?.includes('prepared statement')) {
-        console.log('⚠️ Prepared statement error, disconnecting and retrying...')
-        // Disconnect to force fresh connection
-        await prisma.$disconnect().catch(() => {})
-        await new Promise(resolve => setTimeout(resolve, 300))
+        console.log('⚠️ Prepared statement error, creating fresh client...')
+        // Create a completely new Prisma client
+        const freshClient = getFreshPrismaClient()
         try {
-          familyProfile = await prisma.familyProfile.findUnique({
+          familyProfile = await freshClient.familyProfile.findUnique({
             where: { userId: session.user.id },
             select: { id: true }
           })
+          // Clean up the fresh client
+          await freshClient.$disconnect()
         } catch (retryError) {
-          console.error('❌ Retry also failed:', retryError)
+          console.error('❌ Fresh client also failed:', retryError)
+          await freshClient.$disconnect().catch(() => {})
           throw retryError
         }
       } else {
