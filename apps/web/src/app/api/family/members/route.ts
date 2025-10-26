@@ -14,13 +14,20 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const familyProfile = await prisma.familyProfile.findUnique({
+    let familyProfile = await prisma.familyProfile.findUnique({
       where: { userId: session.user.id },
       select: { id: true }
     })
 
     if (!familyProfile) {
-      return NextResponse.json({ error: 'Family profile not found' }, { status: 404 })
+      // Create family profile if it doesn't exist
+      familyProfile = await prisma.familyProfile.create({
+        data: {
+          userId: session.user.id,
+          name: `${session.user.name || 'My Family'}'s Family`,
+        },
+        select: { id: true }
+      })
     }
 
     const members = await prisma.familyMember.findMany({
@@ -54,13 +61,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const familyProfile = await prisma.familyProfile.findUnique({
+    let familyProfile = await prisma.familyProfile.findUnique({
       where: { userId: session.user.id },
       select: { id: true }
     })
 
     if (!familyProfile) {
-      return NextResponse.json({ error: 'Family profile not found' }, { status: 404 })
+      // Create family profile if it doesn't exist
+      familyProfile = await prisma.familyProfile.create({
+        data: {
+          userId: session.user.id,
+          name: `${session.user.name || 'My Family'}'s Family`,
+        },
+        select: { id: true }
+      })
     }
 
     const body = await request.json()
