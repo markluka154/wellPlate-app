@@ -392,7 +392,7 @@ USING (
   EXISTS (
     SELECT 1 FROM "FamilyBudget"
     JOIN "FamilyProfile" ON "FamilyBudget"."familyProfileId" = "FamilyProfile".id
-    WHERE "BudgetExpense"."budgetId" = "FamilyBudget".id 
+    WHERE "BudgetExpense"."familyBudgetId" = "FamilyBudget".id 
     AND "FamilyProfile"."userId" = auth.uid()::text
   )
 );
@@ -403,7 +403,7 @@ WITH CHECK (
   EXISTS (
     SELECT 1 FROM "FamilyBudget"
     JOIN "FamilyProfile" ON "FamilyBudget"."familyProfileId" = "FamilyProfile".id
-    WHERE "BudgetExpense"."budgetId" = "FamilyBudget".id 
+    WHERE "BudgetExpense"."familyBudgetId" = "FamilyBudget".id 
     AND "FamilyProfile"."userId" = auth.uid()::text
   )
 );
@@ -414,7 +414,7 @@ USING (
   EXISTS (
     SELECT 1 FROM "FamilyBudget"
     JOIN "FamilyProfile" ON "FamilyBudget"."familyProfileId" = "FamilyProfile".id
-    WHERE "BudgetExpense"."budgetId" = "FamilyBudget".id 
+    WHERE "BudgetExpense"."familyBudgetId" = "FamilyBudget".id 
     AND "FamilyProfile"."userId" = auth.uid()::text
   )
 );
@@ -425,7 +425,7 @@ USING (
   EXISTS (
     SELECT 1 FROM "FamilyBudget"
     JOIN "FamilyProfile" ON "FamilyBudget"."familyProfileId" = "FamilyProfile".id
-    WHERE "BudgetExpense"."budgetId" = "FamilyBudget".id 
+    WHERE "BudgetExpense"."familyBudgetId" = "FamilyBudget".id 
     AND "FamilyProfile"."userId" = auth.uid()::text
   )
 );
