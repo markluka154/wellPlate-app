@@ -77,16 +77,24 @@ export async function GET(request: NextRequest) {
     }
 
     // Return the actual meal data
+    // Extract prep time (e.g., "12 min" -> "12")
+    const prepTimeMatch = (todayMeal.time || '').toString().match(/(\d+)/)
+    const prepTime = prepTimeMatch ? prepTimeMatch[1] : '15'
+    
+    // Determine meal status based on the stored status field or default to 'shopping'
+    const mealStatus = todayMeal.status || 'shopping'
+    
     return NextResponse.json({ 
       meal: {
         id: todayMeal.id || '1',
         name: todayMeal.name || 'No meal name',
         description: todayMeal.description,
-        scheduledTime: todayMeal.time || '18:00',
-        estimatedPrepTime: todayMeal.time || '45',
+        scheduledTime: '18:00', // Default dinner time
+        estimatedPrepTime: prepTime, // Just the number, e.g., "12"
         type: todayMeal.type,
-        status: 'planned' as const,
-        missingIngredients: [],
+        status: mealStatus,
+        progressStatus: mealStatus, // Add progress status
+        missingIngredients: [], // Empty for emergency meals (you chose them because you have ingredients)
         assignedCook: undefined
       }
     })
@@ -110,7 +118,64 @@ export async function PUT(request: NextRequest) {
 
     const prisma = getPrismaClient()
     const body = await request.json()
-    const { name, description, time, type } = body
+    const { name, description, time, type, progressStatus } = body
+
+    // Check if this is a progress status update only
+    if (progressStatus && !name) {
+      // Just update the progress status for today's meal
+      const familyProfile = await prisma.familyProfile.findUnique({
+        where: { userId: session.user.id },
+        select: { id: true }
+      })
+
+      if (!familyProfile) {
+        return NextResponse.json({ error: 'Family profile not found' }, { status: 404 })
+      }
+
+      const mealPlan = await prisma.familyMealPlan.findFirst({
+        where: {
+          familyProfileId: familyProfile.id,
+          isActive: true
+        },
+        orderBy: { weekStartDate: 'desc' }
+      })
+
+      if (mealPlan) {
+        let mealsRaw = mealPlan.meals
+        let meals: any[] = []
+        
+        if (typeof mealsRaw === 'string') {
+          try {
+            const parsed = JSON.parse(mealsRaw)
+            meals = Array.isArray(parsed) ? parsed : []
+          } catch (e) {
+            meals = []
+          }
+        } else if (Array.isArray(mealsRaw)) {
+          meals = mealsRaw
+        }
+        
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        
+        const updatedMeals = meals.map((m: any) => {
+          const mealDate = new Date(m.date || m.dateString)
+          mealDate.setHours(0, 0, 0, 0)
+          
+          if (mealDate.getTime() === today.getTime()) {
+            return { ...m, status: progressStatus, updatedAt: new Date().toISOString() }
+          }
+          return m
+        })
+
+        await prisma.familyMealPlan.update({
+          where: { id: mealPlan.id },
+          data: { meals: JSON.stringify(updatedMeals) }
+        })
+      }
+
+      return NextResponse.json({ success: true, progressStatus })
+    }
 
     if (!name) {
       return NextResponse.json({ error: 'Meal name is required' }, { status: 400 })
@@ -143,7 +208,7 @@ export async function PUT(request: NextRequest) {
           familyProfileId: familyProfile.id,
           weekStartDate: today,
           weekEndDate: new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000),
-          meals: JSON.stringify([{ name, description, time, type, date: today.toISOString() }]),
+          meals: JSON.stringify([{ name, description, time, type, date: today.toISOString(), status: 'shopping' }]),
           isActive: true
         }
       })
@@ -172,14 +237,14 @@ export async function PUT(request: NextRequest) {
         mealDate.setHours(0, 0, 0, 0)
         
         if (mealDate.getTime() === today.getTime()) {
-          return { ...m, name, description, time, type, updatedAt: new Date().toISOString() }
+          return { ...m, name, description, time, type, updatedAt: new Date().toISOString(), status: 'shopping' }
         }
         return m
       })
       
       // If today's meal doesn't exist in the array, add it
       if (!updatedMeals.some((m: any) => new Date(m.date || m.dateString).getDate() === today.getDate())) {
-        updatedMeals.push({ name, description, time, type, date: today.toISOString(), dateString: today.toISOString() })
+        updatedMeals.push({ name, description, time, type, date: today.toISOString(), dateString: today.toISOString(), status: 'shopping' })
       }
 
       await prisma.familyMealPlan.update({

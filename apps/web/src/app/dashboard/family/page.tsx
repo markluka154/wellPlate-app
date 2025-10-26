@@ -406,18 +406,27 @@ export default function FamilyDashboard() {
               <div className="bg-gray-50 rounded-xl p-4">
                 <h4 className="font-semibold text-gray-700 mb-3">Progress Status</h4>
                 <div className="space-y-3">
-                  {['Shopping', 'Prepping', 'Cooking', 'Served'].map((stage, idx) => (
-                    <div key={stage} className="flex items-center gap-3">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                        idx === 0 ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-400'
-                      }`}>
-                        {idx === 0 ? '✓' : idx + 1}
+                  {['Shopping', 'Prepping', 'Cooking', 'Served'].map((stage, idx) => {
+                    // Determine which stage is active based on meal progress
+                    const stages = ['shopping', 'prepping', 'cooking', 'served']
+                    const currentStatus = todayMeal?.progressStatus || 'shopping'
+                    const isCompleted = stages.indexOf(currentStatus) > idx
+                    const isActive = stages.indexOf(currentStatus) === idx
+                    const statusIndex = stages.indexOf(currentStatus)
+                    
+                    return (
+                      <div key={stage} className="flex items-center gap-3">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                          isCompleted || isActive ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-400'
+                        }`}>
+                          {(isCompleted || isActive) ? '✓' : idx + 1}
+                        </div>
+                        <span className={`font-medium ${isCompleted || isActive ? 'text-gray-900' : 'text-gray-400'}`}>
+                          {stage}
+                        </span>
                       </div>
-                      <span className={`font-medium ${idx === 0 ? 'text-gray-900' : 'text-gray-400'}`}>
-                        {stage}
-                      </span>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               </div>
             </div>
@@ -631,8 +640,8 @@ export default function FamilyDashboard() {
           onSwap={handleSwapConfirmed}
           currentMeal={{
             name: todayMeal.name || 'Today Meal',
-            calories: 0,
-            time: '45 min'
+            calories: todayMeal.calories || 0,
+            time: `${todayMeal.estimatedPrepTime || 12} min`
           }}
           mealPlanId="1"
           mealIndex={0}

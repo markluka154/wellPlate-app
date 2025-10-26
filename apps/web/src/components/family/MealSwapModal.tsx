@@ -50,14 +50,21 @@ export default function MealSwapModal({
   const loadAlternatives = async () => {
     try {
       setLoading(true)
-      const response = await fetch(
-        `/api/family/meal-plan/swap?mealPlanId=${mealPlanId}&mealIndex=${mealIndex}`
-      )
+      // Use the alternatives endpoint that actually returns data
+      const response = await fetch(`/api/family/today-meal/alternatives`)
       
       if (response.ok) {
         const data = await response.json()
         setAlternatives(data.alternatives || [])
-        setSwapReasons(data.swapReasons || [])
+        // Add default swap reasons
+        setSwapReasons([
+          'Allergy concern',
+          'Time constraint',
+          'Budget limitation',
+          'Preference change',
+          'Ingredient unavailable',
+          'Dietary restriction'
+        ])
       } else {
         console.error('Failed to load alternatives')
       }
