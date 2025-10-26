@@ -169,7 +169,13 @@ export async function GET(request: NextRequest) {
     }
 
     // Calculate insights
-    const insights = {
+    const insights: {
+      totalMeals: number
+      averageReaction: number
+      favoriteFoods: Array<{ food: string; acceptanceRate: number; timesServed: number }>
+      lessLikedFoods: Array<{ food: string; acceptanceRate: number; timesServed: number }>
+      recommendations: Array<{ type: string; message: string }>
+    } = {
       totalMeals: member.mealReactions.length,
       averageReaction: member.mealReactions.length > 0
         ? member.mealReactions.reduce((sum, r) => {
