@@ -3,9 +3,16 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { MemberRole, ActivityLevel, MemberPhase, PrismaClient } from '@prisma/client'
 import prisma from '@/lib/prisma'
+import { Pool } from 'pg'
 
-// Create a function to get a fresh Prisma client
-const getFreshPrismaClient = () => new PrismaClient({ log: ['error', 'warn'] })
+// Create a direct PostgreSQL connection to bypass prepared statements
+const getDirectPgClient = () => {
+  const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    max: 1, // Single connection to avoid pooling issues
+  })
+  return pool
+}
 
 // GET /api/family/members - Get all family members
 export async function GET(request: NextRequest) {
@@ -25,20 +32,24 @@ export async function GET(request: NextRequest) {
       })
     } catch (prismaError: any) {
       if (prismaError?.message?.includes('prepared statement')) {
-        console.log('⚠️ Prepared statement error, using raw SQL...')
+        console.log('⚠️ Prepared statement error, using direct PostgreSQL client...')
         try {
-          // Use raw SQL to bypass prepared statements
-          const result = await prisma.$queryRaw<Array<{ id: string }>>`
-            SELECT id FROM "FamilyProfile" WHERE "userId" = ${session.user.id}
-          `
-          if (result && result[0]) {
-            familyProfile = result[0]
+          // Use direct pg client to completely bypass Prisma
+          const pgClient = getDirectPgClient()
+          const result = await pgClient.query(
+            'SELECT id FROM "FamilyProfile" WHERE "userId" = $1',
+            [session.user.id]
+          )
+          await pgClient.end()
+          
+          if (result && result.rows && result.rows[0]) {
+            familyProfile = result.rows[0]
           } else {
             throw new Error('Family profile not found')
           }
-        } catch (rawError) {
-          console.error('❌ Raw SQL also failed:', rawError)
-          throw rawError
+        } catch (pgError) {
+          console.error('❌ Direct pg client also failed:', pgError)
+          throw pgError
         }
       } else {
         throw prismaError
