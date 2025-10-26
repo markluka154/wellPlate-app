@@ -63,7 +63,7 @@ export default function MemberProfile() {
   const [preferences, setPreferences] = useState<FoodPreference[]>([])
   const [loading, setLoading] = useState(true)
 
-  const memberId = Array.isArray(params.id) ? params.id[0] : params.id
+  const memberId = params?.id ? (Array.isArray(params.id) ? params.id[0] : params.id) : ''
 
   useEffect(() => {
     loadMemberData()
