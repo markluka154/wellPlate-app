@@ -438,8 +438,9 @@ CREATE POLICY "Users can view own family shopping lists"
 ON "ShoppingList" FOR SELECT 
 USING (
   EXISTS (
-    SELECT 1 FROM "FamilyProfile" 
-    WHERE "FamilyProfile".id = "ShoppingList"."familyProfileId" 
+    SELECT 1 FROM "FamilyMealPlan"
+    JOIN "FamilyProfile" ON "FamilyMealPlan"."familyProfileId" = "FamilyProfile".id
+    WHERE "ShoppingList"."familyMealPlanId" = "FamilyMealPlan".id 
     AND "FamilyProfile"."userId" = auth.uid()::text
   )
 );
@@ -448,8 +449,9 @@ CREATE POLICY "Users can create own family shopping lists"
 ON "ShoppingList" FOR INSERT 
 WITH CHECK (
   EXISTS (
-    SELECT 1 FROM "FamilyProfile" 
-    WHERE "FamilyProfile".id = "ShoppingList"."familyProfileId" 
+    SELECT 1 FROM "FamilyMealPlan"
+    JOIN "FamilyProfile" ON "FamilyMealPlan"."familyProfileId" = "FamilyProfile".id
+    WHERE "ShoppingList"."familyMealPlanId" = "FamilyMealPlan".id 
     AND "FamilyProfile"."userId" = auth.uid()::text
   )
 );
@@ -458,8 +460,9 @@ CREATE POLICY "Users can update own family shopping lists"
 ON "ShoppingList" FOR UPDATE 
 USING (
   EXISTS (
-    SELECT 1 FROM "FamilyProfile" 
-    WHERE "FamilyProfile".id = "ShoppingList"."familyProfileId" 
+    SELECT 1 FROM "FamilyMealPlan"
+    JOIN "FamilyProfile" ON "FamilyMealPlan"."familyProfileId" = "FamilyProfile".id
+    WHERE "ShoppingList"."familyMealPlanId" = "FamilyMealPlan".id 
     AND "FamilyProfile"."userId" = auth.uid()::text
   )
 );
@@ -468,8 +471,9 @@ CREATE POLICY "Users can delete own family shopping lists"
 ON "ShoppingList" FOR DELETE 
 USING (
   EXISTS (
-    SELECT 1 FROM "FamilyProfile" 
-    WHERE "FamilyProfile".id = "ShoppingList"."familyProfileId" 
+    SELECT 1 FROM "FamilyMealPlan"
+    JOIN "FamilyProfile" ON "FamilyMealPlan"."familyProfileId" = "FamilyProfile".id
+    WHERE "ShoppingList"."familyMealPlanId" = "FamilyMealPlan".id 
     AND "FamilyProfile"."userId" = auth.uid()::text
   )
 );
@@ -530,8 +534,9 @@ CREATE POLICY "Users can view own family meal prep plans"
 ON "MealPrepPlan" FOR SELECT 
 USING (
   EXISTS (
-    SELECT 1 FROM "FamilyProfile" 
-    WHERE "FamilyProfile".id = "MealPrepPlan"."familyProfileId" 
+    SELECT 1 FROM "FamilyMealPlan"
+    JOIN "FamilyProfile" ON "FamilyMealPlan"."familyProfileId" = "FamilyProfile".id
+    WHERE "MealPrepPlan"."familyMealPlanId" = "FamilyMealPlan".id 
     AND "FamilyProfile"."userId" = auth.uid()::text
   )
 );
@@ -540,8 +545,9 @@ CREATE POLICY "Users can create own family meal prep plans"
 ON "MealPrepPlan" FOR INSERT 
 WITH CHECK (
   EXISTS (
-    SELECT 1 FROM "FamilyProfile" 
-    WHERE "FamilyProfile".id = "MealPrepPlan"."familyProfileId" 
+    SELECT 1 FROM "FamilyMealPlan"
+    JOIN "FamilyProfile" ON "FamilyMealPlan"."familyProfileId" = "FamilyProfile".id
+    WHERE "MealPrepPlan"."familyMealPlanId" = "FamilyMealPlan".id 
     AND "FamilyProfile"."userId" = auth.uid()::text
   )
 );
@@ -550,8 +556,9 @@ CREATE POLICY "Users can update own family meal prep plans"
 ON "MealPrepPlan" FOR UPDATE 
 USING (
   EXISTS (
-    SELECT 1 FROM "FamilyProfile" 
-    WHERE "FamilyProfile".id = "MealPrepPlan"."familyProfileId" 
+    SELECT 1 FROM "FamilyMealPlan"
+    JOIN "FamilyProfile" ON "FamilyMealPlan"."familyProfileId" = "FamilyProfile".id
+    WHERE "MealPrepPlan"."familyMealPlanId" = "FamilyMealPlan".id 
     AND "FamilyProfile"."userId" = auth.uid()::text
   )
 );
@@ -560,8 +567,9 @@ CREATE POLICY "Users can delete own family meal prep plans"
 ON "MealPrepPlan" FOR DELETE 
 USING (
   EXISTS (
-    SELECT 1 FROM "FamilyProfile" 
-    WHERE "FamilyProfile".id = "MealPrepPlan"."familyProfileId" 
+    SELECT 1 FROM "FamilyMealPlan"
+    JOIN "FamilyProfile" ON "FamilyMealPlan"."familyProfileId" = "FamilyProfile".id
+    WHERE "MealPrepPlan"."familyMealPlanId" = "FamilyMealPlan".id 
     AND "FamilyProfile"."userId" = auth.uid()::text
   )
 );
