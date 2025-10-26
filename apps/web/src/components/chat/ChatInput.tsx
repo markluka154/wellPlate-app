@@ -18,6 +18,14 @@ export function ChatInput({ onSend, disabled = false, userId }: ChatInputProps) 
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const maxLength = 2000
   
+  // Debug: Log state on mount and when it changes
+  console.log('🔍 ChatInput mounted with:', { userId, disabled, hasTextarea: !!textareaRef.current })
+  
+  // Debug: Log when userId changes
+  useEffect(() => {
+    console.log('🔍 ChatInput userId changed:', userId)
+  }, [userId])
+  
   // Auto-resize textarea
   useEffect(() => {
     const textarea = textareaRef.current
@@ -122,11 +130,21 @@ User message: ${message.trim()}
           {/* Salad Icon Button */}
           <button
             type="button"
-            onClick={handleAttachMeal}
+            onClick={() => {
+              console.log('🔍 Salad button clicked!', { disabled, userId, hasTextarea: !!textareaRef.current })
+              if (!userId) {
+                console.error('❌ Button clicked but no userId!')
+              }
+              if (disabled) {
+                console.error('❌ Button clicked but disabled!')
+              }
+              handleAttachMeal()
+            }}
             disabled={disabled || !userId}
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 w-8 h-8 flex items-center justify-center text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-full transition-colors disabled:opacity-50"
+            className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-full transition-colors disabled:opacity-50 touch-manipulation z-10"
+            style={{ pointerEvents: 'auto' }}
           >
-            <Salad className="w-4 h-4" />
+            <Salad className="w-5 h-5 sm:w-4 sm:h-4" />
           </button>
 
           {/* Textarea */}
@@ -143,7 +161,7 @@ User message: ${message.trim()}
               w-full
               min-h-[56px]
               max-h-[200px]
-              pl-12 pr-14 py-4
+              pl-14 sm:pl-12 pr-14 py-4
               bg-transparent
               border-0
               resize-none
