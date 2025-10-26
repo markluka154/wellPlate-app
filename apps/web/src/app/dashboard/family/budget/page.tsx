@@ -257,7 +257,7 @@ export default function BudgetPage() {
                         <div className="flex-1">
                           <h3 className="text-lg font-bold text-gray-900">{expense.item}</h3>
                           <div className="text-sm text-gray-600 mt-1">
-                            {expense.category} • {expense.quantity} {expense.unit || 'piece'}
+                            {expense.category} • {expense.quantity}
                             {expense.store && ` • ${expense.store}`}
                           </div>
                         </div>
