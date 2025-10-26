@@ -79,7 +79,8 @@ export function FamilyLockedComponent({ currentPlan = 'FREE' }: FamilyLockedComp
               <div className="text-center mb-4">
                 <div className="inline-block">
                   <span className="text-5xl font-bold text-gray-900">€</span>
-                  <span className="text-5xl font-bold text-gray-900">29</span>
+                  <span className="text-5xl font-bold text-gray-900">24</span>
+                  <span className="text-xl text-gray-600">.99</span>
                   <span className="text-xl text-gray-600">/month</span>
                 </div>
               </div>
