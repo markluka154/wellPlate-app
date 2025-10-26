@@ -45,7 +45,15 @@ export async function POST(request: NextRequest) {
         time: '30 min',
         type: 'balanced',
         calories: 450,
-        status: today <= weekStart ? 'shopping' : 'planned'
+        status: today <= weekStart ? 'shopping' : 'planned',
+        ingredients: [
+          { name: 'Chicken Breast', quantity: 500, unit: 'g' },
+          { name: 'Bell Peppers', quantity: 3, unit: 'pieces' },
+          { name: 'Zucchini', quantity: 2, unit: 'pieces' },
+          { name: 'Olive Oil', quantity: 30, unit: 'ml' },
+          { name: 'Salt', quantity: 1, unit: 'tsp' },
+          { name: 'Black Pepper', quantity: 1, unit: 'tsp' }
+        ]
       },
       { 
         date: new Date(weekStart.getTime() + 24*60*60*1000).toISOString(), 
@@ -54,7 +62,15 @@ export async function POST(request: NextRequest) {
         time: '20 min',
         type: 'comfort',
         calories: 380,
-        status: today <= new Date(weekStart.getTime() + 24*60*60*1000) ? 'shopping' : 'planned'
+        status: today <= new Date(weekStart.getTime() + 24*60*60*1000) ? 'shopping' : 'planned',
+        ingredients: [
+          { name: 'Pasta', quantity: 400, unit: 'g' },
+          { name: 'Tomatoes', quantity: 800, unit: 'g' },
+          { name: 'Onion', quantity: 1, unit: 'piece' },
+          { name: 'Garlic', quantity: 3, unit: 'cloves' },
+          { name: 'Olive Oil', quantity: 20, unit: 'ml' },
+          { name: 'Basil', quantity: 10, unit: 'g' }
+        ]
       },
       { 
         date: new Date(weekStart.getTime() + 2*24*60*60*1000).toISOString(), 
@@ -63,7 +79,16 @@ export async function POST(request: NextRequest) {
         time: '25 min',
         type: 'interactive',
         calories: 480,
-        status: today <= new Date(weekStart.getTime() + 2*24*60*60*1000) ? 'shopping' : 'planned'
+        status: today <= new Date(weekStart.getTime() + 2*24*60*60*1000) ? 'shopping' : 'planned',
+        ingredients: [
+          { name: 'Ground Beef', quantity: 500, unit: 'g' },
+          { name: 'Taco Shells', quantity: 12, unit: 'pieces' },
+          { name: 'Rice', quantity: 300, unit: 'g' },
+          { name: 'Lettuce', quantity: 200, unit: 'g' },
+          { name: 'Tomatoes', quantity: 2, unit: 'pieces' },
+          { name: 'Cheddar Cheese', quantity: 200, unit: 'g' },
+          { name: 'Sour Cream', quantity: 200, unit: 'g' }
+        ]
       },
       { 
         date: new Date(weekStart.getTime() + 3*24*60*60*1000).toISOString(), 
@@ -72,7 +97,15 @@ export async function POST(request: NextRequest) {
         time: '35 min',
         type: 'healthy',
         calories: 420,
-        status: today <= new Date(weekStart.getTime() + 3*24*60*60*1000) ? 'shopping' : 'planned'
+        status: today <= new Date(weekStart.getTime() + 3*24*60*60*1000) ? 'shopping' : 'planned',
+        ingredients: [
+          { name: 'Salmon Fillet', quantity: 600, unit: 'g' },
+          { name: 'Sweet Potato', quantity: 800, unit: 'g' },
+          { name: 'Broccoli', quantity: 400, unit: 'g' },
+          { name: 'Lemon', quantity: 2, unit: 'pieces' },
+          { name: 'Olive Oil', quantity: 30, unit: 'ml' },
+          { name: 'Salt', quantity: 1, unit: 'tsp' }
+        ]
       },
       { 
         date: new Date(weekStart.getTime() + 4*24*60*60*1000).toISOString(), 
@@ -81,7 +114,15 @@ export async function POST(request: NextRequest) {
         time: '30 min',
         type: 'easy',
         calories: 440,
-        status: today <= new Date(weekStart.getTime() + 4*24*60*60*1000) ? 'shopping' : 'planned'
+        status: today <= new Date(weekStart.getTime() + 4*24*60*60*1000) ? 'shopping' : 'planned',
+        ingredients: [
+          { name: 'Italian Sausage', quantity: 800, unit: 'g' },
+          { name: 'Potatoes', quantity: 800, unit: 'g' },
+          { name: 'Bell Peppers', quantity: 3, unit: 'pieces' },
+          { name: 'Onion', quantity: 1, unit: 'piece' },
+          { name: 'Olive Oil', quantity: 30, unit: 'ml' },
+          { name: 'Italian Seasoning', quantity: 15, unit: 'g' }
+        ]
       },
       { 
         date: new Date(weekStart.getTime() + 5*24*60*60*1000).toISOString(), 
@@ -90,7 +131,15 @@ export async function POST(request: NextRequest) {
         time: '40 min',
         type: 'fun',
         calories: 520,
-        status: today <= new Date(weekStart.getTime() + 5*24*60*60*1000) ? 'shopping' : 'planned'
+        status: today <= new Date(weekStart.getTime() + 5*24*60*60*1000) ? 'shopping' : 'planned',
+        ingredients: [
+          { name: 'Pizza Dough', quantity: 500, unit: 'g' },
+          { name: 'Tomato Sauce', quantity: 200, unit: 'ml' },
+          { name: 'Mozzarella Cheese', quantity: 300, unit: 'g' },
+          { name: 'Pepperoni', quantity: 150, unit: 'g' },
+          { name: 'Mushrooms', quantity: 200, unit: 'g' },
+          { name: 'Olives', quantity: 100, unit: 'g' }
+        ]
       },
       { 
         date: new Date(weekStart.getTime() + 6*24*60*60*1000).toISOString(), 
@@ -99,7 +148,16 @@ export async function POST(request: NextRequest) {
         time: '60 min',
         type: 'traditional',
         calories: 500,
-        status: today <= new Date(weekStart.getTime() + 6*24*60*60*1000) ? 'shopping' : 'planned'
+        status: today <= new Date(weekStart.getTime() + 6*24*60*60*1000) ? 'shopping' : 'planned',
+        ingredients: [
+          { name: 'Beef Roast', quantity: 1.5, unit: 'kg' },
+          { name: 'Potatoes', quantity: 1, unit: 'kg' },
+          { name: 'Carrots', quantity: 500, unit: 'g' },
+          { name: 'Onions', quantity: 2, unit: 'pieces' },
+          { name: 'Garlic', quantity: 4, unit: 'cloves' },
+          { name: 'Beef Broth', quantity: 500, unit: 'ml' },
+          { name: 'Rosemary', quantity: 10, unit: 'g' }
+        ]
       }
     ]
 
