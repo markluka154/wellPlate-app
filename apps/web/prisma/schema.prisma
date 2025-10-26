@@ -8,8 +8,8 @@ generator client {
 
 datasource db {
   provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  url       = env("DATABASE_URL")  // Connection pooler for queries
+  directUrl = env("DIRECT_URL")    // Direct connection for migrations
 }
 
 model Account {
@@ -183,4 +183,387 @@ model ChatSession {
   updatedAt DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ============================================
+// FAMILY PACK - WELLPLATE FAMILY PACK SCHEMA
+// ============================================
+
+// Family Profile & Core Structures
+model FamilyProfile {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  name            String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  members         FamilyMember[]
+  mealPlans       FamilyMealPlan[]
+  preferences     FamilyPreferences?
+  calendar        FamilyCalendar?
+  budget          FamilyBudget?
+  pantryInventory PantryInventory[]
+  
+  @@index([userId])
+}
+
+model FamilyMember {
+  id                    String   @id @default(cuid())
+  familyProfileId       String
+  familyProfile         FamilyProfile @relation(fields: [familyProfileId], references: [id], onDelete: Cascade)
+  
+  name                  String
+  age                   Int
+  role                  MemberRole
+  avatar                String?
+  
+  // Nutrition & Health
+  weightKg              Float?
+  heightCm               Float?
+  activityLevel         ActivityLevel
+  healthGoals           String[]
+  currentPhase          MemberPhase
+  
+  // Dietary
+  dietaryRestrictions   String[]
+  allergies             String[]
+  
+  // Preference Learning
+  foodPreferences       FoodPreference[]
+  mealReactions         MealReaction[]
+  
+  // Cooking Skills
+  cookingSkillLevel     Int @default(1)
+  canCookAlone          Boolean @default(false)
+  favoriteTasks         String[]
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  @@index([familyProfileId])
+}
+
+model FoodPreference {
+  id              String   @id @default(cuid())
+  memberId        String
+  member          FamilyMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  
+  foodItem        String
+  acceptanceRate  Float
+  preparationStyles Json
+  lastServed      DateTime?
+  timesServed     Int @default(0)
+  timesAccepted   Int @default(0)
+  moodDependent   Boolean @default(false)
+  timeOfDay       String?
+  seasonalPref    String?
+  notes           String?
+  
+  @@unique([memberId, foodItem])
+  @@index([memberId])
+}
+
+model MealReaction {
+  id              String   @id @default(cuid())
+  memberId        String
+  member          FamilyMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  
+  mealPlanId      String
+  mealName        String
+  date            DateTime
+  reaction        Reaction
+  portionEaten    Float
+  notes           String?
+  createdAt       DateTime @default(now())
+  
+  @@index([memberId])
+  @@index([mealPlanId])
+}
+
+// Family Meal Plan System
+model FamilyMealPlan {
+  id                    String   @id @default(cuid())
+  familyProfileId       String
+  familyProfile         FamilyProfile @relation(fields: [familyProfileId], references: [id], onDelete: Cascade)
+  
+  weekStartDate         DateTime
+  weekEndDate           DateTime
+  meals                 Json
+  currentDayIndex       Int @default(0)
+  completedMeals        Json @default("[]")
+  skippedMeals          Json @default("[]")
+  swappedMeals          Json @default("[]")
+  
+  shoppingList          ShoppingList?
+  mealPrepPlan          MealPrepPlan?
+  leftovers             Leftover[]
+  
+  isActive              Boolean @default(true)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  @@index([familyProfileId])
+  @@index([weekStartDate])
+}
+
+// Calendar Integration & Conflicts
+model FamilyCalendar {
+  id                    String   @id @default(cuid())
+  familyProfileId       String   @unique
+  familyProfile         FamilyProfile @relation(fields: [familyProfileId], references: [id], onDelete: Cascade)
+  
+  googleCalendarConnected Boolean @default(false)
+  googleCalendarId        String?
+  appleCalendarConnected  Boolean @default(false)
+  events                CalendarEvent[]
+  
+  defaultBreakfastTime  String @default("07:00")
+  defaultLunchTime      String @default("12:00")
+  defaultDinnerTime     String @default("18:00")
+  
+  enableConflictDetection Boolean @default(true)
+  notifyBeforeMinutes     Int @default(120)
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+model CalendarEvent {
+  id                  String   @id @default(cuid())
+  familyCalendarId    String
+  familyCalendar      FamilyCalendar @relation(fields: [familyCalendarId], references: [id], onDelete: Cascade)
+  
+  title               String
+  startTime           DateTime
+  endTime             DateTime
+  involvedMembers     String[]
+  impactType          EventImpact
+  suggestedAdjustment String?
+  externalEventId     String?
+  source              String?
+  createdAt           DateTime @default(now())
+  
+  @@index([familyCalendarId])
+  @@index([startTime])
+}
+
+// Budget Tracking
+model FamilyBudget {
+  id                    String   @id @default(cuid())
+  familyProfileId       String   @unique
+  familyProfile         FamilyProfile @relation(fields: [familyProfileId], references: [id], onDelete: Cascade)
+  
+  weeklyBudget          Float
+  currentWeekSpend      Float @default(0)
+  expenses              BudgetExpense[]
+  
+  enableSmartSwaps      Boolean @default(true)
+  preferredStores        String[]
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+model BudgetExpense {
+  id              String   @id @default(cuid())
+  familyBudgetId  String
+  familyBudget    FamilyBudget @relation(fields: [familyBudgetId], references: [id], onDelete: Cascade)
+  
+  item            String
+  quantity        Float
+  unitPrice       Float
+  totalPrice      Float
+  store           String?
+  category        String
+  purchaseDate    DateTime
+  usedInMeals     String[]
+  
+  @@index([familyBudgetId])
+  @@index([purchaseDate])
+}
+
+// Shopping System
+model ShoppingList {
+  id                String   @id @default(cuid())
+  familyMealPlanId  String   @unique
+  familyMealPlan    FamilyMealPlan @relation(fields: [familyMealPlanId], references: [id], onDelete: Cascade)
+  
+  items             ShoppingItem[]
+  groupedByStore    Boolean @default(false)
+  groupedByCategory Boolean @default(true)
+  isCompleted       Boolean @default(false)
+  completedAt       DateTime?
+  estimatedTotal    Float?
+  actualTotal        Float?
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model ShoppingItem {
+  id              String   @id @default(cuid())
+  shoppingListId  String
+  shoppingList    ShoppingList @relation(fields: [shoppingListId], references: [id], onDelete: Cascade)
+  
+  name            String
+  quantity        Float
+  unit            String
+  category        String
+  estimatedPrice  Float?
+  actualPrice     Float?
+  isPurchased     Boolean @default(false)
+  bulkOption      Json?
+  substituteOptions String[]
+  usedInMeals     String[]
+  
+  @@index([shoppingListId])
+}
+
+// Meal Prep & Tasks
+model MealPrepPlan {
+  id                String   @id @default(cuid())
+  familyMealPlanId  String   @unique
+  familyMealPlan    FamilyMealPlan @relation(fields: [familyMealPlanId], references: [id], onDelete: Cascade)
+  
+  prepDay           DateTime
+  tasks             MealPrepTask[]
+  estimatedTime     Int
+  completionStatus  Float @default(0)
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model MealPrepTask {
+  id                String   @id @default(cuid())
+  mealPrepPlanId    String
+  mealPrepPlan      MealPrepPlan @relation(fields: [mealPrepPlanId], references: [id], onDelete: Cascade)
+  
+  title             String
+  description        String?
+  estimatedTime      Int
+  difficulty         Int
+  assignedTo         String?
+  canParallelize     Boolean @default(false)
+  isCompleted        Boolean @default(false)
+  completedAt        DateTime?
+  order              Int
+  
+  @@index([mealPrepPlanId])
+}
+
+// Pantry Inventory
+model PantryInventory {
+  id                String   @id @default(cuid())
+  familyProfileId   String
+  familyProfile     FamilyProfile @relation(fields: [familyProfileId], references: [id], onDelete: Cascade)
+  
+  itemName          String
+  quantity          Float
+  unit              String
+  category          String
+  location          String?
+  purchaseDate      DateTime?
+  expiryDate        DateTime?
+  daysUntilExpiry   Int?
+  usedInMeal        String?
+  openedDate        DateTime?
+  isStaple          Boolean @default(false)
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  @@index([familyProfileId])
+  @@index([expiryDate])
+}
+
+// Leftover Management
+model Leftover {
+  id                String   @id @default(cuid())
+  familyMealPlanId  String
+  familyMealPlan    FamilyMealPlan @relation(fields: [familyMealPlanId], references: [id], onDelete: Cascade)
+  
+  originalMealName  String
+  originalMealDate DateTime
+  quantity          Float
+  unit              String
+  storedDate        DateTime @default(now())
+  expiresAt         DateTime
+  
+  canBeUsedIn       String[]
+  transformRecipes  Json
+  isUsed            Boolean @default(false)
+  usedInMeal        String?
+  usedAt            DateTime?
+  
+  @@index([familyMealPlanId])
+  @@index([expiresAt])
+}
+
+// Preferences & Settings
+model FamilyPreferences {
+  id                    String   @id @default(cuid())
+  familyProfileId       String   @unique
+  familyProfile         FamilyProfile @relation(fields: [familyProfileId], references: [id], onDelete: Cascade)
+  
+  mealsPerDay           Int @default(3)
+  snacksPerDay          Int @default(2)
+  
+  averageCookingTime    Int @default(30)
+  maxCookingTime         Int @default(60)
+  preferredCookingStyle String @default("balanced")
+  
+  eatTogetherFrequency  Int @default(5)
+  weekendBrunchStyle    Boolean @default(false)
+  
+  celebrateWithFood     Boolean @default(true)
+  traditionMeals        Json?
+  
+  mealPrepDay           String?
+  batchCookingEnabled    Boolean @default(false)
+  
+  emergencyMealTypes    String[] @default(["pasta", "rice-bowls", "sandwiches"])
+  backupRestaurants     Json?
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+// Enums
+enum MemberRole {
+  ADULT
+  TEEN
+  CHILD
+  SENIOR
+}
+
+enum ActivityLevel {
+  LOW
+  MODERATE
+  HIGH
+  VERY_HIGH
+}
+
+enum MemberPhase {
+  NORMAL
+  GROWTH_SPURT
+  SPORTS_SEASON
+  EXAM_SEASON
+  RECOVERY
+}
+
+enum Reaction {
+  LOVED
+  LIKED
+  NEUTRAL
+  DISLIKED
+  REFUSED
+}
+
+enum EventImpact {
+  NO_TIME_TO_COOK
+  EATING_ON_GO
+  LATE_DINNER
+  EARLY_DINNER
+  NONE
 }
