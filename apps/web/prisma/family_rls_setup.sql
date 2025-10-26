@@ -487,7 +487,8 @@ ON "ShoppingItem" FOR SELECT
 USING (
   EXISTS (
     SELECT 1 FROM "ShoppingList"
-    JOIN "FamilyProfile" ON "ShoppingList"."familyProfileId" = "FamilyProfile".id
+    JOIN "FamilyMealPlan" ON "ShoppingList"."familyMealPlanId" = "FamilyMealPlan".id
+    JOIN "FamilyProfile" ON "FamilyMealPlan"."familyProfileId" = "FamilyProfile".id
     WHERE "ShoppingItem"."shoppingListId" = "ShoppingList".id 
     AND "FamilyProfile"."userId" = auth.uid()::text
   )
@@ -498,7 +499,8 @@ ON "ShoppingItem" FOR INSERT
 WITH CHECK (
   EXISTS (
     SELECT 1 FROM "ShoppingList"
-    JOIN "FamilyProfile" ON "ShoppingList"."familyProfileId" = "FamilyProfile".id
+    JOIN "FamilyMealPlan" ON "ShoppingList"."familyMealPlanId" = "FamilyMealPlan".id
+    JOIN "FamilyProfile" ON "FamilyMealPlan"."familyProfileId" = "FamilyProfile".id
     WHERE "ShoppingItem"."shoppingListId" = "ShoppingList".id 
     AND "FamilyProfile"."userId" = auth.uid()::text
   )
@@ -509,7 +511,8 @@ ON "ShoppingItem" FOR UPDATE
 USING (
   EXISTS (
     SELECT 1 FROM "ShoppingList"
-    JOIN "FamilyProfile" ON "ShoppingList"."familyProfileId" = "FamilyProfile".id
+    JOIN "FamilyMealPlan" ON "ShoppingList"."familyMealPlanId" = "FamilyMealPlan".id
+    JOIN "FamilyProfile" ON "FamilyMealPlan"."familyProfileId" = "FamilyProfile".id
     WHERE "ShoppingItem"."shoppingListId" = "ShoppingList".id 
     AND "FamilyProfile"."userId" = auth.uid()::text
   )
@@ -520,7 +523,8 @@ ON "ShoppingItem" FOR DELETE
 USING (
   EXISTS (
     SELECT 1 FROM "ShoppingList"
-    JOIN "FamilyProfile" ON "ShoppingList"."familyProfileId" = "FamilyProfile".id
+    JOIN "FamilyMealPlan" ON "ShoppingList"."familyMealPlanId" = "FamilyMealPlan".id
+    JOIN "FamilyProfile" ON "FamilyMealPlan"."familyProfileId" = "FamilyProfile".id
     WHERE "ShoppingItem"."shoppingListId" = "ShoppingList".id 
     AND "FamilyProfile"."userId" = auth.uid()::text
   )
@@ -583,7 +587,8 @@ ON "MealPrepTask" FOR SELECT
 USING (
   EXISTS (
     SELECT 1 FROM "MealPrepPlan"
-    JOIN "FamilyProfile" ON "MealPrepPlan"."familyProfileId" = "FamilyProfile".id
+    JOIN "FamilyMealPlan" ON "MealPrepPlan"."familyMealPlanId" = "FamilyMealPlan".id
+    JOIN "FamilyProfile" ON "FamilyMealPlan"."familyProfileId" = "FamilyProfile".id
     WHERE "MealPrepTask"."mealPrepPlanId" = "MealPrepPlan".id 
     AND "FamilyProfile"."userId" = auth.uid()::text
   )
@@ -594,7 +599,8 @@ ON "MealPrepTask" FOR INSERT
 WITH CHECK (
   EXISTS (
     SELECT 1 FROM "MealPrepPlan"
-    JOIN "FamilyProfile" ON "MealPrepPlan"."familyProfileId" = "FamilyProfile".id
+    JOIN "FamilyMealPlan" ON "MealPrepPlan"."familyMealPlanId" = "FamilyMealPlan".id
+    JOIN "FamilyProfile" ON "FamilyMealPlan"."familyProfileId" = "FamilyProfile".id
     WHERE "MealPrepTask"."mealPrepPlanId" = "MealPrepPlan".id 
     AND "FamilyProfile"."userId" = auth.uid()::text
   )
@@ -605,7 +611,8 @@ ON "MealPrepTask" FOR UPDATE
 USING (
   EXISTS (
     SELECT 1 FROM "MealPrepPlan"
-    JOIN "FamilyProfile" ON "MealPrepPlan"."familyProfileId" = "FamilyProfile".id
+    JOIN "FamilyMealPlan" ON "MealPrepPlan"."familyMealPlanId" = "FamilyMealPlan".id
+    JOIN "FamilyProfile" ON "FamilyMealPlan"."familyProfileId" = "FamilyProfile".id
     WHERE "MealPrepTask"."mealPrepPlanId" = "MealPrepPlan".id 
     AND "FamilyProfile"."userId" = auth.uid()::text
   )
@@ -616,7 +623,8 @@ ON "MealPrepTask" FOR DELETE
 USING (
   EXISTS (
     SELECT 1 FROM "MealPrepPlan"
-    JOIN "FamilyProfile" ON "MealPrepPlan"."familyProfileId" = "FamilyProfile".id
+    JOIN "FamilyMealPlan" ON "MealPrepPlan"."familyMealPlanId" = "FamilyMealPlan".id
+    JOIN "FamilyProfile" ON "FamilyMealPlan"."familyProfileId" = "FamilyProfile".id
     WHERE "MealPrepTask"."mealPrepPlanId" = "MealPrepPlan".id 
     AND "FamilyProfile"."userId" = auth.uid()::text
   )
