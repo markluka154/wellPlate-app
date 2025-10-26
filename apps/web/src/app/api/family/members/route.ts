@@ -82,17 +82,56 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const members = await prisma.familyMember.findMany({
-      where: { familyProfileId: familyProfile.id },
-      include: {
-        foodPreferences: true,
-        mealReactions: {
-          orderBy: { createdAt: 'desc' },
-          take: 10
+    let members
+    try {
+      members = await prisma.familyMember.findMany({
+        where: { familyProfileId: familyProfile.id },
+        include: {
+          foodPreferences: true,
+          mealReactions: {
+            orderBy: { createdAt: 'desc' },
+            take: 10
+          }
+        },
+        orderBy: { createdAt: 'asc' }
+      })
+    } catch (membersError: any) {
+      if (membersError?.message?.includes('prepared statement')) {
+        console.log('⚠️ Prepared statement error in findMany, using direct pg client...')
+        const pgClient = getDirectPgClient()
+        try {
+          const result = await pgClient.query(
+            'SELECT * FROM "FamilyMember" WHERE "familyProfileId" = $1 ORDER BY "createdAt" ASC',
+            [familyProfile.id]
+          )
+          await pgClient.end()
+          
+          // Fetch related data using pg for foodPreferences and mealReactions
+          const pgClient2 = getDirectPgClient()
+          for (const member of result.rows) {
+            const prefsResult = await pgClient2.query(
+              'SELECT * FROM "FoodPreference" WHERE "memberId" = $1',
+              [member.id]
+            )
+            member.foodPreferences = prefsResult.rows
+            
+            const reactionsResult = await pgClient2.query(
+              'SELECT * FROM "MealReaction" WHERE "memberId" = $1 ORDER BY "createdAt" DESC LIMIT 10',
+              [member.id]
+            )
+            member.mealReactions = reactionsResult.rows
+          }
+          await pgClient2.end()
+          
+          members = result.rows
+        } catch (pgError) {
+          console.error('❌ Direct pg client for members failed:', pgError)
+          throw pgError
         }
-      },
-      orderBy: { createdAt: 'asc' }
-    })
+      } else {
+        throw membersError
+      }
+    }
 
     return NextResponse.json({ members })
   } catch (error) {
