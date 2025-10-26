@@ -453,7 +453,7 @@ export default function FamilyDashboard() {
                       <span className="font-semibold text-yellow-800">Missing Ingredients</span>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      {todayMeal.missingIngredients.map((ingredient, idx) => (
+                      {todayMeal.missingIngredients.map((ingredient: string, idx: number) => (
                         <span key={idx} className="bg-white px-3 py-1 rounded-full text-sm text-yellow-800 border border-yellow-300">
                           {ingredient}
                         </span>
