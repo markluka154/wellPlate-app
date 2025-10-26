@@ -19,7 +19,8 @@ import {
   X,
   Loader2,
   Timer,
-  Package
+  Package,
+  TrendingUp
 } from 'lucide-react'
 import Link from 'next/link'
 import { UpgradePrompt } from '@/components/dashboard/UpgradePrompt'
@@ -747,6 +748,21 @@ export default function FamilyDashboard() {
                 <div>
                   <h3 className="font-bold text-gray-900">Leftovers</h3>
                   <p className="text-gray-600 text-sm">Manage food waste</p>
+          </div>
+        </div>
+            </Link>
+
+            <Link
+              href="/dashboard/family/budget"
+              className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 hover:shadow-md transition-all duration-200"
+            >
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl flex items-center justify-center">
+                  <TrendingUp className="h-6 w-6 text-white" />
+              </div>
+                <div>
+                  <h3 className="font-bold text-gray-900">Budget</h3>
+                  <p className="text-gray-600 text-sm">Track spending</p>
           </div>
         </div>
             </Link>
