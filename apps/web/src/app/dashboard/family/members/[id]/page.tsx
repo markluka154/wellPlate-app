@@ -4,383 +4,400 @@ import React, { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { 
   ArrowLeft, 
-  Edit2, 
-  ChefHat, 
+  User, 
+  Heart, 
+  Calendar,
   TrendingUp,
-  Award,
+  Activity,
+  ChefHat,
+  AlertCircle,
+  Clock,
   Target,
-  Heart,
-  AlertTriangle,
-  Loader2,
-  User,
-  Star
+  Award,
+  XCircle,
+  Star,
+  ThumbsUp,
+  ThumbsDown,
+  Smile,
+  Frown
 } from 'lucide-react'
-import Link from 'next/link'
+import { useNotification } from '@/components/ui/Notification'
 
-interface FamilyMember {
-  id: string
-  familyProfileId: string
-  name: string
-  age: number
-  role: 'ADULT' | 'TEEN' | 'CHILD' | 'SENIOR'
-  avatar?: string
-  weightKg?: number
-  heightCm?: number
-  activityLevel: 'LOW' | 'MODERATE' | 'HIGH' | 'VERY_HIGH'
-  healthGoals: string[]
-  currentPhase: 'NORMAL' | 'GROWTH_SPURT' | 'SPORTS_SEASON' | 'EXAM_SEASON' | 'RECOVERY'
-  dietaryRestrictions: string[]
-  allergies: string[]
-  cookingSkillLevel: number
-  canCookAlone: boolean
-  favoriteTasks: string[]
-  createdAt: string
-  updatedAt: string
+interface MemberDetail {
+  member: {
+    id: string
+    name: string
+    age: number
+    role: string
+    avatar?: string
+    weightKg?: number
+    heightCm?: number
+    activityLevel: string
+    healthGoals: string[]
+    currentPhase: string
+    dietaryRestrictions: string[]
+    allergies: string[]
+    cookingSkillLevel: number
+    canCookAlone: boolean
+    favoriteTasks: string[]
+    createdAt: string
+    updatedAt: string
+  }
+  preferences: any[]
+  reactions: {
+    total: number
+    loved: number
+    liked: number
+    refused: number
+    recent: any[]
+  }
+  mealHistory: any[]
+  insights: {
+    topPreferences: any[]
+    avoidedFoods: any[]
+    totalMeals: number
+  }
 }
 
-interface MealReaction {
-  id: string
-  mealName: string
-  date: string
-  reaction: 'LOVED' | 'LIKED' | 'NEUTRAL' | 'DISLIKED' | 'REFUSED'
-  portionEaten: number
-  notes?: string
-}
-
-interface FoodPreference {
-  id: string
-  foodItem: string
-  acceptanceRate: number
-  timesServed: number
-  timesAccepted: number
-}
-
-export default function MemberProfile() {
+export default function MemberDetailPage() {
   const params = useParams()
   const router = useRouter()
-  const [member, setMember] = useState<FamilyMember | null>(null)
-  const [reactions, setReactions] = useState<MealReaction[]>([])
-  const [preferences, setPreferences] = useState<FoodPreference[]>([])
+  const memberId = params.id as string
+  const [detail, setDetail] = useState<MemberDetail | null>(null)
   const [loading, setLoading] = useState(true)
-
-  const memberId = params?.id ? (Array.isArray(params.id) ? params.id[0] : params.id) : ''
+  const { showNotification, NotificationComponent } = useNotification()
 
   useEffect(() => {
-    loadMemberData()
+    loadMemberDetail()
   }, [memberId])
 
-  const loadMemberData = async () => {
-    if (!memberId) return
-    
+  const loadMemberDetail = async () => {
     try {
       setLoading(true)
-      
-      // Load member details
-      const response = await fetch(`/api/family/members/${memberId}`)
+      const response = await fetch(`/api/family/members/${memberId}/detail`)
       if (response.ok) {
         const data = await response.json()
-        setMember(data.member)
-        
-        // Load reactions and preferences if available
-        if (data.member.mealReactions) {
-          setReactions(data.member.mealReactions)
-        }
-        if (data.member.foodPreferences) {
-          setPreferences(data.member.foodPreferences)
-        }
+        setDetail(data)
+      } else {
+        showNotification('error', 'Error', 'Failed to load member details')
       }
     } catch (error) {
-      console.error('Error loading member data:', error)
+      console.error('Error loading member detail:', error)
+      showNotification('error', 'Error', 'Failed to load member details')
     } finally {
       setLoading(false)
     }
   }
 
-  const getActivityLevelColor = (level: string) => {
-    switch (level) {
-      case 'LOW': return 'bg-red-100 text-red-700'
-      case 'MODERATE': return 'bg-yellow-100 text-yellow-700'
-      case 'HIGH': return 'bg-green-100 text-green-700'
-      case 'VERY_HIGH': return 'bg-blue-100 text-blue-700'
+  const getRoleIcon = (role: string) => {
+    switch (role) {
+      case 'ADULT': return <User className="h-5 w-5" />
+      case 'TEEN': return <TrendingUp className="h-5 w-5" />
+      case 'CHILD': return <Smile className="h-5 w-5" />
+      case 'SENIOR': return <Award className="h-5 w-5" />
+      default: return <User className="h-5 w-5" />
+    }
+  }
+
+  const getRoleBadge = (role: string) => {
+    switch (role) {
+      case 'ADULT': return 'bg-blue-100 text-blue-700'
+      case 'TEEN': return 'bg-purple-100 text-purple-700'
+      case 'CHILD': return 'bg-green-100 text-green-700'
+      case 'SENIOR': return 'bg-amber-100 text-amber-700'
       default: return 'bg-gray-100 text-gray-700'
     }
   }
 
-  const getReactionColor = (reaction: string) => {
+  const getActivityLevelBadge = (level: string) => {
+    switch (level) {
+      case 'LOW': return { label: 'Low', color: 'bg-gray-100 text-gray-700' }
+      case 'MODERATE': return { label: 'Moderate', color: 'bg-yellow-100 text-yellow-700' }
+      case 'HIGH': return { label: 'High', color: 'bg-orange-100 text-orange-700' }
+      case 'VERY_HIGH': return { label: 'Very High', color: 'bg-red-100 text-red-700' }
+      default: return { label: 'Unknown', color: 'bg-gray-100 text-gray-700' }
+    }
+  }
+
+  const getReactionIcon = (reaction: string) => {
     switch (reaction) {
-      case 'LOVED': return 'bg-pink-100 text-pink-700'
-      case 'LIKED': return 'bg-green-100 text-green-700'
-      case 'NEUTRAL': return 'bg-yellow-100 text-yellow-700'
-      case 'DISLIKED': return 'bg-orange-100 text-orange-700'
-      case 'REFUSED': return 'bg-red-100 text-red-700'
-      default: return 'bg-gray-100 text-gray-700'
+      case 'LOVED': return <Star className="h-5 w-5 text-yellow-500" />
+      case 'LIKED': return <ThumbsUp className="h-5 w-5 text-green-500" />
+      case 'NEUTRAL': return <Clock className="h-5 w-5 text-gray-500" />
+      case 'DISLIKED': return <ThumbsDown className="h-5 w-5 text-orange-500" />
+      case 'REFUSED': return <XCircle className="h-5 w-5 text-red-500" />
+      default: return <Clock className="h-5 w-5 text-gray-500" />
     }
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50 flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
-          <p className="text-gray-600">Loading member profile...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading member details...</p>
         </div>
       </div>
     )
   }
 
-  if (!member) {
+  if (!detail) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-600 mb-4">Member not found</p>
-          <Link href="/dashboard/family" className="text-blue-600 hover:text-blue-700">
-            Back to Family Dashboard
-          </Link>
+          <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <p className="text-gray-600">Member not found</p>
+          <button
+            onClick={() => router.back()}
+            className="mt-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+          >
+            Go Back
+          </button>
         </div>
       </div>
     )
   }
+
+  const { member, reactions, insights } = detail
+  const activityBadge = getActivityLevelBadge(member.activityLevel)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50">
+      <NotificationComponent />
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center gap-4 mb-4">
-            <Link 
-              href="/dashboard/family" 
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors bg-white/80 backdrop-blur-sm px-4 py-2 rounded-xl border border-gray-200"
-            >
-              <ArrowLeft className="h-5 w-5" />
-              Back to Family
-            </Link>
-            <button
-              onClick={() => router.push(`/dashboard/family/members/${member.id}/edit`)}
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors bg-white/80 backdrop-blur-sm px-4 py-2 rounded-xl border border-gray-200"
-            >
-              <Edit2 className="h-5 w-5" />
-              Edit Profile
-            </button>
-          </div>
+          <button
+            onClick={() => router.back()}
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-xl border border-gray-200"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Family Dashboard
+          </button>
 
-          <div className="bg-white rounded-3xl p-8 shadow-lg border border-gray-200">
-            <div className="flex items-center gap-6">
-              <div className="text-6xl">{member.avatar || '👤'}</div>
-              <div className="flex-1">
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">{member.name}</h1>
-                <div className="flex items-center gap-4 text-gray-600">
-                  <span className="font-medium">{member.age} years old</span>
-                  <span className="font-medium capitalize">{member.role.toLowerCase()}</span>
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${getActivityLevelColor(member.activityLevel)}`}>
-                    {member.activityLevel.replace('_', ' ')}
-                  </span>
+          <div className="bg-white rounded-3xl shadow-xl overflow-hidden">
+            {/* Hero Section */}
+            <div className="bg-gradient-to-r from-green-600 to-blue-600 p-8">
+              <div className="flex flex-col md:flex-row items-center gap-6">
+                <div className="w-32 h-32 bg-white rounded-full flex items-center justify-center text-4xl font-bold">
+                  {member.avatar || member.name.charAt(0)}
+                </div>
+                <div className="flex-1 text-white">
+                  <div className="flex items-center gap-3 mb-2">
+                    <h1 className="text-4xl font-bold">{member.name}</h1>
+                    <span className={`px-3 py-1 rounded-full text-sm font-bold ${getRoleBadge(member.role)}`}>
+                      {member.role}
+                    </span>
+                  </div>
+                  <p className="text-green-100 text-lg">
+                    Age {member.age} • {insights.totalMeals} meals tracked
+                  </p>
                 </div>
               </div>
             </div>
 
             {/* Quick Stats */}
-            <div className="grid grid-cols-4 gap-4 mt-8">
-              <div className="bg-blue-50 rounded-xl p-4">
-                <div className="flex items-center gap-2 text-blue-700 mb-1">
-                  <ChefHat className="h-5 w-5" />
-                  <span className="text-sm font-medium">Cooking Skills</span>
-                </div>
-                <div className="text-2xl font-bold text-gray-900">{member.cookingSkillLevel}/10</div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-6 bg-white">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-gray-900">{reactions.total}</div>
+                <div className="text-sm text-gray-600">Meal Reactions</div>
               </div>
-              
-              <div className="bg-green-50 rounded-xl p-4">
-                <div className="flex items-center gap-2 text-green-700 mb-1">
-                  <Target className="h-5 w-5" />
-                  <span className="text-sm font-medium">Health Goals</span>
-                </div>
-                <div className="text-2xl font-bold text-gray-900">{member.healthGoals.length}</div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-yellow-600">{reactions.loved}</div>
+                <div className="text-sm text-gray-600">Loved Meals</div>
               </div>
-              
-              <div className="bg-purple-50 rounded-xl p-4">
-                <div className="flex items-center gap-2 text-purple-700 mb-1">
-                  <Heart className="h-5 w-5" />
-                  <span className="text-sm font-medium">Meals Rated</span>
-                </div>
-                <div className="text-2xl font-bold text-gray-900">{reactions.length}</div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600">{reactions.liked}</div>
+                <div className="text-sm text-gray-600">Liked Meals</div>
               </div>
-              
-              <div className="bg-yellow-50 rounded-xl p-4">
-                <div className="flex items-center gap-2 text-yellow-700 mb-1">
-                  <TrendingUp className="h-5 w-5" />
-                  <span className="text-sm font-medium">Average Rating</span>
-                </div>
-                <div className="text-2xl font-bold text-gray-900">
-                  {reactions.length > 0
-                    ? (reactions.reduce((sum, r) => {
-                        const rating = r.reaction === 'LOVED' ? 5 : r.reaction === 'LIKED' ? 4 : r.reaction === 'NEUTRAL' ? 3 : r.reaction === 'DISLIKED' ? 2 : 1
-                        return sum + rating
-                      }, 0) / reactions.length).toFixed(1)
-                    : 'N/A'}
-                </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-red-600">{reactions.refused}</div>
+                <div className="text-sm text-gray-600">Refused</div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Main Info */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Dietary Information */}
-            <div className="bg-white rounded-2xl p-6 border border-gray-200">
+            {/* Health & Activity */}
+            <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-200">
               <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5 text-red-600" />
-                Dietary Information
+                <Target className="h-5 w-5 text-green-600" />
+                Health & Fitness
               </h2>
-              
-              {member.allergies.length > 0 && (
-                <div className="mb-4">
-                  <p className="text-sm font-medium text-gray-700 mb-2">Allergies</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <div className="text-sm text-gray-600 mb-1">Weight</div>
+                  <div className="text-lg font-semibold text-gray-900">
+                    {member.weightKg ? `${member.weightKg} kg` : 'Not set'}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-sm text-gray-600 mb-1">Height</div>
+                  <div className="text-lg font-semibold text-gray-900">
+                    {member.heightCm ? `${member.heightCm} cm` : 'Not set'}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-sm text-gray-600 mb-1">Activity Level</div>
+                  <div className={`px-3 py-1 rounded-full text-sm font-bold inline-block ${activityBadge.color}`}>
+                    {activityBadge.label}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-sm text-gray-600 mb-1">Current Phase</div>
+                  <div className="text-lg font-semibold text-gray-900 capitalize">
+                    {member.currentPhase.toLowerCase().replace('_', ' ')}
+                  </div>
+                </div>
+              </div>
+              {member.healthGoals.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <div className="text-sm text-gray-600 mb-2">Health Goals</div>
                   <div className="flex flex-wrap gap-2">
-                    {member.allergies.map((allergy, index) => (
-                      <span key={index} className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm font-medium">
-                        {allergy}
+                    {member.healthGoals.map((goal, idx) => (
+                      <span key={idx} className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">
+                        {goal}
                       </span>
                     ))}
                   </div>
                 </div>
               )}
-              
+            </div>
+
+            {/* Dietary Restrictions */}
+            <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-200">
+              <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <AlertCircle className="h-5 w-5 text-orange-600" />
+                Dietary Info
+              </h2>
               {member.dietaryRestrictions.length > 0 && (
-                <div>
-                  <p className="text-sm font-medium text-gray-700 mb-2">Dietary Restrictions</p>
+                <div className="mb-4">
+                  <div className="text-sm text-gray-600 mb-2">Restrictions</div>
                   <div className="flex flex-wrap gap-2">
-                    {member.dietaryRestrictions.map((restriction, index) => (
-                      <span key={index} className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-medium">
+                    {member.dietaryRestrictions.map((restriction, idx) => (
+                      <span key={idx} className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm">
                         {restriction}
                       </span>
                     ))}
                   </div>
                 </div>
               )}
-            </div>
-
-            {/* Health Goals */}
-            <div className="bg-white rounded-2xl p-6 border border-gray-200">
-              <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <Target className="h-5 w-5 text-green-600" />
-                Health Goals
-              </h2>
-              
-              <div className="grid grid-cols-2 gap-3">
-                {member.healthGoals.map((goal, index) => (
-                  <div key={index} className="bg-green-50 rounded-lg p-3 flex items-center gap-2">
-                    <div className="w-6 h-6 bg-green-600 rounded-full flex items-center justify-center">
-                      <span className="text-white text-xs">✓</span>
-                    </div>
-                    <span className="text-sm font-medium text-gray-900">{goal}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Meal Reactions History */}
-            {reactions.length > 0 && (
-              <div className="bg-white rounded-2xl p-6 border border-gray-200">
-                <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <Heart className="h-5 w-5 text-pink-600" />
-                  Recent Meal Reactions
-                </h2>
-                
-                <div className="space-y-3">
-                  {reactions.slice(0, 5).map((reaction) => (
-                    <div key={reaction.id} className="border border-gray-200 rounded-lg p-4">
-                      <div className="flex items-start justify-between mb-2">
-                        <h3 className="font-semibold text-gray-900">{reaction.mealName}</h3>
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getReactionColor(reaction.reaction)}`}>
-                          {reaction.reaction}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-4 text-sm text-gray-600">
-                        <span>{new Date(reaction.date).toLocaleDateString()}</span>
-                        <span>{(reaction.portionEaten * 100).toFixed(0)}% eaten</span>
-                      </div>
-                      {reaction.notes && (
-                        <p className="text-sm text-gray-600 mt-2 italic">{reaction.notes}</p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Right Column - Skills & Stats */}
-          <div className="space-y-6">
-            {/* Cooking Skills */}
-            <div className="bg-white rounded-2xl p-6 border border-gray-200">
-              <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <ChefHat className="h-5 w-5 text-orange-600" />
-                Cooking Skills
-              </h2>
-              
-              <div className="mb-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-700">Skill Level</span>
-                  <span className="text-sm font-bold text-blue-600">{member.cookingSkillLevel}/10</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div 
-                    className="bg-blue-600 rounded-full h-3 transition-all duration-300" 
-                    style={{ width: `${(member.cookingSkillLevel / 10) * 100}%` }}
-                  />
-                </div>
-              </div>
-              
-              {member.canCookAlone && (
-                <div className="bg-green-50 rounded-lg p-3 flex items-center gap-2">
-                  <Award className="h-5 w-5 text-green-600" />
-                  <span className="text-sm font-medium text-green-700">Can Cook Independently</span>
-                </div>
-              )}
-              
-              {member.favoriteTasks.length > 0 && (
-                <div className="mt-4">
-                  <p className="text-sm font-medium text-gray-700 mb-2">Favorite Cooking Tasks</p>
+              {member.allergies.length > 0 && (
+                <div>
+                  <div className="text-sm text-gray-600 mb-2">Allergies</div>
                   <div className="flex flex-wrap gap-2">
-                    {member.favoriteTasks.slice(0, 3).map((task, index) => (
-                      <span key={index} className="bg-orange-100 text-orange-700 px-2 py-1 rounded-full text-xs font-medium">
-                        {task}
+                    {member.allergies.map((allergy, idx) => (
+                      <span key={idx} className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm">
+                        ⚠️ {allergy}
                       </span>
                     ))}
                   </div>
                 </div>
               )}
+              {member.dietaryRestrictions.length === 0 && member.allergies.length === 0 && (
+                <p className="text-gray-600">No dietary restrictions or allergies</p>
+              )}
             </div>
 
-            {/* Food Preferences */}
-            {preferences.length > 0 && (
-              <div className="bg-white rounded-2xl p-6 border border-gray-200">
-                <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <Star className="h-5 w-5 text-yellow-600" />
-                  Food Preferences
-                </h2>
-                
-                <div className="space-y-2">
-                  {preferences
-                    .sort((a, b) => b.acceptanceRate - a.acceptanceRate)
-                    .slice(0, 5)
-                    .map((pref) => (
-                      <div key={pref.id} className="border border-gray-200 rounded-lg p-3">
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-sm font-medium text-gray-900">{pref.foodItem}</span>
-                          <span className="text-xs font-bold text-blue-600">
-                            {(pref.acceptanceRate * 100).toFixed(0)}% acceptance
-                          </span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div 
-                            className="bg-blue-600 rounded-full h-2 transition-all duration-300" 
+            {/* Cooking Skills */}
+            <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-200">
+              <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <ChefHat className="h-5 w-5 text-blue-600" />
+                Cooking Skills
+              </h2>
+              <div className="space-y-3">
+                <div>
+                  <div className="text-sm text-gray-600 mb-1">Skill Level</div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div
+                        className="bg-blue-600 h-2 rounded-full"
+                        style={{ width: `${(member.cookingSkillLevel / 5) * 100}%` }}
+                      ></div>
+                    </div>
+                    <span className="text-sm font-semibold text-gray-900">{member.cookingSkillLevel}/5</span>
+                  </div>
+                </div>
+                <div>
+                  <div className="text-sm text-gray-600 mb-1">Can Cook Alone</div>
+                  <div className={`px-3 py-1 rounded-full text-sm font-bold inline-block ${
+                    member.canCookAlone ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
+                  }`}>
+                    {member.canCookAlone ? 'Yes' : 'No'}
+                  </div>
+                </div>
+                {member.favoriteTasks.length > 0 && (
+                  <div>
+                    <div className="text-sm text-gray-600 mb-2">Favorite Tasks</div>
+                    <div className="flex flex-wrap gap-2">
+                      {member.favoriteTasks.map((task, idx) => (
+                        <span key={idx} className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
+                          {task}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column */}
+          <div className="space-y-6">
+            {/* Top Preferences */}
+            <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-200">
+              <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <Heart className="h-5 w-5 text-red-600" />
+                Top Preferences
+              </h2>
+              {insights.topPreferences.length > 0 ? (
+                <div className="space-y-3">
+                  {insights.topPreferences.map((pref, idx) => (
+                    <div key={idx} className="flex items-center justify-between">
+                      <span className="text-gray-900 font-medium">{pref.foodItem}</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-24 bg-gray-200 rounded-full h-2">
+                          <div
+                            className="bg-green-500 h-2 rounded-full"
                             style={{ width: `${pref.acceptanceRate * 100}%` }}
-                          />
+                          ></div>
                         </div>
+                        <span className="text-sm text-gray-600">{(pref.acceptanceRate * 100).toFixed(0)}%</span>
                       </div>
-                    ))}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-600">No preference data yet</p>
+              )}
+            </div>
+
+            {/* Avoided Foods */}
+            {insights.avoidedFoods.length > 0 && (
+              <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-200">
+                <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <XCircle className="h-5 w-5 text-red-600" />
+                  Avoids
+                </h2>
+                <div className="space-y-3">
+                  {insights.avoidedFoods.map((food, idx) => (
+                    <div key={idx} className="flex items-center justify-between">
+                      <span className="text-gray-900 font-medium">{food.foodItem}</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-24 bg-gray-200 rounded-full h-2">
+                          <div
+                            className="bg-red-500 h-2 rounded-full"
+                            style={{ width: `${(1 - food.acceptanceRate) * 100}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-sm text-gray-600">{((1 - food.acceptanceRate) * 100).toFixed(0)}%</span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
@@ -390,4 +407,3 @@ export default function MemberProfile() {
     </div>
   )
 }
-
