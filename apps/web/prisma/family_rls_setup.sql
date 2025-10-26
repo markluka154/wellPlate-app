@@ -682,8 +682,9 @@ CREATE POLICY "Users can view own family leftovers"
 ON "Leftover" FOR SELECT 
 USING (
   EXISTS (
-    SELECT 1 FROM "FamilyProfile" 
-    WHERE "FamilyProfile".id = "Leftover"."familyProfileId" 
+    SELECT 1 FROM "FamilyMealPlan"
+    JOIN "FamilyProfile" ON "FamilyMealPlan"."familyProfileId" = "FamilyProfile".id
+    WHERE "Leftover"."familyMealPlanId" = "FamilyMealPlan".id 
     AND "FamilyProfile"."userId" = auth.uid()::text
   )
 );
@@ -692,8 +693,9 @@ CREATE POLICY "Users can create own family leftovers"
 ON "Leftover" FOR INSERT 
 WITH CHECK (
   EXISTS (
-    SELECT 1 FROM "FamilyProfile" 
-    WHERE "FamilyProfile".id = "Leftover"."familyProfileId" 
+    SELECT 1 FROM "FamilyMealPlan"
+    JOIN "FamilyProfile" ON "FamilyMealPlan"."familyProfileId" = "FamilyProfile".id
+    WHERE "Leftover"."familyMealPlanId" = "FamilyMealPlan".id 
     AND "FamilyProfile"."userId" = auth.uid()::text
   )
 );
@@ -702,8 +704,9 @@ CREATE POLICY "Users can update own family leftovers"
 ON "Leftover" FOR UPDATE 
 USING (
   EXISTS (
-    SELECT 1 FROM "FamilyProfile" 
-    WHERE "FamilyProfile".id = "Leftover"."familyProfileId" 
+    SELECT 1 FROM "FamilyMealPlan"
+    JOIN "FamilyProfile" ON "FamilyMealPlan"."familyProfileId" = "FamilyProfile".id
+    WHERE "Leftover"."familyMealPlanId" = "FamilyMealPlan".id 
     AND "FamilyProfile"."userId" = auth.uid()::text
   )
 );
@@ -712,8 +715,9 @@ CREATE POLICY "Users can delete own family leftovers"
 ON "Leftover" FOR DELETE 
 USING (
   EXISTS (
-    SELECT 1 FROM "FamilyProfile" 
-    WHERE "FamilyProfile".id = "Leftover"."familyProfileId" 
+    SELECT 1 FROM "FamilyMealPlan"
+    JOIN "FamilyProfile" ON "FamilyMealPlan"."familyProfileId" = "FamilyProfile".id
+    WHERE "Leftover"."familyMealPlanId" = "FamilyMealPlan".id 
     AND "FamilyProfile"."userId" = auth.uid()::text
   )
 );
