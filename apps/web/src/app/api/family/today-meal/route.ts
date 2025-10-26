@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Retry logic for prepared statement errors
+    // Retry logic for prepared statement errors - use raw SQL as last resort
     let familyProfile
     try {
       familyProfile = await prisma.familyProfile.findUnique({
@@ -25,20 +25,20 @@ export async function GET(request: NextRequest) {
       })
     } catch (prismaError: any) {
       if (prismaError?.message?.includes('prepared statement')) {
-        console.log('⚠️ Prepared statement error, creating fresh client...')
-        // Create a completely new Prisma client
-        const freshClient = getFreshPrismaClient()
+        console.log('⚠️ Prepared statement error, using raw SQL...')
         try {
-          familyProfile = await freshClient.familyProfile.findUnique({
-            where: { userId: session.user.id },
-            select: { id: true }
-          })
-          // Clean up the fresh client
-          await freshClient.$disconnect()
-        } catch (retryError) {
-          console.error('❌ Fresh client also failed:', retryError)
-          await freshClient.$disconnect().catch(() => {})
-          throw retryError
+          // Use raw SQL to bypass prepared statements
+          const result = await prisma.$queryRaw<Array<{ id: string }>>`
+            SELECT id FROM "FamilyProfile" WHERE "userId" = ${session.user.id}
+          `
+          if (result && result[0]) {
+            familyProfile = result[0]
+          } else {
+            throw new Error('Family profile not found')
+          }
+        } catch (rawError) {
+          console.error('❌ Raw SQL also failed:', rawError)
+          throw rawError
         }
       } else {
         throw prismaError
