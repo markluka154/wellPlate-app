@@ -5,6 +5,7 @@ import { CTASection } from '@/components/marketing/CTASection'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { AICoach } from '@/components/marketing/AICoach'
+import { FamilyPack } from '@/components/marketing/FamilyPack'
 
 // New components
 import StatBar from '@/components/marketing/StatBar'
@@ -33,6 +34,9 @@ export default function HomePage() {
         <ProductDemo />
         <StatBar />
         <Comparison />
+        
+        {/* Family Pack Section */}
+        <FamilyPack />
         
         {/* Updated Testimonials */}
         <Testimonials />
