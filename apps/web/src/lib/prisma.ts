@@ -4,19 +4,30 @@ const globalForPrisma = global as unknown as {
   prisma: PrismaClient | undefined
 }
 
-// In production (Vercel), create a new client for each request to avoid prepared statement conflicts
-// In development, reuse the same client for better performance
-const prisma =
-  process.env.NODE_ENV === 'production'
-    ? new PrismaClient({
-        log: ['error', 'warn'],
-      })
-    : globalForPrisma.prisma ?? new PrismaClient({
-        log: ['error', 'warn'],
-      })
+let prisma: PrismaClient
 
-if (process.env.NODE_ENV !== 'production') {
-  globalForPrisma.prisma = prisma
+// Create singleton client with connection management
+if (process.env.NODE_ENV === 'production') {
+  // In production, create a fresh instance each time to avoid prepared statement conflicts
+  prisma = new PrismaClient({
+    log: ['error', 'warn'],
+  })
+  
+  // Disconnect on request completion
+  if (typeof window === 'undefined') {
+    process.on('beforeExit', async () => {
+      await prisma.$disconnect()
+    })
+  }
+} else {
+  // In development, reuse the same instance
+  prisma = globalForPrisma.prisma ?? new PrismaClient({
+    log: ['error', 'warn'],
+  })
+  
+  if (!globalForPrisma.prisma) {
+    globalForPrisma.prisma = prisma
+  }
 }
 
 export default prisma

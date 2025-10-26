@@ -21,12 +21,17 @@ export async function GET(request: NextRequest) {
       })
     } catch (prismaError: any) {
       if (prismaError?.message?.includes('prepared statement')) {
-        // Wait a bit and retry with fresh connection
-        await new Promise(resolve => setTimeout(resolve, 100))
-        familyProfile = await prisma.familyProfile.findUnique({
-          where: { userId: session.user.id },
-          select: { id: true }
-        })
+        console.log('⚠️ Prepared statement error, retrying...')
+        await new Promise(resolve => setTimeout(resolve, 200))
+        try {
+          familyProfile = await prisma.familyProfile.findUnique({
+            where: { userId: session.user.id },
+            select: { id: true }
+          })
+        } catch (retryError) {
+          console.error('❌ Retry also failed:', retryError)
+          throw retryError
+        }
       } else {
         throw prismaError
       }
