@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// PUT /api/family/today-meal/status - Update meal status
+// PUT /api/family/today-meal - Update today's meal
 export async function PUT(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
@@ -79,19 +79,80 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const prisma = getPrismaClient()
     const body = await request.json()
-    const { status } = body
+    const { name, description, time, type } = body
 
-    if (!status) {
-      return NextResponse.json({ error: 'Status is required' }, { status: 400 })
+    if (!name) {
+      return NextResponse.json({ error: 'Meal name is required' }, { status: 400 })
     }
 
-    // TODO: Update meal status in database
-    return NextResponse.json({ success: true })
+    // Get family profile
+    const familyProfile = await prisma.familyProfile.findUnique({
+      where: { userId: session.user.id },
+      select: { id: true }
+    })
+
+    if (!familyProfile) {
+      return NextResponse.json({ error: 'Family profile not found' }, { status: 404 })
+    }
+
+    // Get or create active meal plan
+    let mealPlan = await prisma.familyMealPlan.findFirst({
+      where: {
+        familyProfileId: familyProfile.id,
+        isActive: true
+      },
+      orderBy: { weekStartDate: 'desc' }
+    })
+
+    if (!mealPlan) {
+      // Create a basic meal plan if none exists
+      const today = new Date()
+      mealPlan = await prisma.familyMealPlan.create({
+        data: {
+          familyProfileId: familyProfile.id,
+          weekStartDate: today,
+          weekEndDate: new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000),
+          meals: JSON.stringify([{ name, description, time, type, date: today.toISOString() }]),
+          isActive: true
+        }
+      })
+    } else {
+      // Update existing meal plan with new meal
+      const meals = (mealPlan.meals as any[]) || []
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      
+      const updatedMeals = meals.map(m => {
+        const mealDate = new Date(m.date || m.dateString)
+        mealDate.setHours(0, 0, 0, 0)
+        
+        if (mealDate.getTime() === today.getTime()) {
+          return { ...m, name, description, time, type, updatedAt: new Date().toISOString() }
+        }
+        return m
+      })
+      
+      // If today's meal doesn't exist in the array, add it
+      if (!updatedMeals.some(m => new Date(m.date || m.dateString).getDate() === today.getDate())) {
+        updatedMeals.push({ name, description, time, type, date: today.toISOString(), dateString: today.toISOString() })
+      }
+
+      await prisma.familyMealPlan.update({
+        where: { id: mealPlan.id },
+        data: { meals: updatedMeals }
+      })
+    }
+
+    return NextResponse.json({ 
+      success: true,
+      meal: { name, description, time, type }
+    })
   } catch (error) {
-    console.error('Error updating meal status:', error)
+    console.error('Error updating meal:', error)
     return NextResponse.json(
-      { error: 'Failed to update meal status' },
+      { error: 'Failed to update meal' },
       { status: 500 }
     )
   }
