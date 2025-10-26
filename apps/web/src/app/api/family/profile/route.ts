@@ -43,27 +43,36 @@ export async function GET(request: NextRequest) {
 
     // Create if doesn't exist
     if (!familyProfile) {
-      familyProfile = await prisma.familyProfile.create({
+      const newFamilyProfile = await prisma.familyProfile.create({
         data: {
           userId: session.user.id,
           name: `${session.user.name || 'My Family'}'s Family`,
-          members: [],
-          preferences: {
-            create: {
-              mealsPerDay: 3,
-              snacksPerDay: 2
-            }
-          }
         },
         include: {
-          members: true,
+          members: {
+            include: {
+              foodPreferences: true,
+              mealReactions: true
+            },
+            orderBy: { createdAt: 'asc' }
+          },
           preferences: true,
           budget: true,
           calendar: true,
-          mealPlans: true,
-          pantryInventory: true
+          mealPlans: {
+            where: { isActive: true },
+            orderBy: { weekStartDate: 'desc' },
+            take: 1
+          },
+          pantryInventory: {
+            where: { expiryDate: { gte: new Date() } },
+            orderBy: { expiryDate: 'asc' },
+            take: 10
+          }
         }
       })
+      
+      familyProfile = newFamilyProfile
     }
 
     return NextResponse.json({ familyProfile })
