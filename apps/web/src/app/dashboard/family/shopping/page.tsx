@@ -106,20 +106,35 @@ export default function FamilyShoppingList() {
   const toggleItem = async (itemId: string) => {
     if (!shoppingList) return
 
-    const updatedItems = shoppingList.items.map(item =>
-      item.id === itemId ? { ...item, isPurchased: !item.isPurchased } : item
-    )
+    const itemToToggle = shoppingList.items.find(item => item.id === itemId)
+    if (!itemToToggle) return
 
-    const updatedList = {
-      ...shoppingList,
-      items: updatedItems,
-      isCompleted: updatedItems.every(item => item.isPurchased)
+    const newPurchasedStatus = !itemToToggle.isPurchased
+
+    // Update in database and create budget expense
+    try {
+      const response = await fetch(`/api/family/shopping-list/items/${itemId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          isPurchased: newPurchasedStatus,
+          wasAlreadyPurchased: itemToToggle.isPurchased,
+          shouldTrackExpense: newPurchasedStatus, // Only track when marking as purchased
+          actualPrice: itemToToggle.estimatedPrice
+        })
+      })
+
+      if (response.ok) {
+        // Reload shopping list to get updated data
+        await loadShoppingList()
+        showNotification('success', 'Item Updated', newPurchasedStatus ? 'Item marked as purchased and added to budget' : 'Item unmarked')
+      } else {
+        throw new Error('Failed to update item')
+      }
+    } catch (error) {
+      console.error('Error updating item:', error)
+      showNotification('error', 'Error', 'Failed to update item')
     }
-
-    setShoppingList(updatedList)
-
-    // TODO: Update in database
-    showNotification('success', 'Item Updated', 'Shopping list updated')
   }
 
   // Get category color
