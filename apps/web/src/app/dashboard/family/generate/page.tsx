@@ -1,19 +1,28 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { ArrowLeft, Users, ChefHat, Target, Heart, Clock, Crown, Zap, Star, Shield, Download } from 'lucide-react'
+import { ArrowLeft, Users, ChefHat, Clock, CheckCircle, AlertTriangle, ShoppingCart, Calendar, X } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useNotification } from '@/components/ui/Notification'
+import Link from 'next/link'
 
-interface FamilyMember {
+interface Portion {
+  memberId: string
+  memberName: string
+  calories: number
+  servingSize: string
+}
+
+interface GeneratedMeal {
   id: string
   name: string
-  age: number
-  role: 'adult' | 'child' | 'teen' | 'senior'
-  dietaryRestrictions: string[]
-  allergies: string
-  activityLevel: string
-  healthGoals: string[]
+  cookTime: number
+  familyCompatibility: number
+  compatibilityScore: number
+  portions: Portion[]
+  tags: string[]
+  warnings: string[]
+  description: string
 }
 
 export default function FamilyMealPlanGenerate() {
