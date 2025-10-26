@@ -121,15 +121,19 @@ export async function PUT(request: NextRequest) {
     } else {
       // Update existing meal plan with new meal
       // Parse the meals JSON string if it's a string
-      let meals = mealPlan.meals
-      if (typeof meals === 'string') {
+      let mealsRaw = mealPlan.meals
+      let meals: any[] = []
+      
+      if (typeof mealsRaw === 'string') {
         try {
-          meals = JSON.parse(meals)
+          const parsed = JSON.parse(mealsRaw)
+          meals = Array.isArray(parsed) ? parsed : []
         } catch (e) {
           meals = []
         }
+      } else if (Array.isArray(mealsRaw)) {
+        meals = mealsRaw
       }
-      meals = meals || []
       
       const today = new Date()
       today.setHours(0, 0, 0, 0)
