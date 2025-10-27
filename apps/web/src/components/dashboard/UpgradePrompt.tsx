@@ -83,32 +83,11 @@ export function UpgradePrompt({ isOpen, onClose, title, message, feature }: Upgr
       
       console.log('Initiating checkout with email:', userEmail, 'plan:', planId)
       
-      const response = await fetch(`/api/stripe/checkout?plan=${planId}&email=${encodeURIComponent(userEmail)}`, {
-        method: 'GET',
-      })
-
-      console.log('Checkout response status:', response.status)
-
-      if (response.redirected) {
-        console.log('Redirecting to:', response.url)
-        window.location.href = response.url
-        return
-      }
-
-      const data = await response.json()
-      
-      if (data.error) {
-        console.error('Checkout error:', data.error)
-        alert(`Error: ${data.error}`)
-        return
-      }
-
-      // If we get here with no redirect and no error, something unexpected happened
-      console.warn('Unexpected response:', data)
-      alert('Something went wrong. Please try again or contact support.')
+      // Directly navigate to the checkout API - it will handle the Stripe redirect
+      window.location.href = `/api/stripe/checkout?plan=${planId}&email=${encodeURIComponent(userEmail)}`
       
     } catch (error) {
-      console.error('Error calling checkout API:', error)
+      console.error('Error initiating checkout:', error)
       alert('Unable to start checkout. Please try again or contact support.')
     } finally {
       onClose()

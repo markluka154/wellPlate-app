@@ -1,7 +1,6 @@
 'use client'
 
 import { Shield, Users, Sparkles, ArrowRight, Check } from 'lucide-react'
-import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 
 interface FamilyLockedComponentProps {
@@ -108,17 +107,38 @@ export function FamilyLockedComponent({ currentPlan = 'FREE' }: FamilyLockedComp
             </div>
 
             {/* CTA */}
-            <Link href="/pricing">
-              <Button 
-                size="lg" 
-                className="w-full bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white font-semibold py-6 text-lg shadow-lg"
-              >
-                <span className="flex items-center justify-center gap-2">
-                  {isUpgrade ? 'Upgrade to Family Pack' : 'Get Family Pack'}
-                  <ArrowRight className="w-5 h-5" />
-                </span>
-              </Button>
-            </Link>
+            <Button 
+              size="lg" 
+              onClick={async () => {
+                try {
+                  const userData = localStorage.getItem('wellplate:user')
+                  if (!userData) {
+                    alert('Please sign in to upgrade')
+                    window.location.href = '/signin'
+                    return
+                  }
+                  const user = JSON.parse(userData)
+                  const userEmail = user.email
+                  if (!userEmail) {
+                    alert('Please sign in to upgrade')
+                    window.location.href = '/signin'
+                    return
+                  }
+                  
+                  // Directly navigate to the checkout API - it will handle the Stripe redirect
+                  window.location.href = `/api/stripe/checkout?plan=FAMILY_MONTHLY&email=${encodeURIComponent(userEmail)}`
+                } catch (error) {
+                  console.error('Error initiating checkout:', error)
+                  window.location.href = '/pricing'
+                }
+              }}
+              className="w-full bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white font-semibold py-6 text-lg shadow-lg"
+            >
+              <span className="flex items-center justify-center gap-2">
+                {isUpgrade ? 'Upgrade to Family Pack' : 'Get Family Pack'}
+                <ArrowRight className="w-5 h-5" />
+              </span>
+            </Button>
 
             <p className="text-xs text-center text-gray-500 mt-4">
               Cancel anytime • 14-day money-back guarantee
