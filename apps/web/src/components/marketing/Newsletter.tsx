@@ -19,13 +19,29 @@ const Newsletter = () => {
 
     setIsLoading(true)
     
-    // Simulate API call
-    setTimeout(() => {
-      console.log('Newsletter subscription:', email)
-      setIsSubscribed(true)
+    try {
+      const response = await fetch('/api/newsletter/subscribe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        console.log('Newsletter subscription successful:', data)
+        setIsSubscribed(true)
+        setEmail('')
+      } else {
+        console.error('Newsletter subscription failed:', data.error)
+      }
+    } catch (error) {
+      console.error('Newsletter subscription error:', error)
+    } finally {
       setIsLoading(false)
-      setEmail('')
-    }, 1000)
+    }
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
