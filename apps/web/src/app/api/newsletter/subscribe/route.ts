@@ -38,6 +38,40 @@ export async function POST(request: NextRequest) {
 
     await client.end()
 
+    // Send notification email to admin
+    try {
+      const { Resend } = await import('resend')
+      const resend = new Resend(process.env.RESEND_API_KEY)
+
+      await resend.emails.send({
+        from: 'WellPlate <getwellplate@gmail.com>',
+        to: 'getwellplate@gmail.com',
+        subject: '🎉 New Newsletter Subscriber!',
+        html: `
+          <!DOCTYPE html>
+          <html>
+            <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+              <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                <h2 style="color: #10b981;">New Newsletter Subscriber! 🎉</h2>
+                <p>A new person has subscribed to your WellPlate newsletter:</p>
+                <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                  <strong>Email:</strong> ${email}<br>
+                  <strong>Date:</strong> ${new Date().toLocaleString()}
+                </div>
+                <p style="color: #666; font-size: 14px;">
+                  Total subscribers can be viewed in your Supabase database.
+                </p>
+              </div>
+            </body>
+          </html>
+        `,
+      })
+      console.log('✅ Notification email sent to admin')
+    } catch (emailError) {
+      console.error('⚠️ Failed to send notification email:', emailError)
+      // Don't fail the subscription if email fails
+    }
+
     return NextResponse.json({ 
       success: true, 
       message: 'Successfully subscribed to newsletter',
